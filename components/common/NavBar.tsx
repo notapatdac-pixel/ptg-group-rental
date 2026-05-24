@@ -93,10 +93,17 @@ export default function NavBar({ showSearch = false }: NavBarProps) {
     </Link>
   );
 
+  const dashDest = user?.type === "landlord"
+    ? "/landlord_backoffice/landlordOverviewPage"
+    : "/retailer_backoffice/retailerDashboardPage";
+
   const links = (
     <div className="hidden md:flex gap-10 items-center">
       <Link href="/explorepage/explorePage" className="nav-link-lime font-sans">Explore Locations</Link>
       <Link href="/pricingpage/pricingPage" className="nav-link-lime font-sans">Pricing</Link>
+      {user && (
+        <Link href={dashDest} className="nav-link-lime font-sans">Dashboard</Link>
+      )}
     </div>
   );
 
@@ -106,7 +113,7 @@ export default function NavBar({ showSearch = false }: NavBarProps) {
     <div className="flex items-center gap-4">
       <Link
         href="/loginpage/loginPage"
-        className="btn-lime-ghost inline-flex items-center justify-center bg-transparent text-slate-600 dark:text-slate-400 font-sans text-sm px-4 py-2 border-0 cursor-pointer rounded-md transition-colors no-underline"
+        className="btn-lime-ghost inline-flex items-center justify-center bg-transparent text-slate-600 font-sans text-sm px-4 py-2 border-0 cursor-pointer rounded-md transition-colors no-underline"
       >
         Sign In
       </Link>
@@ -121,7 +128,7 @@ export default function NavBar({ showSearch = false }: NavBarProps) {
 
   if (!showSearch) {
     return (
-      <nav className="fixed top-0 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-50 overflow-visible">
+      <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 overflow-visible">
         <div className="w-full flex justify-between items-center px-8 h-20">
           <div className="flex items-center gap-14">{logo}{links}</div>
           {rightActions}
@@ -143,13 +150,11 @@ export default function NavBar({ showSearch = false }: NavBarProps) {
   );
 
   return (
-    <nav className="fixed top-0 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-50 border-b border-outline-variant/10 overflow-visible">
-      <div className="relative w-full">
-        <div className="w-full flex justify-between items-center px-8 h-20 relative z-10">
-          <div className="flex items-center gap-14">{logo}{links}</div>
-          {rightActions}
-        </div>
-        <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">{search}</div>
+    <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-outline-variant/10 overflow-visible">
+      <div className="w-full flex items-center px-8 h-20 gap-6">
+        <div className="flex items-center gap-14 shrink-0">{logo}{links}</div>
+        <div className="flex-1 flex justify-end pr-8">{search}</div>
+        <div className="shrink-0">{rightActions}</div>
       </div>
     </nav>
   );

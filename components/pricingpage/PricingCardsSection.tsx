@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useAuth } from "@/lib/authContext";
 
 function PricingPlanCard({
   title,
@@ -10,6 +13,7 @@ function PricingPlanCard({
   buttonText,
   href,
   featured = false,
+  disabled = false,
 }: {
   title: string;
   price: string;
@@ -20,6 +24,7 @@ function PricingPlanCard({
   buttonText: string;
   href: string;
   featured?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <div
@@ -61,22 +66,30 @@ function PricingPlanCard({
           </li>
         ))}
       </ul>
-      <Link
-        href={href}
-        className={
-          "w-full py-4 px-6 rounded-md font-bold text-xs tracking-widest uppercase transition-all cursor-pointer no-underline inline-flex items-center justify-center" +
-          (featured
-            ? " primary-gradient text-on-primary shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95"
-            : " bg-white border border-outline-variant/20 text-primary transition-colors hover:opacity-95")
-        }
-      >
-        {buttonText}
-      </Link>
+      {disabled ? (
+        <span className="w-full py-4 px-6 rounded-md font-bold text-xs tracking-widest uppercase inline-flex items-center justify-center bg-outline-variant/20 border border-outline-variant/20 text-on-surface-variant cursor-not-allowed select-none">
+          Already Signed In
+        </span>
+      ) : (
+        <Link
+          href={href}
+          className={
+            "w-full py-4 px-6 rounded-md font-bold text-xs tracking-widest uppercase transition-all cursor-pointer no-underline inline-flex items-center justify-center" +
+            (featured
+              ? " primary-gradient text-on-primary shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95"
+              : " bg-white border border-outline-variant/20 text-primary transition-colors hover:opacity-95")
+          }
+        >
+          {buttonText}
+        </Link>
+      )}
     </div>
   );
 }
 
 export default function PricingCardsSection() {
+  const { user } = useAuth();
+
   return (
     <section>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-32 items-stretch max-w-7xl mx-auto">
@@ -89,6 +102,7 @@ export default function PricingCardsSection() {
           items={["Browse all listings", "Apply for 2 spaces"]}
           buttonText="Get started free"
           href="/createaccountpage/createAccountPage"
+          disabled={!!user}
         />
         <PricingPlanCard
           title="Pro"

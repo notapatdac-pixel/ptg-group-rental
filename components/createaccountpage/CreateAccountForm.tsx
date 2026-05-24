@@ -47,7 +47,7 @@ export default function CreateAccountForm() {
           <Field label="PASSWORD" placeholder="••••••••" type="password" />
           <button
             type="submit"
-            className="w-full bg-lime-500 hover:bg-lime-400 active:bg-lime-600 text-white font-bold py-4 rounded-full text-sm tracking-widest transition-colors cursor-pointer border-0 mt-2"
+            className="w-full primary-gradient text-on-primary font-bold py-4 rounded-full text-sm tracking-widest uppercase shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95 transition-all cursor-pointer border-0 mt-2"
           >
             CREATE ACCOUNT
           </button>

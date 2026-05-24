@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import StatsBar from "./StatsBar";
+import { useAuth } from "@/lib/authContext";
 import hero1 from "@/components/image/hero-ptg-style-1.png";
 import hero2 from "@/components/image/hero-ptg-style-2.png";
 import hero3 from "@/components/image/hero-ptg-style-3.png";
@@ -13,6 +16,8 @@ const HERO_CAROUSEL_IMAGES = [
 ];
 
 export default function HeroSection() {
+  const { user } = useAuth();
+
   return (
     <section>
       <div className="relative overflow-hidden min-h-[90vh] lg:min-h-[40rem]">
@@ -47,24 +52,26 @@ export default function HeroSection() {
                 <p className="text-xl text-on-surface leading-relaxed mb-10 max-w-xl">
                   Discover high-traffic retail locations, analyze success potential with AI, and grow your business where customers already are.
                 </p>
-                <div className="flex flex-wrap gap-4">
+                <div className="flex gap-4 items-stretch">
                   <Link
                     href="/explorepage/explorePage"
-                    className="group inline-flex items-center justify-center primary-gradient text-white px-26 py-4 rounded-md text-base font-bold border-0 cursor-pointer transition-all hover:shadow-lg hover:shadow-lime-600/40 no-underline"
+                    className="group inline-flex items-center justify-center primary-gradient text-white w-1/2 py-4 rounded-md text-base font-bold border-0 cursor-pointer transition-all hover:shadow-lg hover:shadow-lime-600/40 no-underline"
                   >
                     <span className="flex items-center gap-2">
                       Explore Locations
-                      <span className="material-symbols-outlined text-lime-200 group-hover:text-lime-50 group-hover:translate-x-4 transition-all">
+                      <span className="material-symbols-outlined text-lime-200 group-hover:text-lime-50 group-hover:translate-x-1 transition-all">
                         arrow_forward
                       </span>
                     </span>
                   </Link>
-                  <Link
-                    href="/createaccountpage/createAccountPage"
-                    className="btn-lime-outline inline-flex items-center justify-center bg-white/90 px-8 py-4 rounded-md text-base font-bold border border-outline-variant transition-colors text-on-surface cursor-pointer backdrop-blur-sm no-underline"
-                  >
-                    Get Started
-                  </Link>
+                  {!user && (
+                    <Link
+                      href="/createaccountpage/createAccountPage"
+                      className="btn-lime-outline inline-flex items-center justify-center bg-white/90 px-8 py-4 rounded-md text-base font-bold border border-outline-variant transition-colors text-on-surface cursor-pointer backdrop-blur-sm no-underline"
+                    >
+                      Get Started
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>
