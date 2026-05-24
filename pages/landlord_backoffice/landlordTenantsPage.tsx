@@ -56,7 +56,7 @@ export default function LandlordTenantsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-[#F5F2EB]">
-                {["Brand", "Station · Unit", "Monthly Rent (THB)", "Lease Period", "Pay History", "AI Score", "Status", ""].map((h) => (
+                {["Brand", "Station · Unit", "Monthly Rent (THB)", "Lease Period", "Pay History", "AI Score", "Status"].map((h) => (
                   <th key={h} className="text-left text-[10px] font-bold uppercase tracking-widest text-on-surface-variant px-4 py-3 whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -85,9 +85,6 @@ export default function LandlordTenantsPage() {
                   </td>
                   <td className="px-4 py-4">
                     <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full capitalize ${STATUS_STYLE[t.status]}`}>{t.status}</span>
-                  </td>
-                  <td className="px-4 py-4">
-                    <button type="button" className="text-xs text-primary font-semibold bg-transparent border-0 cursor-pointer">View →</button>
                   </td>
                 </tr>
               ))}

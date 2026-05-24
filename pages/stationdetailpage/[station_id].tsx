@@ -2,7 +2,6 @@ import type { GetStaticPaths, GetStaticProps } from "next";
 import NavBar from "@/components/common/NavBar";
 import Footer from "@/components/common/Footer";
 import StationDetailHeader from "@/components/stationdetailpage/StationDetailHeader";
-import StationDetailTabs from "@/components/stationdetailpage/StationDetailTabs";
 import StationDetailKpiSection from "@/components/stationdetailpage/StationDetailKpiSection";
 import TrafficTrendChart from "@/components/stationdetailpage/TrafficTrendChart";
 import ProInsightsCard from "@/components/stationdetailpage/ProInsightsCard";
@@ -37,8 +36,7 @@ export default function StationDetailPage({ station }: { station: Station }) {
           />
           <div className="relative z-10 max-w-[1200px] mx-auto w-full px-6 py-8 pt-28 pb-28">
             <StationDetailHeader station={station} />
-            <StationDetailTabs />
-            <div className="space-y-12">
+<div className="space-y-12">
               <StationDetailKpiSection station={station} />
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:items-stretch">
                 <TrafficTrendChart station={station} />

@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { Station } from "@/lib/stations";
+import { useAuth } from "@/lib/authContext";
 
-const BTN_LANDING_GHOST =
-  "btn-lime-ghost inline-flex items-center justify-center bg-transparent text-slate-600 dark:text-slate-400 font-sans text-sm px-4 py-2.5 border-0 cursor-pointer rounded-md transition-colors";
 const BTN_LANDING_PRIMARY =
   "inline-flex items-center justify-center primary-gradient text-white px-6 py-2.5 rounded-md text-sm font-bold shadow-sm border-0 cursor-pointer transition-all hover:shadow-lime-500/40 hover:ring-2 hover:ring-lime-300 hover:ring-offset-2 hover:ring-offset-white/80 active:scale-95";
 
 export default function StationDetailHeader({ station }: { station: Station }) {
+  const { user } = useAuth();
+
   return (
     <div>
       <nav className="flex items-center gap-2 mb-6">
@@ -41,14 +42,13 @@ export default function StationDetailHeader({ station }: { station: Station }) {
             </div>
           </div>
         </div>
-        <div className="flex gap-3 flex-shrink-0 flex-wrap">
-          <button type="button" className={BTN_LANDING_GHOST}>
-            Save
-          </button>
-          <button type="button" className={BTN_LANDING_PRIMARY}>
-            Sign in to Apply
-          </button>
-        </div>
+        {user?.type !== "landlord" && (
+          <div className="flex-shrink-0">
+            <button type="button" className={BTN_LANDING_PRIMARY}>
+              {user?.type === "retailer" ? "Apply" : "Sign in to Apply"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

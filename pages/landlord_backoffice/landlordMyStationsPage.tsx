@@ -1,4 +1,5 @@
 import LandlordBackofficeLayout from "@/components/landlord_backoffice/LandlordBackofficeLayout";
+import Link from "next/link";
 import latphrao71Img from "@/components/image/station-ptg-latphrao71.png";
 import ramaIxImg from "@/components/image/station-ptg-ramaix.png";
 
@@ -12,6 +13,7 @@ const STATIONS = [
     revenue: "498K THB/MO",
     performance: "+12%",
     renewal: "Oct '24",
+    aiSuggestion: "Primary catchment is office workers and families in the Lat Phrao corridor. Best fit: quick-service restaurants, grab-and-go coffee, or mid-sized convenience retail with strong morning and evening trade.",
   },
   {
     name: "PTG Sukhumvit 62",
@@ -22,6 +24,7 @@ const STATIONS = [
     revenue: "318K THB/MO",
     performance: "+27%",
     renewal: "Jan '25",
+    aiSuggestion: "High-footfall BTS-adjacent location with a strong expat community. Ideal for international dining, premium bakeries, or wellness-focused tenants such as pharmacies or wellness cafés targeting higher spending power.",
   },
 ];
 
@@ -37,26 +40,6 @@ export default function LandlordMyStationsPage() {
           <span className="material-symbols-outlined text-[18px]">add_circle</span>
           Add New Station
         </button>
-      </div>
-
-      {/* Summary KPIs */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        <div className="bg-white rounded-2xl p-5 shadow-sm flex items-start justify-between gap-2">
-          <div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">Active Stations</div>
-            <div className="text-4xl font-bold text-on-surface leading-tight">12</div>
-            <div className="text-xs font-bold text-primary mt-1">+2 this quarter</div>
-          </div>
-          <span className="material-symbols-outlined text-[36px] text-outline-variant/50">ev_station</span>
-        </div>
-        <div className="bg-white rounded-2xl p-5 shadow-sm flex items-start justify-between gap-2">
-          <div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">AVG. OCCUPANCY</div>
-            <div className="text-4xl font-bold text-on-surface leading-tight">94%</div>
-            <div className="text-xs font-bold text-primary mt-1">+1.8% vs. last month</div>
-          </div>
-          <span className="material-symbols-outlined text-[36px] text-outline-variant/50">apartment</span>
-        </div>
       </div>
 
       {/* Station cards */}
@@ -96,12 +79,20 @@ export default function LandlordMyStationsPage() {
                   </div>
                 ))}
               </div>
-              <button
-                type="button"
-                className="w-full bg-surface-container-low border border-outline-variant/40 rounded-full px-4 py-2.5 text-sm font-bold text-on-surface cursor-pointer hover:bg-surface-container transition-colors"
+              {/* AI Suggestion */}
+              <div className="bg-[#F5F2EB] rounded-xl p-4 mb-4">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <span className="material-symbols-outlined text-[14px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+                  <span className="text-[9px] font-bold tracking-widest text-primary">AI SUGGESTION</span>
+                </div>
+                <p className="text-xs text-on-surface-variant leading-relaxed">{st.aiSuggestion}</p>
+              </div>
+              <Link
+                href={`/landlord_backoffice/landlordEditStationPage?name=${encodeURIComponent(st.name)}`}
+                className="no-underline block w-full text-center bg-surface-container-low border border-outline-variant/40 rounded-full px-4 py-2.5 text-sm font-bold text-on-surface hover:bg-surface-container transition-colors"
               >
                 Edit Details
-              </button>
+              </Link>
             </div>
           </div>
         ))}
