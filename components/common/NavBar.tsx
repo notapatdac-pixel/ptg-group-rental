@@ -1,0 +1,156 @@
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { useAuth } from "@/lib/authContext";
+
+interface NavBarProps {
+  showSearch?: boolean;
+}
+
+function ProfileMenu() {
+  const { user, logout } = useAuth();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  if (!user) return null;
+
+  const dashDest = user.type === "landlord"
+    ? "/landlord_backoffice/landlordOverviewPage"
+    : "/retailer_backoffice/retailerDashboardPage";
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-9 h-9 rounded-full primary-gradient flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity shadow-sm border-0"
+      >
+        <span className="text-sm font-bold text-white select-none">{user.initials}</span>
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-[52px] bg-white border border-outline-variant/20 rounded-2xl shadow-xl py-2 w-48 z-[60]">
+          <div className="px-4 py-3 border-b border-outline-variant/20">
+            <div className="text-xs font-bold text-on-surface">{user.name}</div>
+            <div className="text-[10px] text-on-surface-variant">{user.email}</div>
+          </div>
+          <Link
+            href={dashDest}
+            onClick={() => setOpen(false)}
+            className="no-underline text-on-surface w-full block"
+          >
+            <div className="flex items-center gap-2 px-4 py-2.5 hover:bg-surface-container-low rounded-lg transition-colors">
+              <span className="material-symbols-outlined text-base">grid_view</span>
+              <span className="text-sm font-medium">Dashboard</span>
+            </div>
+          </Link>
+          {user.type === "retailer" && (
+            <Link
+              href="/retailer_backoffice/retailerProfileSetupPage"
+              onClick={() => setOpen(false)}
+              className="no-underline text-on-surface w-full block"
+            >
+              <div className="flex items-center gap-2 px-4 py-2.5 hover:bg-surface-container-low rounded-lg transition-colors">
+                <span className="material-symbols-outlined text-base">manage_accounts</span>
+                <span className="text-sm font-medium">Edit Profile</span>
+              </div>
+            </Link>
+          )}
+          <button
+            type="button"
+            onClick={() => { setOpen(false); logout(); router.push("/loginpage/loginPage"); }}
+            className="w-full flex items-center gap-2 px-4 py-2.5 hover:bg-surface-container-low rounded-lg transition-colors text-error border-0 bg-transparent cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-base">logout</span>
+            <span className="text-sm font-medium">Logout</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function NavBar({ showSearch = false }: NavBarProps) {
+  const { user } = useAuth();
+
+  const logo = (
+    <Link href="/" className="no-underline">
+      <div className="flex items-center gap-2">
+        <span className="text-4xl font-serif font-bold text-lime-500">PTG</span>
+        <span className="font-headline text-lg tracking-tight text-on-surface">Retail Platform</span>
+      </div>
+    </Link>
+  );
+
+  const links = (
+    <div className="hidden md:flex gap-10 items-center">
+      <Link href="/explorepage/explorePage" className="nav-link-lime font-sans">Explore Locations</Link>
+      <Link href="/pricingpage/pricingPage" className="nav-link-lime font-sans">Pricing</Link>
+    </div>
+  );
+
+  const rightActions = user ? (
+    <ProfileMenu />
+  ) : (
+    <div className="flex items-center gap-4">
+      <Link
+        href="/loginpage/loginPage"
+        className="btn-lime-ghost inline-flex items-center justify-center bg-transparent text-slate-600 dark:text-slate-400 font-sans text-sm px-4 py-2 border-0 cursor-pointer rounded-md transition-colors no-underline"
+      >
+        Sign In
+      </Link>
+      <Link
+        href="/createaccountpage/createAccountPage"
+        className="inline-flex items-center justify-center primary-gradient text-white px-6 py-2.5 rounded-md text-sm font-bold shadow-sm border-0 cursor-pointer transition-all hover:shadow-lime-500/40 hover:ring-2 hover:ring-lime-300 hover:ring-offset-2 hover:ring-offset-white/80 active:scale-95 no-underline"
+      >
+        Get Started
+      </Link>
+    </div>
+  );
+
+  if (!showSearch) {
+    return (
+      <nav className="fixed top-0 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-50 overflow-visible">
+        <div className="w-full flex justify-between items-center px-8 h-20">
+          <div className="flex items-center gap-14">{logo}{links}</div>
+          {rightActions}
+        </div>
+      </nav>
+    );
+  }
+
+  const search = (
+    <div className="pointer-events-auto relative group w-full max-w-2xl mx-auto transition-all duration-300 group-focus-within:max-w-5xl">
+      <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary">search</span>
+      <input
+        id="ptg-explore-search-input"
+        placeholder="Search by province, station name, or district..."
+        type="text"
+        className="w-full bg-surface-container-low border-none rounded-full py-2.5 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+      />
+    </div>
+  );
+
+  return (
+    <nav className="fixed top-0 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-50 border-b border-outline-variant/10 overflow-visible">
+      <div className="relative w-full">
+        <div className="w-full flex justify-between items-center px-8 h-20 relative z-10">
+          <div className="flex items-center gap-14">{logo}{links}</div>
+          {rightActions}
+        </div>
+        <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">{search}</div>
+      </div>
+    </nav>
+  );
+}
