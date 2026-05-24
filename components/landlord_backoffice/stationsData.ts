@@ -1,0 +1,88 @@
+export type StationUnit = {
+  id: string;
+  type: string;
+  sqm: number;
+  rent: number;
+  status: "occupied" | "vacant";
+  tenant: string | null;
+};
+
+export type StationData = {
+  name: string;
+  fullName: string;
+  location: string;
+  province: string;
+  type: string;
+  area: number;
+  hours: string;
+  description: string;
+  image: string;
+  occupied: number;
+  total: number;
+  revenue: string;
+  footfall: string;
+  aiScore: number;
+  aiNote: string;
+  units: StationUnit[];
+};
+
+export const STATIONS_DATA: Record<string, StationData> = {
+  "PTG Lat Phrao 71": {
+    name: "PTG Lat Phrao 71",
+    fullName: "PTG Lat Phrao 71 – Retail Hub",
+    location: "Lat Phrao Road, Bangkok",
+    province: "Bangkok",
+    type: "Premium Transit Hub",
+    area: 3800,
+    hours: "06:00 – 24:00",
+    description:
+      "Transit retail hub serving daily commuters along Lat Phrao Road. Strong F&B performance with high repeat visitor rate.",
+    image: "/images/station-ptg-latphrao71.png",
+    occupied: 6,
+    total: 8,
+    revenue: "498K",
+    footfall: "12,715",
+    aiScore: 88,
+    aiNote:
+      "Strong performer. Recommend targeting premium F&B or wellness tenants for the two vacant units to maximise revenue per sqm.",
+    units: [
+      { id: "A1", type: "Premium Kiosk",   sqm: 25, rent: 65000, status: "occupied", tenant: "Coffee Corner Co." },
+      { id: "A2", type: "Pop-up Corner",   sqm: 8,  rent: 18000, status: "occupied", tenant: "Artisan Brew" },
+      { id: "A3", type: "Express Counter", sqm: 12, rent: 28000, status: "occupied", tenant: "FreshMart Ltd." },
+      { id: "B1", type: "Standard Kiosk",  sqm: 20, rent: 45000, status: "occupied", tenant: "PharmaPlus" },
+      { id: "B2", type: "Boutique Unit",   sqm: 35, rent: 85000, status: "vacant",   tenant: null },
+      { id: "B3", type: "Standard Kiosk",  sqm: 18, rent: 42000, status: "occupied", tenant: "QuickBite" },
+      { id: "C1", type: "Express Counter", sqm: 10, rent: 24000, status: "vacant",   tenant: null },
+      { id: "C2", type: "Pop-up Corner",   sqm: 8,  rent: 18000, status: "occupied", tenant: "Bloom Snacks" },
+    ],
+  },
+  "PTG Sukhumvit 62": {
+    name: "PTG Sukhumvit 62",
+    fullName: "PTG Sukhumvit 62 – Retail Hub",
+    location: "Sukhumvit Road, Bangkok",
+    province: "Bangkok",
+    type: "Premium Transit Hub",
+    area: 4200,
+    hours: "06:00 – 24:00",
+    description:
+      "Premium transit retail hub near BTS On Nut. High-income catchment with strong expat community presence.",
+    image: "/images/station-ptg-ramaix.png",
+    occupied: 8,
+    total: 8,
+    revenue: "318K",
+    footfall: "10,398",
+    aiScore: 94,
+    aiNote:
+      "Top 10% of PTG network. Fully occupied — consider a waitlist strategy and premium pricing at next renewal cycle.",
+    units: [
+      { id: "A1", type: "Premium Kiosk",   sqm: 30,  rent: 85000,  status: "occupied", tenant: "7-Eleven Express" },
+      { id: "A2", type: "Pop-up Corner",   sqm: 8,   rent: 22000,  status: "occupied", tenant: "Coffee Corner Co." },
+      { id: "A3", type: "Express Counter", sqm: 12,  rent: 34000,  status: "occupied", tenant: "Bloom Beauty" },
+      { id: "B1", type: "Boutique Unit",   sqm: 60,  rent: 145000, status: "occupied", tenant: "QuickBite Kitchen" },
+      { id: "B2", type: "Standard Kiosk",  sqm: 20,  rent: 55000,  status: "occupied", tenant: "FreshMart Ltd." },
+      { id: "B3", type: "Flagship Store",  sqm: 120, rent: 280000, status: "occupied", tenant: "Tanaka Premium Market" },
+      { id: "C1", type: "Express Counter", sqm: 10,  rent: 28000,  status: "occupied", tenant: "PharmaPlus Express" },
+      { id: "C2", type: "Standard Kiosk",  sqm: 18,  rent: 42000,  status: "occupied", tenant: "Artisan Brew" },
+    ],
+  },
+};
