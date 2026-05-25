@@ -4,10 +4,9 @@ import type { ReactNode } from "react";
 import NavBar from "@/components/common/NavBar";
 
 const NAV_ITEMS = [
-  { label: "Dashboard", icon: "dashboard", href: "/retailer_backoffice/retailerDashboardPage" },
+  { label: "Overview", icon: "dashboard", href: "/retailer_backoffice/retailerDashboardPage" },
   { label: "Performance", icon: "bar_chart", href: "/retailer_backoffice/performancePage" },
   { label: "ML Predictions", icon: "model_training", href: "/retailer_backoffice/mlPredictionsPage" },
-  { label: "Submit Store Data", icon: "upload", href: "/retailer_backoffice/submitStoreDataPage" },
   { label: "My Applications", icon: "folder_open", href: "/retailer_backoffice/myApplicationsPage" },
   { label: "AI Advisor", icon: "smart_toy", href: "/retailer_backoffice/aiAdvisorPage" },
 ];
