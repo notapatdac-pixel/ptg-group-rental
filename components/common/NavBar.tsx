@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useAuth } from "@/lib/authContext";
+import { useLanguage } from "@/lib/languageContext";
 
 interface NavBarProps {
   showSearch?: boolean;
@@ -81,6 +82,30 @@ function ProfileMenu() {
   );
 }
 
+function LanguageSwitcher() {
+  const { lang, setLang } = useLanguage();
+  const { user } = useAuth();
+  if (!user || user.type !== "retailer") return null;
+  return (
+    <div className="flex items-center bg-[#F5F2EB] rounded-full p-0.5 gap-0.5">
+      <button
+        type="button"
+        onClick={() => setLang("en")}
+        className={`text-xs font-bold px-3 py-1.5 rounded-full transition-all cursor-pointer border-0 ${
+          lang === "en" ? "bg-white text-on-surface shadow-sm" : "bg-transparent text-on-surface-variant hover:text-on-surface"
+        }`}
+      >EN</button>
+      <button
+        type="button"
+        onClick={() => setLang("th")}
+        className={`text-xs font-bold px-3 py-1.5 rounded-full transition-all cursor-pointer border-0 ${
+          lang === "th" ? "bg-white text-on-surface shadow-sm" : "bg-transparent text-on-surface-variant hover:text-on-surface"
+        }`}
+      >TH</button>
+    </div>
+  );
+}
+
 export default function NavBar({ showSearch = false }: NavBarProps) {
   const { user } = useAuth();
 
@@ -108,7 +133,10 @@ export default function NavBar({ showSearch = false }: NavBarProps) {
   );
 
   const rightActions = user ? (
-    <ProfileMenu />
+    <div className="flex items-center gap-3">
+      <LanguageSwitcher />
+      <ProfileMenu />
+    </div>
   ) : (
     <div className="flex items-center gap-4">
       <Link

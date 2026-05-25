@@ -9,7 +9,7 @@ const EXPANSION_UNITS = [
     size: "45 sqm",
     price: "฿24,500/mo",
     distance: "2.4km away",
-    traffic: "High traffic",
+    traffic: "High foot traffic",
     tags: ["High foot traffic", "BTS access", "Fits budget", "EV synergy"],
     match: 94,
     matchTier: "Excellent",
@@ -24,7 +24,7 @@ const EXPANSION_UNITS = [
     size: "32 sqm",
     price: "฿18,000/mo",
     distance: "2.9km away",
-    traffic: "High traffic",
+    traffic: "High foot traffic",
     tags: ["MRT Yellow Line", "Morning commuters", "Platinum Hub"],
     match: 91,
     matchTier: "Excellent",
@@ -39,14 +39,14 @@ const EXPANSION_UNITS = [
     size: "28 sqm",
     price: "฿15,000/mo",
     distance: "3.1km away",
-    traffic: "Medium traffic",
+    traffic: "Medium foot traffic",
     tags: ["Near your cluster", "Budget fit"],
     match: 88,
     matchTier: "Strong",
     matchCls: "text-amber-700 bg-amber-50 border-amber-200",
     dotCls: "bg-amber-400",
     revenueUplift: "฿18,000–฿28,000",
-    whyMatch: ["Lowest entry cost in your shortlist", "Complements your existing cluster", "Medium traffic — lower risk for a test unit"],
+    whyMatch: ["Lowest entry cost in your shortlist", "Complements your existing cluster", "Medium traffic — lower risk for a first expansion"],
   },
 ];
 
@@ -54,10 +54,10 @@ const ANOMALIES = [
   {
     icon: "trending_up",
     iconBg: "bg-green-100 text-green-600",
-    title: "Tuesday foot traffic spike",
-    body: "+34% above model prediction — possibly linked to a nearby BTS event.",
-    action: "Add 1–2 staff next Tuesday · estimated +฿8,400 revenue capture.",
-    tag: "Positive",
+    title: "Tuesday was busier than usual",
+    body: "Your shops got about 34% more customers than normal on Tuesday — possibly a nearby event brought extra people in.",
+    action: "Add 1–2 staff next Tuesday · could earn +฿8,400 more.",
+    tag: "Good news",
     tagCls: "bg-green-100 text-green-700",
     age: "2 days ago",
     borderCls: "border-l-green-400",
@@ -65,9 +65,9 @@ const ANOMALIES = [
   {
     icon: "remove_shopping_cart",
     iconBg: "bg-amber-100 text-amber-600",
-    title: "Basket size drop on Friday",
-    body: "-18% on Friday afternoon — promotion ended, customers spent less per visit.",
-    action: "Run a weekend bundle promotion to recover basket size.",
+    title: "Customers spent less on Friday",
+    body: "People spent about 18% less than usual on Friday afternoon — likely because a promotion ended and customers started buying less per visit.",
+    action: "Run a weekend bundle deal to bring average spend back up.",
     tag: "Watch",
     tagCls: "bg-amber-100 text-amber-700",
     age: "4 days ago",
@@ -76,10 +76,10 @@ const ANOMALIES = [
   {
     icon: "warning",
     iconBg: "bg-red-100 text-red-600",
-    title: "Monday revenue shortfall",
-    body: "-22% below forecast — model flags possible POS downtime or unsubmitted transactions.",
-    action: "Check POS logs and reconcile transaction records for Monday.",
-    tag: "Investigate",
+    title: "Monday sales were lower than expected",
+    body: "Revenue on Monday was 22% lower than expected — could be a technical issue with the payment system, or some transactions weren't recorded.",
+    action: "Check your payment records and make sure all Monday orders are saved correctly.",
+    tag: "Check this",
     tagCls: "bg-red-100 text-red-600",
     age: "6 days ago",
     borderCls: "border-l-red-400",
@@ -88,7 +88,7 @@ const ANOMALIES = [
 
 const CHURN_SEGMENTS = [
   {
-    segment: "Premium · 46+",
+    segment: "Big spenders · 46+",
     lastVisit: "18 days ago",
     risk: 74,
     revenueAtRisk: "฿62,000/yr",
@@ -97,10 +97,10 @@ const CHURN_SEGMENTS = [
     rowBg: "bg-red-50",
     riskText: "text-red-600",
     btnCls: "bg-red-700 hover:bg-red-800 text-white",
-    tip: "Send a loyalty reward or personal discount — this segment responds well to exclusivity.",
+    tip: "Send a loyalty reward or personal discount — this group responds well to feeling special.",
   },
   {
-    segment: "Millennial · Mid-tier",
+    segment: "26–35 year olds · Mid-spenders",
     lastVisit: "14 days ago",
     risk: 61,
     revenueAtRisk: "฿48,000/yr",
@@ -112,7 +112,7 @@ const CHURN_SEGMENTS = [
     tip: "A time-limited deal or referral bonus works well for this group.",
   },
   {
-    segment: "Gen X · Value",
+    segment: "36–45 year olds · Budget-friendly",
     lastVisit: "9 days ago",
     risk: 38,
     revenueAtRisk: "฿24,000/yr",
@@ -121,10 +121,10 @@ const CHURN_SEGMENTS = [
     rowBg: "bg-amber-50",
     riskText: "text-amber-600",
     btnCls: "bg-amber-500 hover:bg-amber-600 text-white",
-    tip: "Not urgent — monitor for another 2 weeks before acting.",
+    tip: "Not urgent — check again in 2 weeks before taking action.",
   },
   {
-    segment: "Gen Z · Budget",
+    segment: "18–25 year olds · Young shoppers",
     lastVisit: "3 days ago",
     risk: 8,
     revenueAtRisk: null,
@@ -138,10 +138,10 @@ const CHURN_SEGMENTS = [
 ];
 
 const CATCHMENT_STATS = [
-  { label: "AVG CUSTOMER DISTANCE", value: "4.2 km", note: "↑ within target range", noteCls: "text-green-600" },
-  { label: "PRIMARY CATCHMENT",      value: "0–3 km",  note: "58% of customers",     noteCls: "text-on-surface-variant" },
-  { label: "CATCHMENT POPULATION",   value: "95K",     note: "within 5 km radius",   noteCls: "text-on-surface-variant" },
-  { label: "UNTAPPED ZONES",         value: "3",       note: "stations suggested",    noteCls: "text-amber-600" },
+  { label: "Avg trip to your shop",   value: "4.2 km", note: "↑ within target range", noteCls: "text-green-600" },
+  { label: "Nearest customers",       value: "0–3 km", note: "58% of customers",      noteCls: "text-on-surface-variant" },
+  { label: "People within reach",     value: "95K",    note: "within 5 km radius",    noteCls: "text-on-surface-variant" },
+  { label: "Untapped areas nearby",   value: "3",      note: "locations suggested",   noteCls: "text-amber-600" },
 ];
 
 const DISTANCE_BANDS = [
@@ -153,28 +153,28 @@ const DISTANCE_BANDS = [
   { label: "8+ km",  pct: 8,  width: 24, color: "#d4d4d4" },
 ];
 
-const CATCHMENT_STORES = ["Lumina Artisan Roastery", "Baan Doi Coffee", "Krua Express"];
+const CATCHMENT_STORES = ["Lumina Artisan Roastery", "Coffee Corner", "Quick Mart"];
 
 const EXPANSION_STATIONS = [
   {
     name: "PTG Sukhumvit 62",
     location: "Khlong Toei, Bangkok",
-    desc: "Customers traveling from Sukhumvit corridor are underserved. 91% demographic overlap with your target segment, zero current competition.",
+    desc: "Many customers traveling through the Sukhumvit area currently have no shop like yours nearby. 91% of the people there match your typical customer profile.",
     tags: ["New audience", "10,398 daily", "23 min dwell", "Millennials"],
     fit: 91,
   },
   {
     name: "PTG Rama 9",
     location: "Huai Khwang, Bangkok",
-    desc: "Bangkok Metro cluster with high morning commuter density. Strong Q4 growth velocity (8.4x regional marker).",
+    desc: "A Bangkok Metro hub with lots of morning commuters. Strong recent growth — one of the fastest-rising areas for retail in the city.",
     tags: ["Growth zone", "8,326 daily", "19.3 min dwell", "MRT access"],
     fit: 84,
   },
   {
     name: "PTG Bang Na Complex",
     location: "Bang Na, Bangkok",
-    desc: "Residential catchment of 148K with no artisan café currently operating. Lower dwell time but high repeat visit potential.",
-    tags: ["Untapped", "6,512 daily", "15.4 min dwell", "BTS access"],
+    desc: "A residential area with 148,000 people nearby and no artisan café currently in the station. Lower daily traffic but customers tend to come back regularly.",
+    tags: ["Untapped area", "6,512 daily", "15.4 min dwell", "BTS access"],
     fit: 76,
   },
 ];
@@ -190,7 +190,7 @@ function AiBox({ text }: { text: string }) {
           auto_awesome
         </span>
         <span className="text-[9px] font-bold tracking-widest text-primary uppercase">
-          AI Suggestion
+          Our Suggestion
         </span>
       </div>
       <p className="text-xs text-on-surface-variant leading-relaxed">{text}</p>
@@ -214,9 +214,9 @@ export default function MlPredictionsPage() {
               AI-Powered · Updated just now
             </span>
           </div>
-          <h1 className="text-3xl font-bold italic text-[#1C3A1C]">ML Growth Intelligence</h1>
+          <h1 className="text-3xl font-bold italic text-[#1C3A1C]">AI Predictions for Your Shops</h1>
           <p className="text-sm text-on-surface-variant mt-1">
-            Predictive insights for expansion and revenue optimization.
+            What's likely to happen next — and what you can do about it.
           </p>
         </div>
         <div className="flex gap-3">
@@ -235,7 +235,7 @@ export default function MlPredictionsPage() {
         </div>
       </div>
 
-      {/* ── Insight Banner ── */}
+      {/* ── Summary Banner ── */}
       <div className="bg-[#1C3A1C] rounded-2xl p-5 mb-6 flex items-center gap-5">
         <div className="shrink-0 w-10 h-10 rounded-xl bg-lime-400/20 flex items-center justify-center">
           <span
@@ -247,12 +247,12 @@ export default function MlPredictionsPage() {
         </div>
         <div className="flex-1">
           <div className="text-[10px] font-bold uppercase tracking-widest text-lime-400 mb-0.5">
-            What this month looks like
+            What to expect
           </div>
           <p className="text-sm text-white/90 leading-relaxed">
-            Revenue is tracking <span className="font-bold text-lime-300">+12.4% above baseline</span> for next
-            month. Two customer segments risk leaving — if you act now, you protect up to{" "}
-            <span className="font-bold text-lime-300">฿110,000/year</span> in recurring revenue.
+            Your shops are on track to earn <span className="font-bold text-lime-300">฿672k next month (+11.3%)</span>.
+            Two groups of loyal customers are at risk of not coming back — if you act now, you could protect up to{" "}
+            <span className="font-bold text-lime-300">฿110,000/year</span> in revenue.
           </p>
         </div>
         <button
@@ -268,36 +268,36 @@ export default function MlPredictionsPage() {
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-outline-variant/10 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-              Next Month Forecast
+              What You'll Likely Earn Next Month
             </span>
             <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
               <span className="material-symbols-outlined text-[17px] text-green-600">trending_up</span>
             </div>
           </div>
-          <div className="text-3xl font-bold text-on-surface">฿4.2M</div>
+          <div className="text-3xl font-bold text-on-surface">฿672k</div>
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-[11px] font-bold bg-green-100 text-green-700 px-2.5 py-0.5 rounded-full">
-              +12.4%
+              +11.3%
             </span>
-            <span className="text-[11px] text-on-surface-variant">vs last month</span>
+            <span className="text-[11px] text-on-surface-variant">vs this month</span>
           </div>
         </div>
 
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-outline-variant/10 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-              Q2 Projected Revenue
+              Predicted Total This Quarter
             </span>
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <span className="material-symbols-outlined text-[17px] text-primary">calendar_month</span>
             </div>
           </div>
-          <div className="text-3xl font-bold text-on-surface">฿18.9M</div>
+          <div className="text-3xl font-bold text-on-surface">฿2.0M</div>
           <div>
             <div className="flex justify-between text-[10px] text-on-surface-variant mb-1">
-              <span>฿17M</span>
-              <span className="font-bold text-primary">89% confident</span>
-              <span>฿20M</span>
+              <span>฿1.8M (low)</span>
+              <span className="font-bold text-primary">89% sure</span>
+              <span>฿2.2M (high)</span>
             </div>
             <div className="h-1.5 bg-outline-variant/20 rounded-full">
               <div className="h-1.5 bg-primary rounded-full" style={{ width: "70%" }} />
@@ -308,7 +308,7 @@ export default function MlPredictionsPage() {
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-outline-variant/10 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-              Avg Basket Predicted
+              Expected Spend Per Visit
             </span>
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <span className="material-symbols-outlined text-[17px] text-primary">shopping_bag</span>
@@ -326,7 +326,7 @@ export default function MlPredictionsPage() {
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-outline-variant/10 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-              Revenue at Risk
+              Revenue You Could Lose
             </span>
             <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
               <span className="material-symbols-outlined text-[17px] text-red-500">person_alert</span>
@@ -335,24 +335,24 @@ export default function MlPredictionsPage() {
           <div className="text-3xl font-bold text-red-600">฿110K</div>
           <div className="flex items-center gap-1.5">
             <span className="text-[11px] font-bold bg-red-100 text-red-600 px-2.5 py-0.5 rounded-full">
-              2 segments at risk /yr
+              2 customer groups at risk
             </span>
           </div>
         </div>
       </div>
 
-      {/* ── ML Expansion Recommendations ── */}
+      {/* ── Best Locations to Open Your Next Shop ── */}
       <div className="bg-white rounded-2xl shadow-sm border border-outline-variant/10 mb-6 overflow-hidden">
         <div className="px-6 pt-5 pb-4 border-b border-outline-variant/10 flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="material-symbols-outlined text-[15px] text-primary">ssid_chart</span>
               <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-                ML-Matched Expansion Opportunities
+                Best Locations to Open Your Next Shop
               </span>
             </div>
             <p className="text-xs text-on-surface-variant">
-              Ranked by predicted success for your business type and financial profile.
+              Ranked by how well each location matches your current shops, customers, and budget.
             </p>
           </div>
           <button
@@ -363,9 +363,8 @@ export default function MlPredictionsPage() {
           </button>
         </div>
 
-        {/* Section-level AI box */}
         <div className="px-6 pt-4 pb-0">
-          <AiBox text="These locations were chosen because they match your current customer profile, budget, and peak hours. A higher match % means the model predicts stronger sales performance based on similar tenants nearby. Start with the highest match — it gives you the best chance of a profitable first expansion." />
+          <AiBox text="These locations were picked because they match your customer type, budget, and busy hours. A higher match % means a better chance of strong sales based on similar shops nearby. Start with the highest match — it gives you the best chance of success for your first expansion." />
         </div>
 
         <div className="grid grid-cols-3 divide-x divide-outline-variant/10 mt-4">
@@ -393,9 +392,9 @@ export default function MlPredictionsPage() {
               <div className="space-y-1.5">
                 {[
                   { icon: "straighten", text: u.size },
-                  { icon: "payments", text: u.price },
-                  { icon: "location_on", text: `Bangkok · ${u.distance}` },
-                  { icon: "groups", text: u.traffic },
+                  { icon: "payments",   text: u.price },
+                  { icon: "location_on",text: `Bangkok · ${u.distance}` },
+                  { icon: "groups",     text: u.traffic },
                 ].map((d) => (
                   <div key={d.icon} className="flex items-center gap-2 text-xs text-on-surface-variant">
                     <span className="material-symbols-outlined text-[13px] text-on-surface-variant/50">
@@ -409,15 +408,15 @@ export default function MlPredictionsPage() {
               {/* Est. uplift */}
               <div className="bg-green-50 border border-green-100 rounded-xl px-3 py-2">
                 <div className="text-[9px] font-bold uppercase tracking-widest text-green-700 mb-0.5">
-                  Est. Monthly Revenue Uplift
+                  How Much More You Could Earn
                 </div>
-                <div className="text-sm font-bold text-green-700">{u.revenueUplift}</div>
+                <div className="text-sm font-bold text-green-700">{u.revenueUplift} / month</div>
               </div>
 
               {/* Why this matches you */}
               <div>
                 <div className="text-[9px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
-                  Why this matches you
+                  Why this suits you
                 </div>
                 <ul className="space-y-1.5">
                   {u.whyMatch.map((w) => (
@@ -455,15 +454,14 @@ export default function MlPredictionsPage() {
         </div>
       </div>
 
-      {/* ── Customer Catchment Analysis ── */}
+      {/* ── Where Do Your Customers Come From? ── */}
       <div className="bg-white rounded-2xl shadow-sm border border-outline-variant/10 mb-6 overflow-hidden">
-        {/* Header */}
         <div className="px-6 pt-5 pb-0 border-b border-outline-variant/10">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h3 className="text-lg font-bold text-on-surface mb-0.5">Customer catchment analysis</h3>
+              <h3 className="text-lg font-bold text-on-surface mb-0.5">Where Do Your Customers Come From?</h3>
               <p className="text-xs text-on-surface-variant">
-                Understand where your customers travel from — and find stations reaching new audiences
+                See how far people travel to visit your shops — and find areas with potential new customers
               </p>
             </div>
             {/* Store selector */}
@@ -488,9 +486,9 @@ export default function MlPredictionsPage() {
           <div className="flex gap-6">
             {(
               [
-                { key: "overview",   label: "Catchment overview" },
-                { key: "distance",   label: "Distance distribution" },
-                { key: "expansion",  label: "Expansion stations" },
+                { key: "overview",  label: "Overview" },
+                { key: "distance",  label: "By Distance" },
+                { key: "expansion", label: "Nearby Locations" },
               ] as const
             ).map((t) => (
               <button
@@ -509,10 +507,9 @@ export default function MlPredictionsPage() {
           </div>
         </div>
 
-        {/* ── Catchment Overview ── */}
+        {/* ── Overview ── */}
         {catchmentTab === "overview" && (
           <div className="p-6">
-            {/* Stats row */}
             <div className="grid grid-cols-4 gap-6 pb-6 mb-6 border-b border-outline-variant/10">
               {CATCHMENT_STATS.map((s) => (
                 <div key={s.label}>
@@ -525,37 +522,28 @@ export default function MlPredictionsPage() {
               ))}
             </div>
 
-            {/* Map + Bar chart */}
             <div className="grid grid-cols-2 gap-10">
               {/* Zone map */}
               <div>
-                <div className="text-xs font-medium text-on-surface mb-3">Catchment zone map</div>
+                <div className="text-xs font-medium text-on-surface mb-3">Where customers travel from</div>
                 <svg viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" className="w-full">
-                  {/* 3–5 km zone */}
                   <ellipse cx="200" cy="125" rx="185" ry="100" fill="#f0f0e8" stroke="#d8d8cc" strokeWidth="1" transform="rotate(-8 200 125)" />
-                  {/* 1–3 km zone */}
                   <ellipse cx="200" cy="125" rx="118" ry="63" fill="#e4edcc" stroke="#c8d4a8" strokeWidth="1" transform="rotate(-8 200 125)" />
-                  {/* 0–1 km zone */}
                   <ellipse cx="200" cy="125" rx="54" ry="29" fill="#d0e4a8" stroke="#b4cc7c" strokeWidth="1" transform="rotate(-8 200 125)" />
-                  {/* Outer zone dots */}
                   {[[78,68],[322,78],[334,162],[88,172],[148,48],[272,48],[342,112],[68,122],[105,88],[295,88],[310,148],[95,148]].map(([cx, cy], i) => (
                     <circle key={`o${i}`} cx={cx} cy={cy} r="3.5" fill="#c8d4a0" opacity="0.7" />
                   ))}
-                  {/* Middle zone dots */}
                   {[[148,94],[252,94],[268,152],[138,156],[172,68],[228,68],[278,122],[120,122],[180,108],[220,108],[260,138],[142,138]].map(([cx, cy], i) => (
                     <circle key={`m${i}`} cx={cx} cy={cy} r="3.5" fill="#a8c870" opacity="0.85" />
                   ))}
-                  {/* Inner zone dots */}
                   {[[186,116],[214,116],[188,136],[212,136],[200,110],[200,140],[193,125],[207,125]].map(([cx, cy], i) => (
                     <circle key={`i${i}`} cx={cx} cy={cy} r="3" fill="#6DBF23" opacity="0.9" />
                   ))}
-                  {/* Station */}
                   <circle cx="200" cy="125" r="7" fill="#1C3A1C" />
                 </svg>
-                {/* Legend */}
                 <div className="flex items-center gap-4 mt-1">
                   {[
-                    { color: "#1C3A1C", label: "Your station" },
+                    { color: "#1C3A1C", label: "Your shop" },
                     { color: "#6DBF23", label: "0–1 km" },
                     { color: "#a8c870", label: "1–3 km" },
                     { color: "#c8d4a0", label: "3–5 km" },
@@ -570,7 +558,7 @@ export default function MlPredictionsPage() {
 
               {/* Bar chart */}
               <div>
-                <div className="text-xs font-medium text-on-surface mb-4">Customer volume by distance band</div>
+                <div className="text-xs font-medium text-on-surface mb-4">How many customers come from each distance</div>
                 <div className="space-y-3">
                   {DISTANCE_BANDS.map((b) => (
                     <div key={b.label} className="flex items-center gap-3">
@@ -583,27 +571,26 @@ export default function MlPredictionsPage() {
                   ))}
                 </div>
                 <p className="text-[11px] text-on-surface-variant mt-4 italic leading-relaxed">
-                  42% of your customers come from areas not served by other PTG stations — high expansion value.
+                  42% of your customers come from areas not covered by other PTG shops — a good sign that a new location there could do well.
                 </p>
               </div>
             </div>
           </div>
         )}
 
-        {/* ── Distance Distribution ── */}
+        {/* ── By Distance ── */}
         {catchmentTab === "distance" && (
           <div className="p-6 flex items-center justify-center py-16 text-sm text-on-surface-variant">
-            Distance distribution chart coming soon.
+            Distance breakdown coming soon.
           </div>
         )}
 
-        {/* ── Expansion Stations ── */}
+        {/* ── Nearby Locations ── */}
         {catchmentTab === "expansion" && (
           <div className="p-6">
             <p className="text-sm text-on-surface-variant mb-5">
-              Stations reaching customer segments outside your current{" "}
-              <span className="font-bold text-on-surface">PTG Chiang Mai Nimman</span> catchment
-              area. Sorted by audience overlap gap.
+              Locations that could reach customers you're not serving yet.
+              Sorted by how well the audience there matches your current shoppers.
             </p>
             <div className="divide-y divide-outline-variant/10">
               {EXPANSION_STATIONS.map((s) => (
@@ -626,7 +613,7 @@ export default function MlPredictionsPage() {
                   <div className="flex flex-col items-end gap-2 shrink-0">
                     <div className="text-right">
                       <div className="text-3xl font-bold text-on-surface">{s.fit}%</div>
-                      <div className="text-[10px] text-on-surface-variant">audience fit</div>
+                      <div className="text-[10px] text-on-surface-variant">audience match</div>
                     </div>
                     <button
                       type="button"
@@ -642,24 +629,24 @@ export default function MlPredictionsPage() {
         )}
       </div>
 
-      {/* ── Anomaly Detection + Churn Risk ── */}
+      {/* ── Unusual Things We Noticed + Customers Who Might Stop Coming Back ── */}
       <div className="grid grid-cols-2 gap-6">
 
-        {/* Anomaly Detection */}
+        {/* Unusual Things We Noticed */}
         <div className="bg-white rounded-2xl shadow-sm border border-outline-variant/10 p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
                 <span className="material-symbols-outlined text-[17px] text-amber-500">troubleshoot</span>
               </div>
-              <span className="text-sm font-bold text-on-surface">Anomaly Detection</span>
+              <span className="text-sm font-bold text-on-surface">Unusual Things We Noticed</span>
             </div>
             <span className="text-[10px] font-bold text-on-surface-variant bg-surface-container-low px-2.5 py-1 rounded-full">
               Last 7 days
             </span>
           </div>
 
-          <AiBox text="These are unusual events the model detected in your sales data — things that don't follow your normal pattern. Each one has a suggested action. Green means something good happened that you can repeat; amber means watch it; red means investigate before it becomes a bigger problem." />
+          <AiBox text="These are things that happened this week that don't match your normal pattern — some good, some worth checking. Each one includes a suggested action. Green = good news you can take advantage of. Amber = keep an eye on it. Red = something to look into." />
 
           <div className="space-y-3 mt-4">
             {ANOMALIES.map((a, i) => (
@@ -668,9 +655,7 @@ export default function MlPredictionsPage() {
                 className={`rounded-xl border-l-4 border border-outline-variant/10 p-4 transition-colors hover:border-outline-variant/20 ${a.borderCls}`}
               >
                 <div className="flex items-start gap-3">
-                  <div
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${a.iconBg}`}
-                  >
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${a.iconBg}`}>
                     <span
                       className="material-symbols-outlined text-[16px]"
                       style={{ fontVariationSettings: "'FILL' 1" }}
@@ -681,9 +666,7 @@ export default function MlPredictionsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1.5">
                       <div className="text-sm font-bold text-on-surface leading-snug">{a.title}</div>
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0 ${a.tagCls}`}
-                      >
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0 ${a.tagCls}`}>
                         {a.tag}
                       </span>
                     </div>
@@ -702,21 +685,21 @@ export default function MlPredictionsPage() {
           </div>
         </div>
 
-        {/* Customer Churn Risk */}
+        {/* Customers Who Might Stop Coming Back */}
         <div className="bg-white rounded-2xl shadow-sm border border-outline-variant/10 p-6">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
                 <span className="material-symbols-outlined text-[17px] text-red-500">group_off</span>
               </div>
-              <span className="text-sm font-bold text-on-surface">Customer Churn Risk</span>
+              <span className="text-sm font-bold text-on-surface">Customers Who Might Stop Coming Back</span>
             </div>
             <span className="text-[10px] font-bold bg-red-100 text-red-600 px-2.5 py-1 rounded-full">
-              2 AT RISK
+              2 GROUPS AT RISK
             </span>
           </div>
 
-          <AiBox text="Churn risk shows which types of customers are likely to stop visiting based on how long it's been since their last visit and whether their spending is dropping. The % is the probability they won't come back. If a segment is red, act now — waiting makes them harder to recover." />
+          <AiBox text="This shows which groups of customers haven't visited in a while and might not come back. The % is how likely they are to stop coming — the higher the number, the more urgent it is. If a row is red, act now. Waiting makes them harder to win back." />
 
           <div className="space-y-3 mt-4">
             {CHURN_SEGMENTS.map((s) => (
@@ -728,13 +711,16 @@ export default function MlPredictionsPage() {
                       <span className="text-xs text-on-surface-variant">Last visit: {s.lastVisit}</span>
                       {s.revenueAtRisk && (
                         <span className="text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">
-                          ฿{s.revenueAtRisk} at risk
+                          {s.revenueAtRisk} at risk
                         </span>
                       )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className={`text-base font-bold ${s.riskText}`}>{s.risk}%</span>
+                    <div className="text-right">
+                      <span className={`text-base font-bold ${s.riskText}`}>{s.risk}%</span>
+                      <div className="text-[9px] text-on-surface-variant">chance of leaving</div>
+                    </div>
                     <button
                       type="button"
                       className={`text-xs font-bold px-3 py-1.5 rounded-full border-0 cursor-pointer whitespace-nowrap transition-colors ${s.btnCls}`}
