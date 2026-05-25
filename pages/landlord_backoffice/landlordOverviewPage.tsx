@@ -101,21 +101,22 @@ export default function LandlordOverviewPage() {
             <YAxis
               domain={[196, 214]}
               ticks={[196, 198, 200, 202, 204, 206, 208, 210, 212, 214]}
-              tickFormatter={(v) => `฿${v}K`}
+              tickFormatter={(v: number) => `฿${v}K`}
               tick={{ fontSize: 9, fill: "#9ca3af" }}
               axisLine={false}
               tickLine={false}
               width={48}
             />
             <Tooltip
-              formatter={(value: number, name: string) => [
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              formatter={(value: any, name: any) => [
                 `฿${value}K`,
                 name === "station" ? "PTG Lat Phrao 71" : "Platinum Hub peer avg",
               ]}
               contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e5e7eb" }}
             />
             <Legend
-              formatter={(value) =>
+              formatter={(value: string) =>
                 value === "station" ? "PTG Lat Phrao 71" : "Platinum Hub peer avg"
               }
               wrapperStyle={{ fontSize: 12, color: "#6b7280" }}
