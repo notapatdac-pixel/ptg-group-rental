@@ -1,0 +1,147 @@
+"use client";
+import { useState, useRef, useEffect } from "react";
+import { useAuth } from "@/lib/authContext";
+
+type Message = { role: "user" | "assistant"; text: string };
+
+const WELCOME: Record<"retailer" | "landlord", string> = {
+  retailer:
+    "Hi! I'm your retail advisor. Ask me anything about your shop performance, customer trends, or expansion opportunities.",
+  landlord:
+    "Hi! I'm your property advisor. Ask me anything about your stations, tenant applications, or revenue insights.",
+};
+
+const PERSONA: Record<"retailer" | "landlord", string> = {
+  retailer: "Retail Intelligence",
+  landlord: "Property Intelligence",
+};
+
+export default function AiAdvisorChat() {
+  const { user } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const welcomeSent = useRef(false);
+
+  const userType = (user?.type === "landlord" ? "landlord" : "retailer") as "retailer" | "landlord";
+
+  useEffect(() => {
+    if (open && !welcomeSent.current) {
+      welcomeSent.current = true;
+      setMessages([{ role: "assistant", text: WELCOME[userType] }]);
+    }
+  }, [open, userType]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const send = () => {
+    const text = input.trim();
+    if (!text) return;
+    setMessages((prev) => [...prev, { role: "user", text }]);
+    setInput("");
+    setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", text: "AI responses are coming soon — I'm still being trained on your data. Stay tuned!" },
+      ]);
+    }, 650);
+  };
+
+  return (
+    <>
+      {/* Floating button */}
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="fixed bottom-6 right-6 z-[900] w-12 h-12 rounded-full primary-gradient shadow-lg flex items-center justify-center cursor-pointer border-0 hover:opacity-90 transition-all hover:shadow-lime-500/30 hover:ring-2 hover:ring-lime-300 hover:ring-offset-2"
+        title="AI Advisor"
+      >
+        <span
+          className="material-symbols-outlined text-white text-[22px]"
+          style={{ fontVariationSettings: "'FILL' 1" }}
+        >
+          {open ? "close" : "chat"}
+        </span>
+      </button>
+
+      {/* Chat panel */}
+      {open && (
+        <div
+          className="fixed bottom-[88px] right-6 z-[900] w-[360px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-outline-variant/10"
+          style={{ maxHeight: 520 }}
+        >
+          {/* Header */}
+          <div className="flex items-center gap-3 px-4 py-3 bg-[#1C3A1C]">
+            <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center flex-shrink-0">
+              <span
+                className="material-symbols-outlined text-white text-[17px]"
+                style={{ fontVariationSettings: "'FILL' 1" }}
+              >
+                smart_toy
+              </span>
+            </div>
+            <div>
+              <div className="text-sm font-bold text-white">AI Advisor</div>
+              <div className="text-[10px] text-white/60">{PERSONA[userType]}</div>
+            </div>
+            <span className="ml-auto flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-lime-400 animate-pulse" />
+              <span className="text-[10px] text-white/50">Beta</span>
+            </span>
+          </div>
+
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#FAFAF8]" style={{ minHeight: 0, maxHeight: 370 }}>
+            {messages.map((m, i) => (
+              <div key={i} className={`flex items-end gap-2 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                {m.role === "assistant" && (
+                  <div className="w-6 h-6 rounded-full bg-[#1C3A1C] flex items-center justify-center flex-shrink-0 mb-0.5">
+                    <span
+                      className="material-symbols-outlined text-white text-[12px]"
+                      style={{ fontVariationSettings: "'FILL' 1" }}
+                    >
+                      smart_toy
+                    </span>
+                  </div>
+                )}
+                <div
+                  className={`max-w-[78%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed ${
+                    m.role === "user"
+                      ? "bg-[#1C3A1C] text-white rounded-br-none"
+                      : "bg-white text-on-surface rounded-bl-none shadow-sm border border-outline-variant/10"
+                  }`}
+                >
+                  {m.text}
+                </div>
+              </div>
+            ))}
+            <div ref={bottomRef} />
+          </div>
+
+          {/* Input */}
+          <div className="p-3 bg-white border-t border-outline-variant/10 flex items-center gap-2">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && send()}
+              placeholder="Ask anything..."
+              className="flex-1 bg-[#F5F2EB] rounded-full px-4 py-2 text-xs outline-none border-none placeholder:text-on-surface-variant/50"
+            />
+            <button
+              type="button"
+              onClick={send}
+              disabled={!input.trim()}
+              className="w-8 h-8 rounded-full bg-[#1C3A1C] flex items-center justify-center border-0 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-opacity hover:opacity-80"
+            >
+              <span className="material-symbols-outlined text-white text-[15px]">send</span>
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

@@ -6,6 +6,7 @@ import { useRouter } from "next/router";
 import { useAuth } from "@/lib/authContext";
 import { useLanguage } from "@/lib/languageContext";
 import { useStoreFilter, STORE_LIST } from "@/lib/storeFilterContext";
+import { useStationFilter, STATION_LIST } from "@/lib/stationFilterContext";
 
 interface NavBarProps {
   showSearch?: boolean;
@@ -109,10 +110,36 @@ function StoreFilterPicker() {
   );
 }
 
+function StationFilterPicker() {
+  const { pathname } = useRouter();
+  const { user } = useAuth();
+  const { stationId, setStationId } = useStationFilter();
+
+  if (!user || user.type !== "landlord" || !pathname.startsWith("/landlord_backoffice")) return null;
+
+  return (
+    <div className="relative flex items-center bg-[#F5F2EB] rounded-full px-3 py-1.5 gap-1.5">
+      <span className="material-symbols-outlined text-[16px] text-primary">location_on</span>
+      <select
+        value={stationId}
+        onChange={(e) => setStationId(e.target.value as typeof stationId)}
+        className="appearance-none bg-transparent text-xs font-semibold text-on-surface pr-5 border-none outline-none cursor-pointer"
+      >
+        {STATION_LIST.map((s) => (
+          <option key={s.id} value={s.id}>{s.name}</option>
+        ))}
+      </select>
+      <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-[14px] text-on-surface-variant pointer-events-none">
+        expand_more
+      </span>
+    </div>
+  );
+}
+
 function LanguageSwitcher() {
   const { lang, setLang } = useLanguage();
   const { user } = useAuth();
-  if (!user || user.type !== "retailer") return null;
+  if (!user || (user.type !== "retailer" && user.type !== "landlord")) return null;
   return (
     <div className="flex items-center bg-[#F5F2EB] rounded-full p-0.5 gap-0.5">
       <button
@@ -162,6 +189,7 @@ export default function NavBar({ showSearch = false }: NavBarProps) {
   const rightActions = user ? (
     <div className="flex items-center gap-3">
       <StoreFilterPicker />
+      <StationFilterPicker />
       <LanguageSwitcher />
       <ProfileMenu />
     </div>

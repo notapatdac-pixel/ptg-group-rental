@@ -2,13 +2,13 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import type { ReactNode } from "react";
 import NavBar from "@/components/common/NavBar";
+import AiAdvisorChat from "@/components/common/AiAdvisorChat";
 
 const NAV_ITEMS = [
   { label: "Overview",       icon: "dashboard",     href: "/retailer_backoffice/retailerDashboardPage" },
   { label: "Performance",    icon: "bar_chart",      href: "/retailer_backoffice/performancePage" },
   { label: "ML Predictions", icon: "model_training", href: "/retailer_backoffice/mlPredictionsPage" },
   { label: "My Applications",icon: "folder_open",    href: "/retailer_backoffice/myApplicationsPage" },
-  { label: "AI Advisor",     icon: "smart_toy",      href: "/retailer_backoffice/aiAdvisorPage" },
 ];
 
 function LayoutInner({ children }: { children: ReactNode }) {
@@ -60,6 +60,8 @@ function LayoutInner({ children }: { children: ReactNode }) {
           {children}
         </main>
       </div>
+
+      <AiAdvisorChat />
     </div>
   );
 }

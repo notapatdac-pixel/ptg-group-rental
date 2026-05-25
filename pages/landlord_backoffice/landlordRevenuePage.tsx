@@ -25,9 +25,6 @@ export default function LandlordRevenuePage() {
             </select>
             <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-[14px] pointer-events-none text-outline">expand_more</span>
           </div>
-          <button type="button" className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-full border-0 cursor-pointer hover:brightness-105">
-            Export Report
-          </button>
         </div>
       </div>
 
