@@ -4,14 +4,14 @@ import type { ReactNode } from "react";
 import NavBar from "@/components/common/NavBar";
 
 const NAV_ITEMS = [
-  { label: "Overview", icon: "dashboard", href: "/retailer_backoffice/retailerDashboardPage" },
-  { label: "Performance", icon: "bar_chart", href: "/retailer_backoffice/performancePage" },
+  { label: "Overview",       icon: "dashboard",     href: "/retailer_backoffice/retailerDashboardPage" },
+  { label: "Performance",    icon: "bar_chart",      href: "/retailer_backoffice/performancePage" },
   { label: "ML Predictions", icon: "model_training", href: "/retailer_backoffice/mlPredictionsPage" },
-  { label: "My Applications", icon: "folder_open", href: "/retailer_backoffice/myApplicationsPage" },
-  { label: "AI Advisor", icon: "smart_toy", href: "/retailer_backoffice/aiAdvisorPage" },
+  { label: "My Applications",icon: "folder_open",    href: "/retailer_backoffice/myApplicationsPage" },
+  { label: "AI Advisor",     icon: "smart_toy",      href: "/retailer_backoffice/aiAdvisorPage" },
 ];
 
-export default function RetailerBackofficeLayout({ children }: { children: ReactNode }) {
+function LayoutInner({ children }: { children: ReactNode }) {
   const { pathname } = useRouter();
 
   return (
@@ -21,6 +21,7 @@ export default function RetailerBackofficeLayout({ children }: { children: React
       <div className="flex flex-1 pt-20">
         {/* Sidebar */}
         <aside className="fixed left-0 top-20 bottom-0 w-[188px] bg-white border-r border-outline-variant/10 flex flex-col z-40">
+
           <nav className="flex-1 py-4">
             {NAV_ITEMS.map((item) => {
               const active = pathname === item.href;
@@ -42,6 +43,7 @@ export default function RetailerBackofficeLayout({ children }: { children: React
               );
             })}
           </nav>
+
           <div className="py-4 border-t border-outline-variant/10">
             <Link
               href="/loginpage/loginPage"
@@ -60,4 +62,8 @@ export default function RetailerBackofficeLayout({ children }: { children: React
       </div>
     </div>
   );
+}
+
+export default function RetailerBackofficeLayout({ children }: { children: ReactNode }) {
+  return <LayoutInner>{children}</LayoutInner>;
 }

@@ -1,6 +1,9 @@
 "use client";
 import { useState } from "react";
 import RetailerBackofficeLayout from "@/components/retailer_backoffice/RetailerBackofficeLayout";
+import { useStoreFilter, type StoreId } from "@/lib/storeFilterContext";
+
+// ── Static data (same across all stores) ────────────────────────────────────
 
 const EXPANSION_UNITS = [
   {
@@ -50,95 +53,8 @@ const EXPANSION_UNITS = [
   },
 ];
 
-const ANOMALIES = [
-  {
-    icon: "trending_up",
-    iconBg: "bg-green-100 text-green-600",
-    title: "Tuesday was busier than usual",
-    body: "Your shops got about 34% more customers than normal on Tuesday — possibly a nearby event brought extra people in.",
-    action: "Add 1–2 staff next Tuesday · could earn +฿8,400 more.",
-    tag: "Good news",
-    tagCls: "bg-green-100 text-green-700",
-    age: "2 days ago",
-    borderCls: "border-l-green-400",
-  },
-  {
-    icon: "remove_shopping_cart",
-    iconBg: "bg-amber-100 text-amber-600",
-    title: "Customers spent less on Friday",
-    body: "People spent about 18% less than usual on Friday afternoon — likely because a promotion ended and customers started buying less per visit.",
-    action: "Run a weekend bundle deal to bring average spend back up.",
-    tag: "Watch",
-    tagCls: "bg-amber-100 text-amber-700",
-    age: "4 days ago",
-    borderCls: "border-l-amber-400",
-  },
-  {
-    icon: "warning",
-    iconBg: "bg-red-100 text-red-600",
-    title: "Monday sales were lower than expected",
-    body: "Revenue on Monday was 22% lower than expected — could be a technical issue with the payment system, or some transactions weren't recorded.",
-    action: "Check your payment records and make sure all Monday orders are saved correctly.",
-    tag: "Check this",
-    tagCls: "bg-red-100 text-red-600",
-    age: "6 days ago",
-    borderCls: "border-l-red-400",
-  },
-];
-
-const CHURN_SEGMENTS = [
-  {
-    segment: "Big spenders · 46+",
-    lastVisit: "18 days ago",
-    risk: 74,
-    revenueAtRisk: "฿62,000/yr",
-    action: "Re-engage",
-    barCls: "bg-red-500",
-    rowBg: "bg-red-50",
-    riskText: "text-red-600",
-    btnCls: "bg-red-700 hover:bg-red-800 text-white",
-    tip: "Send a loyalty reward or personal discount — this group responds well to feeling special.",
-  },
-  {
-    segment: "26–35 year olds · Mid-spenders",
-    lastVisit: "14 days ago",
-    risk: 61,
-    revenueAtRisk: "฿48,000/yr",
-    action: "Re-engage",
-    barCls: "bg-red-400",
-    rowBg: "bg-red-50",
-    riskText: "text-red-500",
-    btnCls: "bg-red-700 hover:bg-red-800 text-white",
-    tip: "A time-limited deal or referral bonus works well for this group.",
-  },
-  {
-    segment: "36–45 year olds · Budget-friendly",
-    lastVisit: "9 days ago",
-    risk: 38,
-    revenueAtRisk: "฿24,000/yr",
-    action: "Watch",
-    barCls: "bg-amber-400",
-    rowBg: "bg-amber-50",
-    riskText: "text-amber-600",
-    btnCls: "bg-amber-500 hover:bg-amber-600 text-white",
-    tip: "Not urgent — check again in 2 weeks before taking action.",
-  },
-  {
-    segment: "18–25 year olds · Young shoppers",
-    lastVisit: "3 days ago",
-    risk: 8,
-    revenueAtRisk: null,
-    action: "Healthy",
-    barCls: "bg-green-500",
-    rowBg: "bg-green-50",
-    riskText: "text-green-600",
-    btnCls: "bg-green-700 hover:bg-green-800 text-white",
-    tip: null,
-  },
-];
-
 const CATCHMENT_STATS = [
-  { label: "Avg trip to your shop",   value: "4.2 km", note: "↑ within target range", noteCls: "text-green-600" },
+  { label: "Avg trip to your shop",   value: "4.2 km", note: "within target range", noteCls: "text-green-600" },
   { label: "Nearest customers",       value: "0–3 km", note: "58% of customers",      noteCls: "text-on-surface-variant" },
   { label: "People within reach",     value: "95K",    note: "within 5 km radius",    noteCls: "text-on-surface-variant" },
   { label: "Untapped areas nearby",   value: "3",      note: "locations suggested",   noteCls: "text-amber-600" },
@@ -179,28 +95,214 @@ const EXPANSION_STATIONS = [
   },
 ];
 
+// ── Per-store ML data ────────────────────────────────────────────────────────
+
+type Anomaly = {
+  icon: string; iconBg: string; title: string; body: string;
+  action: string; tag: string; tagCls: string; age: string; borderCls: string;
+};
+type ChurnSeg = {
+  segment: string; lastVisit: string; risk: number; revenueAtRisk: string | null;
+  action: string; barCls: string; rowBg: string; riskText: string; btnCls: string; tip: string | null;
+};
+type StoreML = {
+  kpi1Val: string; kpi1Sub: string; kpi1Trend: string;
+  kpi2Val: string; kpi2Sub: string; kpi2Trend: string;
+  kpi3Val: string; kpi3Sub: string; kpi3Trend: string;
+  kpi4Val: string; kpi4Sub: string; kpi4Trend: string;
+  aiEarn: string; aiEarnFull: string; aiPct: string;
+  aiQuarter: string; aiConf: string;
+  aiSpend: string; aiSpendCurr: string; aiSpendPct: string;
+  aiLoss: string; aiRiskNote: string;
+  anomalies: Anomaly[];
+  churn: ChurnSeg[];
+};
+
+const ML_BY_STORE: Record<StoreId, StoreML> = {
+  all: {
+    kpi1Val: "฿672k",  kpi1Sub: "predicted revenue",        kpi1Trend: "+11.3% vs this month",
+    kpi2Val: "฿2.0M",  kpi2Sub: "฿1.8M – ฿2.2M range",     kpi2Trend: "89% confidence",
+    kpi3Val: "฿271",   kpi3Sub: "per customer visit",        kpi3Trend: "+9% vs current ฿249",
+    kpi4Val: "฿110K",  kpi4Sub: "if no action taken",        kpi4Trend: "2 customer groups at risk",
+    aiEarn: "฿672k", aiEarnFull: "฿672,000 next month", aiPct: "+11.3%",
+    aiQuarter: "฿2.0M", aiConf: "89%",
+    aiSpend: "฿271 per visit", aiSpendCurr: "฿249", aiSpendPct: "+9%",
+    aiLoss: "฿110,000/year", aiRiskNote: "two groups of loyal customers haven't visited in a while",
+    anomalies: [
+      {
+        icon: "trending_up", iconBg: "bg-green-100 text-green-600",
+        title: "Tuesday was busier than usual",
+        body: "Your shops got about 34% more customers than normal on Tuesday — possibly a nearby event brought extra people in.",
+        action: "Add 1–2 staff next Tuesday · could earn +฿8,400 more.",
+        tag: "Good news", tagCls: "bg-green-100 text-green-700", age: "2 days ago", borderCls: "border-l-green-400",
+      },
+      {
+        icon: "remove_shopping_cart", iconBg: "bg-amber-100 text-amber-600",
+        title: "Customers spent less on Friday",
+        body: "People spent about 18% less than usual on Friday afternoon — likely because a promotion ended and customers started buying less per visit.",
+        action: "Run a weekend bundle deal to bring average spend back up.",
+        tag: "Watch", tagCls: "bg-amber-100 text-amber-700", age: "4 days ago", borderCls: "border-l-amber-400",
+      },
+      {
+        icon: "warning", iconBg: "bg-red-100 text-red-600",
+        title: "Monday sales were lower than expected",
+        body: "Revenue on Monday was 22% lower than expected — could be a technical issue with the payment system, or some transactions weren't recorded.",
+        action: "Check your payment records and make sure all Monday orders are saved correctly.",
+        tag: "Check this", tagCls: "bg-red-100 text-red-600", age: "6 days ago", borderCls: "border-l-red-400",
+      },
+    ],
+    churn: [
+      { segment: "Big spenders · 46+", lastVisit: "18 days ago", risk: 74, revenueAtRisk: "฿62,000/yr", action: "Re-engage", barCls: "bg-red-500", rowBg: "bg-red-50", riskText: "text-red-600", btnCls: "bg-red-700 hover:bg-red-800 text-white", tip: "Send a loyalty reward or personal discount — this group responds well to feeling special." },
+      { segment: "26–35 year olds · Mid-spenders", lastVisit: "14 days ago", risk: 61, revenueAtRisk: "฿48,000/yr", action: "Re-engage", barCls: "bg-red-400", rowBg: "bg-red-50", riskText: "text-red-500", btnCls: "bg-red-700 hover:bg-red-800 text-white", tip: "A time-limited deal or referral bonus works well for this group." },
+      { segment: "36–45 year olds · Budget-friendly", lastVisit: "9 days ago", risk: 38, revenueAtRisk: "฿24,000/yr", action: "Watch", barCls: "bg-amber-400", rowBg: "bg-amber-50", riskText: "text-amber-600", btnCls: "bg-amber-500 hover:bg-amber-600 text-white", tip: "Not urgent — check again in 2 weeks before taking action." },
+      { segment: "18–25 year olds · Young shoppers", lastVisit: "3 days ago", risk: 8, revenueAtRisk: null, action: "Healthy", barCls: "bg-green-500", rowBg: "bg-green-50", riskText: "text-green-600", btnCls: "bg-green-700 hover:bg-green-800 text-white", tip: null },
+    ],
+  },
+
+  coffee: {
+    kpi1Val: "฿285k",  kpi1Sub: "predicted revenue",        kpi1Trend: "+8.4% vs this month",
+    kpi2Val: "฿820K",  kpi2Sub: "฿740K – ฿900K range",     kpi2Trend: "87% confidence",
+    kpi3Val: "฿245",   kpi3Sub: "per customer visit",        kpi3Trend: "+6% vs current ฿231",
+    kpi4Val: "฿42K",   kpi4Sub: "if no action taken",        kpi4Trend: "1 customer group at risk",
+    aiEarn: "฿285k", aiEarnFull: "฿285,000 next month", aiPct: "+8.4%",
+    aiQuarter: "฿820K", aiConf: "87%",
+    aiSpend: "฿245 per visit", aiSpendCurr: "฿231", aiSpendPct: "+6%",
+    aiLoss: "฿42,000/year", aiRiskNote: "frequent morning regulars haven't visited in over 2 weeks",
+    anomalies: [
+      {
+        icon: "trending_up", iconBg: "bg-green-100 text-green-600",
+        title: "Tuesday morning rush was unusually busy",
+        body: "Coffee Corner had 31% more customers than normal on Tuesday morning — likely linked to a nearby office event that brought extra foot traffic.",
+        action: "Prepare extra stock on Tuesday mornings · potential +฿4,200 gain.",
+        tag: "Good news", tagCls: "bg-green-100 text-green-700", age: "2 days ago", borderCls: "border-l-green-400",
+      },
+      {
+        icon: "remove_shopping_cart", iconBg: "bg-amber-100 text-amber-600",
+        title: "Afternoon spend dropped on Friday",
+        body: "Customers spent about 16% less per visit on Friday afternoon — the post-promotion dip seems sharper here than at other stores.",
+        action: "Try a 3pm–6pm bundle offer on Fridays to lift afternoon baskets.",
+        tag: "Watch", tagCls: "bg-amber-100 text-amber-700", age: "4 days ago", borderCls: "border-l-amber-400",
+      },
+      {
+        icon: "warning", iconBg: "bg-red-100 text-red-600",
+        title: "Monday revenue gap detected",
+        body: "Sales on Monday were 19% below forecast — this could be a quiet trading period or a missed transaction batch.",
+        action: "Cross-check Monday's payment logs with your POS receipts.",
+        tag: "Check this", tagCls: "bg-red-100 text-red-600", age: "6 days ago", borderCls: "border-l-red-400",
+      },
+    ],
+    churn: [
+      { segment: "Morning regulars · 36–50", lastVisit: "16 days ago", risk: 68, revenueAtRisk: "฿42,000/yr", action: "Re-engage", barCls: "bg-red-500", rowBg: "bg-red-50", riskText: "text-red-600", btnCls: "bg-red-700 hover:bg-red-800 text-white", tip: "A free drink loyalty stamp or personalised message works well for habitual morning visitors." },
+      { segment: "Students · 18–24", lastVisit: "11 days ago", risk: 45, revenueAtRisk: "฿31,000/yr", action: "Re-engage", barCls: "bg-red-400", rowBg: "bg-red-50", riskText: "text-red-500", btnCls: "bg-red-700 hover:bg-red-800 text-white", tip: "A study-hour deal or group discount brings this segment back quickly." },
+      { segment: "Afternoon visitors · 26–35", lastVisit: "5 days ago", risk: 22, revenueAtRisk: "฿18,000/yr", action: "Watch", barCls: "bg-amber-400", rowBg: "bg-amber-50", riskText: "text-amber-600", btnCls: "bg-amber-500 hover:bg-amber-600 text-white", tip: "Still within normal return window — revisit in 10 days." },
+      { segment: "Daily commuters · all ages", lastVisit: "1 day ago", risk: 6, revenueAtRisk: null, action: "Healthy", barCls: "bg-green-500", rowBg: "bg-green-50", riskText: "text-green-600", btnCls: "bg-green-700 hover:bg-green-800 text-white", tip: null },
+    ],
+  },
+
+  quick: {
+    kpi1Val: "฿198k",  kpi1Sub: "predicted revenue",        kpi1Trend: "+14.2% vs this month",
+    kpi2Val: "฿560K",  kpi2Sub: "฿490K – ฿630K range",     kpi2Trend: "91% confidence",
+    kpi3Val: "฿188",   kpi3Sub: "per customer visit",        kpi3Trend: "+12% vs current ฿168",
+    kpi4Val: "฿68K",   kpi4Sub: "if no action taken",        kpi4Trend: "1 customer group at risk",
+    aiEarn: "฿198k", aiEarnFull: "฿198,000 next month", aiPct: "+14.2%",
+    aiQuarter: "฿560K", aiConf: "91%",
+    aiSpend: "฿188 per visit", aiSpendCurr: "฿168", aiSpendPct: "+12%",
+    aiLoss: "฿68,000/year", aiRiskNote: "weekend shoppers aged 26–35 haven't returned in 13 days",
+    anomalies: [
+      {
+        icon: "trending_up", iconBg: "bg-green-100 text-green-600",
+        title: "Weekend traffic surged 41%",
+        body: "Quick Mart had 41% more customers on Saturday and Sunday than normal — likely driven by the new residential buildings opening nearby.",
+        action: "Stock up on grab-and-go items before weekends · potential +฿6,800/weekend.",
+        tag: "Good news", tagCls: "bg-green-100 text-green-700", age: "2 days ago", borderCls: "border-l-green-400",
+      },
+      {
+        icon: "remove_shopping_cart", iconBg: "bg-amber-100 text-amber-600",
+        title: "Thursday afternoon had fewer customers",
+        body: "Foot traffic dropped 24% on Thursday afternoons over the past 3 weeks — possibly the nearby office has changed its work-from-home schedule.",
+        action: "Consider a Thursday afternoon promotion to bring people in during the slow window.",
+        tag: "Watch", tagCls: "bg-amber-100 text-amber-700", age: "3 days ago", borderCls: "border-l-amber-400",
+      },
+      {
+        icon: "warning", iconBg: "bg-red-100 text-red-600",
+        title: "Possible missing transactions on Wednesday",
+        body: "Wednesday showed 26% fewer completed transactions than expected — this doesn't match foot traffic data and may indicate a payment system issue.",
+        action: "Review Wednesday's transaction logs and reconcile against foot traffic records.",
+        tag: "Check this", tagCls: "bg-red-100 text-red-600", age: "5 days ago", borderCls: "border-l-red-400",
+      },
+    ],
+    churn: [
+      { segment: "Frequent shoppers · 36–45", lastVisit: "20 days ago", risk: 71, revenueAtRisk: "฿58,000/yr", action: "Re-engage", barCls: "bg-red-500", rowBg: "bg-red-50", riskText: "text-red-600", btnCls: "bg-red-700 hover:bg-red-800 text-white", tip: "This group responds to convenience perks — a fast-checkout or loyalty punch card works well." },
+      { segment: "Weekend families · 26–40", lastVisit: "13 days ago", risk: 52, revenueAtRisk: "฿39,000/yr", action: "Re-engage", barCls: "bg-red-400", rowBg: "bg-red-50", riskText: "text-red-500", btnCls: "bg-red-700 hover:bg-red-800 text-white", tip: "A family bundle deal or weekend-only discount brings this group back." },
+      { segment: "Occasional visitors · mixed ages", lastVisit: "7 days ago", risk: 29, revenueAtRisk: "฿12,000/yr", action: "Watch", barCls: "bg-amber-400", rowBg: "bg-amber-50", riskText: "text-amber-600", btnCls: "bg-amber-500 hover:bg-amber-600 text-white", tip: "Still within normal range — no action needed yet." },
+      { segment: "Daily commuters · all ages", lastVisit: "1 day ago", risk: 5, revenueAtRisk: null, action: "Healthy", barCls: "bg-green-500", rowBg: "bg-green-50", riskText: "text-green-600", btnCls: "bg-green-700 hover:bg-green-800 text-white", tip: null },
+    ],
+  },
+
+  lumina: {
+    kpi1Val: "฿189k",  kpi1Sub: "predicted revenue",        kpi1Trend: "+13.7% vs this month",
+    kpi2Val: "฿540K",  kpi2Sub: "฿480K – ฿600K range",     kpi2Trend: "85% confidence",
+    kpi3Val: "฿412",   kpi3Sub: "per customer visit",        kpi3Trend: "+7% vs current ฿385",
+    kpi4Val: "฿38K",   kpi4Sub: "if no action taken",        kpi4Trend: "2 customer groups at risk",
+    aiEarn: "฿189k", aiEarnFull: "฿189,000 next month", aiPct: "+13.7%",
+    aiQuarter: "฿540K", aiConf: "85%",
+    aiSpend: "฿412 per visit", aiSpendCurr: "฿385", aiSpendPct: "+7%",
+    aiLoss: "฿38,000/year", aiRiskNote: "two groups — premium buyers and weekend brunch regulars — haven't been in for over 2 weeks",
+    anomalies: [
+      {
+        icon: "trending_up", iconBg: "bg-green-100 text-green-600",
+        title: "Saturday brunch peak hit a new high",
+        body: "Lumina had 29% more customers on Saturday than its previous best — social media mentions from a food blogger may have driven the spike.",
+        action: "Plan a limited Saturday special to capitalise on the momentum · potential +฿5,600 extra.",
+        tag: "Good news", tagCls: "bg-green-100 text-green-700", age: "2 days ago", borderCls: "border-l-green-400",
+      },
+      {
+        icon: "remove_shopping_cart", iconBg: "bg-amber-100 text-amber-600",
+        title: "Premium drink orders dipped mid-week",
+        body: "Orders for signature drinks (฿200+) fell 21% on Tuesday and Wednesday — customers may be switching to simpler, lower-cost items.",
+        action: "Introduce a mid-week pairing deal to encourage premium drink orders.",
+        tag: "Watch", tagCls: "bg-amber-100 text-amber-700", age: "4 days ago", borderCls: "border-l-amber-400",
+      },
+      {
+        icon: "warning", iconBg: "bg-red-100 text-red-600",
+        title: "New customer visits dropped on Tuesday",
+        body: "First-time visitor count on Tuesday was 33% lower than the weekly average — this could signal reduced visibility or a local competitor pulling attention.",
+        action: "Check if nearby promotions are running and consider a window display or signage update.",
+        tag: "Check this", tagCls: "bg-red-100 text-red-600", age: "6 days ago", borderCls: "border-l-red-400",
+      },
+    ],
+    churn: [
+      { segment: "Premium buyers · 35–50", lastVisit: "22 days ago", risk: 76, revenueAtRisk: "฿68,000/yr", action: "Re-engage", barCls: "bg-red-500", rowBg: "bg-red-50", riskText: "text-red-600", btnCls: "bg-red-700 hover:bg-red-800 text-white", tip: "This high-value group responds to exclusivity — a private tasting invite or early-access offer works well." },
+      { segment: "Weekend brunch crowd · 26–40", lastVisit: "15 days ago", risk: 58, revenueAtRisk: "฿44,000/yr", action: "Re-engage", barCls: "bg-red-400", rowBg: "bg-red-50", riskText: "text-red-500", btnCls: "bg-red-700 hover:bg-red-800 text-white", tip: "A weekend set-menu deal or reservation perk brings this group back." },
+      { segment: "First-time visitors", lastVisit: "8 days ago", risk: 31, revenueAtRisk: "฿16,000/yr", action: "Watch", barCls: "bg-amber-400", rowBg: "bg-amber-50", riskText: "text-amber-600", btnCls: "bg-amber-500 hover:bg-amber-600 text-white", tip: "Not urgent — a welcome-back message in 1–2 weeks should be enough." },
+      { segment: "Loyalty members · all ages", lastVisit: "2 days ago", risk: 6, revenueAtRisk: null, action: "Healthy", barCls: "bg-green-500", rowBg: "bg-green-50", riskText: "text-green-600", btnCls: "bg-green-700 hover:bg-green-800 text-white", tip: null },
+    ],
+  },
+};
+
+// ── AiBox component ──────────────────────────────────────────────────────────
+
 function AiBox({ text }: { text: string }) {
   return (
     <div className="bg-[#F5F2EB] rounded-xl p-4 mt-4">
       <div className="flex items-center gap-1.5 mb-2">
-        <span
-          className="material-symbols-outlined text-[14px] text-primary"
-          style={{ fontVariationSettings: "'FILL' 1" }}
-        >
+        <span className="material-symbols-outlined text-[14px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
           auto_awesome
         </span>
-        <span className="text-[9px] font-bold tracking-widest text-primary uppercase">
-          Our Suggestion
-        </span>
+        <span className="text-[9px] font-bold tracking-widest text-primary uppercase">Our Suggestion</span>
       </div>
       <p className="text-xs text-on-surface-variant leading-relaxed">{text}</p>
     </div>
   );
 }
 
+// ── Page ─────────────────────────────────────────────────────────────────────
+
 export default function MlPredictionsPage() {
   const [catchmentTab, setCatchmentTab] = useState<"overview" | "distance" | "expansion">("overview");
   const [activeStore, setActiveStore] = useState(0);
+  const { storeId } = useStoreFilter();
+  const md = ML_BY_STORE[storeId];
 
   return (
     <RetailerBackofficeLayout>
@@ -216,128 +318,57 @@ export default function MlPredictionsPage() {
           </div>
           <h1 className="text-3xl font-bold italic text-[#1C3A1C]">AI Predictions for Your Shops</h1>
           <p className="text-sm text-on-surface-variant mt-1">
-            What's likely to happen next — and what you can do about it.
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <button
-            type="button"
-            className="flex items-center gap-1.5 border border-outline-variant text-on-surface text-xs font-medium px-4 py-2.5 rounded-full bg-white cursor-pointer hover:bg-surface-container-low transition-colors"
-          >
-            <span className="material-symbols-outlined text-[15px]">refresh</span>Refresh
-          </button>
-          <button
-            type="button"
-            className="flex items-center gap-1.5 bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-full border-0 cursor-pointer hover:brightness-105 transition-all"
-          >
-            <span className="material-symbols-outlined text-[15px]">download</span>Export Report
-          </button>
-        </div>
-      </div>
-
-      {/* ── Summary Banner ── */}
-      <div className="bg-[#1C3A1C] rounded-2xl p-5 mb-6 flex items-center gap-5">
-        <div className="shrink-0 w-10 h-10 rounded-xl bg-lime-400/20 flex items-center justify-center">
-          <span
-            className="material-symbols-outlined text-lime-300 text-[22px]"
-            style={{ fontVariationSettings: "'FILL' 1" }}
-          >
-            insights
-          </span>
-        </div>
-        <div className="flex-1">
-          <div className="text-[10px] font-bold uppercase tracking-widest text-lime-400 mb-0.5">
-            What to expect
-          </div>
-          <p className="text-sm text-white/90 leading-relaxed">
-            Your shops are on track to earn <span className="font-bold text-lime-300">฿672k next month (+11.3%)</span>.
-            Two groups of loyal customers are at risk of not coming back — if you act now, you could protect up to{" "}
-            <span className="font-bold text-lime-300">฿110,000/year</span> in revenue.
+            What&apos;s likely to happen next — and what you can do about it.
           </p>
         </div>
         <button
           type="button"
-          className="shrink-0 text-xs font-bold text-lime-300 border border-lime-300/30 px-4 py-2 rounded-full bg-transparent cursor-pointer hover:bg-lime-400/10 transition-colors whitespace-nowrap"
+          className="flex items-center gap-1.5 border border-outline-variant text-on-surface text-xs font-medium px-4 py-2.5 rounded-full bg-white cursor-pointer hover:bg-surface-container-low transition-colors"
         >
-          Full Report →
+          <span className="material-symbols-outlined text-[15px]">refresh</span>Refresh
         </button>
       </div>
 
       {/* ── KPI Cards ── */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-outline-variant/10 flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-              What You'll Likely Earn Next Month
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
-              <span className="material-symbols-outlined text-[17px] text-green-600">trending_up</span>
-            </div>
-          </div>
-          <div className="text-3xl font-bold text-on-surface">฿672k</div>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[11px] font-bold bg-green-100 text-green-700 px-2.5 py-0.5 rounded-full">
-              +11.3%
-            </span>
-            <span className="text-[11px] text-on-surface-variant">vs this month</span>
-          </div>
+      <div className="grid grid-cols-4 gap-4 mb-4">
+        <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <div className="text-xs text-on-surface-variant mb-3">What You&apos;ll Likely Earn Next Month</div>
+          <div className="text-3xl font-bold text-on-surface">{md.kpi1Val}</div>
+          <div className="text-sm text-on-surface-variant mb-3">{md.kpi1Sub}</div>
+          <span className="text-xs font-bold text-primary">{md.kpi1Trend}</span>
         </div>
-
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-outline-variant/10 flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-              Predicted Total This Quarter
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <span className="material-symbols-outlined text-[17px] text-primary">calendar_month</span>
-            </div>
-          </div>
-          <div className="text-3xl font-bold text-on-surface">฿2.0M</div>
-          <div>
-            <div className="flex justify-between text-[10px] text-on-surface-variant mb-1">
-              <span>฿1.8M (low)</span>
-              <span className="font-bold text-primary">89% sure</span>
-              <span>฿2.2M (high)</span>
-            </div>
-            <div className="h-1.5 bg-outline-variant/20 rounded-full">
-              <div className="h-1.5 bg-primary rounded-full" style={{ width: "70%" }} />
-            </div>
-          </div>
+        <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <div className="text-xs text-on-surface-variant mb-3">Predicted Total This Quarter</div>
+          <div className="text-3xl font-bold text-on-surface">{md.kpi2Val}</div>
+          <div className="text-sm text-on-surface-variant mb-3">{md.kpi2Sub}</div>
+          <span className="text-xs font-bold text-primary">{md.kpi2Trend}</span>
         </div>
-
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-outline-variant/10 flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-              Expected Spend Per Visit
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <span className="material-symbols-outlined text-[17px] text-primary">shopping_bag</span>
-            </div>
-          </div>
-          <div className="text-3xl font-bold text-on-surface">฿271</div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[11px] font-bold bg-green-100 text-green-700 px-2.5 py-0.5 rounded-full">
-              +9%
-            </span>
-            <span className="text-[11px] text-on-surface-variant">vs current ฿249</span>
-          </div>
+        <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <div className="text-xs text-on-surface-variant mb-3">Expected Spend Per Visit</div>
+          <div className="text-3xl font-bold text-on-surface">{md.kpi3Val}</div>
+          <div className="text-sm text-on-surface-variant mb-3">{md.kpi3Sub}</div>
+          <span className="text-xs font-bold text-primary">{md.kpi3Trend}</span>
         </div>
+        <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <div className="text-xs text-on-surface-variant mb-3">Revenue You Could Lose</div>
+          <div className="text-3xl font-bold text-red-600">{md.kpi4Val}</div>
+          <div className="text-sm text-on-surface-variant mb-3">{md.kpi4Sub}</div>
+          <span className="text-xs font-bold text-red-500">{md.kpi4Trend}</span>
+        </div>
+      </div>
 
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-outline-variant/10 flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-              Revenue You Could Lose
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
-              <span className="material-symbols-outlined text-[17px] text-red-500">person_alert</span>
-            </div>
-          </div>
-          <div className="text-3xl font-bold text-red-600">฿110K</div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[11px] font-bold bg-red-100 text-red-600 px-2.5 py-0.5 rounded-full">
-              2 customer groups at risk
-            </span>
-          </div>
+      {/* ── AI Predictions Summary ── */}
+      <div className="bg-white rounded-2xl shadow-sm px-5 py-4 mb-6 flex items-start gap-3">
+        <span className="material-symbols-outlined text-primary text-[20px] mt-0.5 flex-shrink-0">auto_awesome</span>
+        <div>
+          <div className="text-xs font-bold text-primary mb-1">AI Predictions for Next Month</div>
+          <p className="text-sm text-on-surface-variant leading-relaxed">
+            Your {storeId === "all" ? "shops are" : `${["Coffee Corner","Quick Mart","Lumina Artisan Roastery"].find((n,i)=>(["coffee","quick","lumina"][i]===storeId)) ?? "shop"} is`} on track to earn{" "}
+            <strong className="text-on-surface">{md.aiEarnFull}</strong> — up {md.aiPct} from this month, with a quarterly total likely reaching{" "}
+            <strong className="text-on-surface">{md.aiQuarter}</strong> ({md.aiConf} confidence). Customers are expected to spend{" "}
+            <strong className="text-on-surface">{md.aiSpend}</strong> on average, up {md.aiSpendPct} from today&apos;s {md.aiSpendCurr}. However, {md.aiRiskNote} — you could lose up to{" "}
+            <strong className="text-on-surface">{md.aiLoss}</strong> if you don&apos;t act soon.
+          </p>
         </div>
       </div>
 
@@ -369,26 +400,16 @@ export default function MlPredictionsPage() {
 
         <div className="grid grid-cols-3 divide-x divide-outline-variant/10 mt-4">
           {EXPANSION_UNITS.map((u) => (
-            <div
-              key={u.name}
-              className="p-6 flex flex-col gap-4 hover:bg-[#F5F2EB]/40 transition-colors"
-            >
-              {/* Match score */}
-              <div
-                className={`self-start inline-flex items-center gap-1.5 border rounded-full px-3 py-1 ${u.matchCls}`}
-              >
+            <div key={u.name} className="p-6 flex flex-col gap-4 hover:bg-[#F5F2EB]/40 transition-colors">
+              <div className={`self-start inline-flex items-center gap-1.5 border rounded-full px-3 py-1 ${u.matchCls}`}>
                 <div className={`w-2 h-2 rounded-full ${u.dotCls}`} />
                 <span className="text-base font-bold">{u.match}%</span>
                 <span className="text-[10px] font-bold uppercase">{u.matchTier}</span>
               </div>
-
-              {/* Name */}
               <div>
                 <div className="text-sm font-bold text-on-surface">{u.name}</div>
                 <div className="text-xs text-on-surface-variant">{u.unit}</div>
               </div>
-
-              {/* Detail rows */}
               <div className="space-y-1.5">
                 {[
                   { icon: "straighten", text: u.size },
@@ -397,52 +418,33 @@ export default function MlPredictionsPage() {
                   { icon: "groups",     text: u.traffic },
                 ].map((d) => (
                   <div key={d.icon} className="flex items-center gap-2 text-xs text-on-surface-variant">
-                    <span className="material-symbols-outlined text-[13px] text-on-surface-variant/50">
-                      {d.icon}
-                    </span>
+                    <span className="material-symbols-outlined text-[13px] text-on-surface-variant/50">{d.icon}</span>
                     {d.text}
                   </div>
                 ))}
               </div>
-
-              {/* Est. uplift */}
               <div className="bg-green-50 border border-green-100 rounded-xl px-3 py-2">
-                <div className="text-[9px] font-bold uppercase tracking-widest text-green-700 mb-0.5">
-                  How Much More You Could Earn
-                </div>
+                <div className="text-[9px] font-bold uppercase tracking-widest text-green-700 mb-0.5">How Much More You Could Earn</div>
                 <div className="text-sm font-bold text-green-700">{u.revenueUplift} / month</div>
               </div>
-
-              {/* Why this matches you */}
               <div>
-                <div className="text-[9px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
-                  Why this suits you
-                </div>
+                <div className="text-[9px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Why this suits you</div>
                 <ul className="space-y-1.5">
                   {u.whyMatch.map((w) => (
                     <li key={w} className="flex items-start gap-1.5 text-xs text-on-surface-variant">
-                      <span className="material-symbols-outlined text-[12px] text-primary mt-0.5 flex-shrink-0">
-                        check_circle
-                      </span>
+                      <span className="material-symbols-outlined text-[12px] text-primary mt-0.5 flex-shrink-0">check_circle</span>
                       {w}
                     </li>
                   ))}
                 </ul>
               </div>
-
-              {/* Tags */}
               <div className="flex flex-wrap gap-1.5">
                 {u.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="text-[10px] text-on-surface-variant border border-outline-variant/30 rounded-full px-2.5 py-0.5 bg-surface-container-low/50"
-                  >
+                  <span key={tag} className="text-[10px] text-on-surface-variant border border-outline-variant/30 rounded-full px-2.5 py-0.5 bg-surface-container-low/50">
                     {tag}
                   </span>
                 ))}
               </div>
-
-              {/* CTA */}
               <button
                 type="button"
                 className="mt-auto w-full text-xs font-bold text-primary border border-primary/25 rounded-full py-2.5 bg-transparent cursor-pointer hover:bg-primary/5 transition-colors"
@@ -464,7 +466,6 @@ export default function MlPredictionsPage() {
                 See how far people travel to visit your shops — and find areas with potential new customers
               </p>
             </div>
-            {/* Store selector */}
             <div className="flex items-center gap-3">
               {CATCHMENT_STORES.map((s, i) => (
                 <button
@@ -482,7 +483,6 @@ export default function MlPredictionsPage() {
               ))}
             </div>
           </div>
-          {/* Tabs */}
           <div className="flex gap-6">
             {(
               [
@@ -507,23 +507,18 @@ export default function MlPredictionsPage() {
           </div>
         </div>
 
-        {/* ── Overview ── */}
         {catchmentTab === "overview" && (
           <div className="p-6">
             <div className="grid grid-cols-4 gap-6 pb-6 mb-6 border-b border-outline-variant/10">
               {CATCHMENT_STATS.map((s) => (
                 <div key={s.label}>
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">
-                    {s.label}
-                  </div>
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">{s.label}</div>
                   <div className="text-2xl font-bold text-on-surface mb-0.5">{s.value}</div>
                   <div className={`text-xs ${s.noteCls}`}>{s.note}</div>
                 </div>
               ))}
             </div>
-
             <div className="grid grid-cols-2 gap-10">
-              {/* Zone map */}
               <div>
                 <div className="text-xs font-medium text-on-surface mb-3">Where customers travel from</div>
                 <svg viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" className="w-full">
@@ -555,8 +550,6 @@ export default function MlPredictionsPage() {
                   ))}
                 </div>
               </div>
-
-              {/* Bar chart */}
               <div>
                 <div className="text-xs font-medium text-on-surface mb-4">How many customers come from each distance</div>
                 <div className="space-y-3">
@@ -578,19 +571,16 @@ export default function MlPredictionsPage() {
           </div>
         )}
 
-        {/* ── By Distance ── */}
         {catchmentTab === "distance" && (
           <div className="p-6 flex items-center justify-center py-16 text-sm text-on-surface-variant">
             Distance breakdown coming soon.
           </div>
         )}
 
-        {/* ── Nearby Locations ── */}
         {catchmentTab === "expansion" && (
           <div className="p-6">
             <p className="text-sm text-on-surface-variant mb-5">
-              Locations that could reach customers you're not serving yet.
-              Sorted by how well the audience there matches your current shoppers.
+              Locations that could reach customers you&apos;re not serving yet. Sorted by how well the audience there matches your current shoppers.
             </p>
             <div className="divide-y divide-outline-variant/10">
               {EXPANSION_STATIONS.map((s) => (
@@ -601,10 +591,7 @@ export default function MlPredictionsPage() {
                     <p className="text-sm text-on-surface-variant leading-relaxed mb-3">{s.desc}</p>
                     <div className="flex flex-wrap gap-2">
                       {s.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="text-[11px] text-on-surface-variant border border-outline-variant/30 rounded-full px-3 py-0.5 bg-surface-container-low/50"
-                        >
+                        <span key={tag} className="text-[11px] text-on-surface-variant border border-outline-variant/30 rounded-full px-3 py-0.5 bg-surface-container-low/50">
                           {tag}
                         </span>
                       ))}
@@ -619,7 +606,7 @@ export default function MlPredictionsPage() {
                       type="button"
                       className="text-xs font-bold text-on-surface border border-outline-variant/30 px-4 py-1.5 rounded cursor-pointer bg-white hover:bg-surface-container-low transition-colors whitespace-nowrap"
                     >
-                      Explore ↗
+                      Explore
                     </button>
                   </div>
                 </div>
@@ -645,36 +632,22 @@ export default function MlPredictionsPage() {
               Last 7 days
             </span>
           </div>
-
           <AiBox text="These are things that happened this week that don't match your normal pattern — some good, some worth checking. Each one includes a suggested action. Green = good news you can take advantage of. Amber = keep an eye on it. Red = something to look into." />
-
           <div className="space-y-3 mt-4">
-            {ANOMALIES.map((a, i) => (
-              <div
-                key={i}
-                className={`rounded-xl border-l-4 border border-outline-variant/10 p-4 transition-colors hover:border-outline-variant/20 ${a.borderCls}`}
-              >
+            {md.anomalies.map((a, i) => (
+              <div key={i} className={`rounded-xl border-l-4 border border-outline-variant/10 p-4 transition-colors hover:border-outline-variant/20 ${a.borderCls}`}>
                 <div className="flex items-start gap-3">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${a.iconBg}`}>
-                    <span
-                      className="material-symbols-outlined text-[16px]"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
-                    >
-                      {a.icon}
-                    </span>
+                    <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>{a.icon}</span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1.5">
                       <div className="text-sm font-bold text-on-surface leading-snug">{a.title}</div>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0 ${a.tagCls}`}>
-                        {a.tag}
-                      </span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0 ${a.tagCls}`}>{a.tag}</span>
                     </div>
                     <p className="text-xs text-on-surface-variant leading-relaxed mb-2">{a.body}</p>
                     <div className="flex items-start gap-1.5">
-                      <span className="material-symbols-outlined text-[12px] text-primary mt-0.5 flex-shrink-0">
-                        arrow_forward
-                      </span>
+                      <span className="material-symbols-outlined text-[12px] text-primary mt-0.5 flex-shrink-0">arrow_forward</span>
                       <p className="text-xs font-medium text-primary">{a.action}</p>
                     </div>
                     <div className="text-[10px] text-on-surface-variant mt-1.5">{a.age}</div>
@@ -695,14 +668,12 @@ export default function MlPredictionsPage() {
               <span className="text-sm font-bold text-on-surface">Customers Who Might Stop Coming Back</span>
             </div>
             <span className="text-[10px] font-bold bg-red-100 text-red-600 px-2.5 py-1 rounded-full">
-              2 GROUPS AT RISK
+              {md.churn.filter(c => c.risk >= 50).length} GROUPS AT RISK
             </span>
           </div>
-
           <AiBox text="This shows which groups of customers haven't visited in a while and might not come back. The % is how likely they are to stop coming — the higher the number, the more urgent it is. If a row is red, act now. Waiting makes them harder to win back." />
-
           <div className="space-y-3 mt-4">
-            {CHURN_SEGMENTS.map((s) => (
+            {md.churn.map((s) => (
               <div key={s.segment} className={`rounded-xl p-4 ${s.rowBg}`}>
                 <div className="flex items-center justify-between mb-2">
                   <div>
@@ -721,23 +692,15 @@ export default function MlPredictionsPage() {
                       <span className={`text-base font-bold ${s.riskText}`}>{s.risk}%</span>
                       <div className="text-[9px] text-on-surface-variant">chance of leaving</div>
                     </div>
-                    <button
-                      type="button"
-                      className={`text-xs font-bold px-3 py-1.5 rounded-full border-0 cursor-pointer whitespace-nowrap transition-colors ${s.btnCls}`}
-                    >
+                    <button type="button" className={`text-xs font-bold px-3 py-1.5 rounded-full border-0 cursor-pointer whitespace-nowrap transition-colors ${s.btnCls}`}>
                       {s.action}
                     </button>
                   </div>
                 </div>
                 <div className="h-1.5 bg-white/60 rounded-full mb-2">
-                  <div
-                    className={`h-1.5 rounded-full transition-all ${s.barCls}`}
-                    style={{ width: `${s.risk}%` }}
-                  />
+                  <div className={`h-1.5 rounded-full transition-all ${s.barCls}`} style={{ width: `${s.risk}%` }} />
                 </div>
-                {s.tip && (
-                  <p className="text-[10px] text-on-surface-variant italic">{s.tip}</p>
-                )}
+                {s.tip && <p className="text-[10px] text-on-surface-variant italic">{s.tip}</p>}
               </div>
             ))}
           </div>

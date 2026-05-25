@@ -1,4 +1,5 @@
 import { useLanguage } from "@/lib/languageContext";
+import { useStoreFilter } from "@/lib/storeFilterContext";
 import RetailerBackofficeLayout from "@/components/retailer_backoffice/RetailerBackofficeLayout";
 
 const HOURS = ["06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23"];
@@ -45,20 +46,21 @@ const AGE_SEGS = [
 ];
 
 const SPEND_SEGS = [
-  { label: ">฿400",     pct: 22, color: "#1C3A1C" },
+  { label: ">฿400",    pct: 22, color: "#1C3A1C" },
   { label: "฿200–400", pct: 45, color: "#6ab04c" },
   { label: "฿100–200", pct: 24, color: "#a5d6a7" },
   { label: "<฿100",    pct:  9, color: "#D4C9B0" },
 ];
 
 const CONVERSION = [
-  { name: "Lumina Artisan Roastery", station: "Lat Phrao 71",  orders: 158, traffic: 415, rate: 38.1 },
-  { name: "Coffee Corner",           station: "Rama IX",        orders: 130, traffic: 340, rate: 38.2 },
-  { name: "Quick Mart",              station: "Ari Station",    orders: 97,  traffic: 280, rate: 34.6 },
+  { id: "lumina", name: "Lumina Artisan Roastery", station: "Lat Phrao 71",  orders: 158, traffic: 415, rate: 38.1 },
+  { id: "coffee", name: "Coffee Corner",           station: "Rama IX",        orders: 130, traffic: 340, rate: 38.2 },
+  { id: "quick",  name: "Quick Mart",              station: "Ari Station",    orders: 97,  traffic: 280, rate: 34.6 },
 ];
 
 const HIGHLIGHTS = [
   {
+    id: "coffee",
     type: "best" as const,
     badgeIcon: "star",
     name: "Coffee Corner",
@@ -69,13 +71,14 @@ const HIGHLIGHTS = [
       { color: "bg-[#F5F2EB] text-on-surface-variant" },
       { color: "bg-primary/10 text-primary" },
     ],
-    revenue: { value: "฿143k", trend: "↑ 18%", up: true },
-    customers: { value: "340",  trend: "↑ 12%", up: true },
+    revenue: { value: "฿143k", trend: "18%", up: true },
+    customers: { value: "340",  trend: "12%", up: true },
     basket:    { value: "฿248" },
     conversion: { value: 38.2, up: true },
     trend: [60, 72, 68, 85, 90, 143],
   },
   {
+    id: "quick",
     type: "needs" as const,
     badgeIcon: "warning",
     name: "Quick Mart",
@@ -86,11 +89,29 @@ const HIGHLIGHTS = [
       { color: "bg-[#F5F2EB] text-on-surface-variant" },
       { color: "bg-amber-50 text-amber-700" },
     ],
-    revenue: { value: "฿143k", trend: "↑ 4%", up: true },
-    customers: { value: "280",  trend: "↑ 2%", up: true },
+    revenue: { value: "฿143k", trend: "4%", up: true },
+    customers: { value: "280",  trend: "2%", up: true },
     basket:    { value: "฿195" },
     conversion: { value: 34.6, up: false },
     trend: [120, 128, 132, 138, 140, 143],
+  },
+  {
+    id: "lumina",
+    type: "best" as const,
+    badgeIcon: "star",
+    name: "Lumina Artisan Roastery",
+    location: "Lat Phrao 71 · Bangkok",
+    unitsUsed: 2, unitsTotal: 3,
+    tags: [
+      { color: "bg-primary/10 text-primary" },
+      { color: "bg-[#F5F2EB] text-on-surface-variant" },
+      { color: "bg-primary/10 text-primary" },
+    ],
+    revenue: { value: "฿318k", trend: "24%", up: true },
+    customers: { value: "415",  trend: "15%", up: true },
+    basket:    { value: "฿310" },
+    conversion: { value: 38.1, up: true },
+    trend: [180, 210, 235, 265, 290, 318],
   },
 ];
 
@@ -101,7 +122,7 @@ const HIGHLIGHTS_LANG = {
       storeType: "Artisan Café",
       tags: ["Top 25% on platform", "Busiest: Sat afternoon", "+18% more sales"],
       perVisit: "per visit",
-      convChange: "↑ more buyers",
+      convChange: "more buyers",
       suggestion: "Staying open 2 hours longer on Saturdays could bring in about ฿21,000 more every month — customers are already there, you just need more time.",
     },
     th: {
@@ -109,7 +130,7 @@ const HIGHLIGHTS_LANG = {
       storeType: "คาเฟ่อาร์ติซัน",
       tags: ["Top 25% บนแพลตฟอร์ม", "คึกคักสุด: บ่ายวันเสาร์", "+18% ยอดขายเพิ่ม"],
       perVisit: "ต่อครั้ง",
-      convChange: "↑ ผู้ซื้อเพิ่ม",
+      convChange: "ผู้ซื้อเพิ่ม",
       suggestion: "เปิดนานขึ้น 2 ชั่วโมงในวันเสาร์อาจทำให้ได้เงินเพิ่มอีก ~฿21,000 ต่อเดือน — ลูกค้ามีอยู่แล้ว แค่ต้องการเวลามากขึ้นก็พอ",
     },
   },
@@ -117,59 +138,112 @@ const HIGHLIGHTS_LANG = {
     en: {
       badge: "Needs Your Attention",
       storeType: "Convenience Store",
-      tags: ["Fewer buyers than avg", "Rent covered: 3.9×", "Bundle deal could help"],
+      tags: ["Fewer buyers than avg", "29% cost-to-revenue", "Bundle deal could help"],
       perVisit: "per visit",
-      convChange: "↓ fewer buyers",
+      convChange: "fewer buyers",
       suggestion: "Only about 35 out of 100 visitors buy something here — lower than your other stores. A simple combo deal (e.g. coffee + snack) could add about 15 extra sales every day without needing more customers.",
     },
     th: {
       badge: "ต้องการความใส่ใจ",
       storeType: "ร้านสะดวกซื้อ",
-      tags: ["ผู้ซื้อน้อยกว่าค่าเฉลี่ย", "รายได้ครอบคลุมค่าเช่า 3.9×", "ดีลรวมอาจช่วยได้"],
+      tags: ["ผู้ซื้อน้อยกว่าค่าเฉลี่ย", "ต้นทุน 29% ของรายได้", "ดีลรวมอาจช่วยได้"],
       perVisit: "ต่อครั้ง",
-      convChange: "↓ ผู้ซื้อน้อยกว่า",
-      suggestion: "มีแค่ประมาณ 35 คนจาก 100 คนที่ซื้อสินค้าที่ร้านนี้ — ต่ำกว่าร้านอื่นของคุณ ลองทำดีลรวม (เช่น กาแฟ + ขนม) อาจเพิ่มยอดขายได้ ~15 รายการต่อวัน โดยไม่ต้องรอลูกค้าเพิ่ม",
+      convChange: "ผู้ซื้อน้อยกว่า",
+      suggestion: "มีแค่ประมาณ 35 คนจาก 100 คนที่ซื้อสินค้าที่ร้านนี้ ลองทำดีลรวม (เช่น กาแฟ + ขนม) อาจเพิ่มยอดขายได้ ~15 รายการต่อวัน",
+    },
+  },
+  "Lumina Artisan Roastery": {
+    en: {
+      badge: "Top Earning Store",
+      storeType: "Artisan Roastery",
+      tags: ["Top 10% on platform", "Highest revenue", "+24% more sales"],
+      perVisit: "per visit",
+      convChange: "more buyers",
+      suggestion: "Lumina is your top earner at ฿318k/month. A premium seasonal menu or office bulk order program could push revenue even higher — your customers already spend ฿310 per visit, well above average.",
+    },
+    th: {
+      badge: "ร้านที่มีรายได้สูงสุด",
+      storeType: "ร้านคั่วกาแฟ",
+      tags: ["Top 10% บนแพลตฟอร์ม", "รายได้สูงสุด", "+24% ยอดขายเพิ่ม"],
+      perVisit: "ต่อครั้ง",
+      convChange: "ผู้ซื้อเพิ่ม",
+      suggestion: "Lumina คือร้านที่ทำรายได้สูงสุดด้วย ฿318k ต่อเดือน เมนูพรีเมียมตามฤดูกาลหรือโปรแกรมสั่งออฟฟิศอาจเพิ่มรายได้ได้อีก — ลูกค้าใช้จ่าย ฿310 ต่อครั้ง สูงกว่าค่าเฉลี่ยมาก",
     },
   },
 } as const;
+
+const DASH_BY_STORE = {
+  all: {
+    kpi1: "฿604,000", kpi1Sub_en: "3 stores combined",   kpi1Sub_th: "รวม 3 ร้าน",
+    kpi2: "1,035",    kpi2Sub_en: "across all 3 stores", kpi2Sub_th: "รวมทั้ง 3 ร้าน",
+    kpi3: "37%",
+    kpi4: "88/100",
+    ai_en: { pre: "Your 3 shops earned", money: "฿604,000 this month", mid: "— up +12% vs last month! About", pct: "37% of visitors make a purchase", post: " across your stores. Quick Mart has the most room to improve — only 35% of visitors there buy something. A simple combo deal could make a real difference." },
+    ai_th: { pre: "ร้านทั้ง 3 แห่งได้", money: "฿604,000 เดือนนี้", mid: "— เพิ่มขึ้น +12% จากเดือนที่แล้ว! ประมาณ", pct: "37% ของผู้เข้าร้านซื้อสินค้า", post: " Quick Mart ยังมีพื้นที่พัฒนาได้มาก — แค่ 35% ของผู้เข้าร้านซื้อสินค้า ทำดีลรวมง่ายๆ อาจเปลี่ยนได้เลย" },
+    actions: [
+      { catEn: "Earn More",      catTh: "เพิ่มรายได้",      icon: "trending_up",   bgCard: "bg-green-50",  border: "border-green-100",  iconColor: "text-green-600",  catColor: "text-green-700",  tipColor: "text-green-700",  titleEn: "Tuesdays are busier than usual",              titleTh: "วันอังคารมีคนมากกว่าปกติ",              bodyEn: "Your shops have been getting more customers on Tuesdays. Add 1–2 extra staff next Tuesday so no one has to wait.",       bodyTh: "ร้านของคุณมีลูกค้ามากกว่าปกติวันอังคาร เพิ่มพนักงาน 1–2 คนวันอังคารหน้า",          tipEn: "Could earn +฿8,400 more",         tipTh: "อาจได้เพิ่ม +฿8,400" },
+      { catEn: "Keep Customers", catTh: "รักษาลูกค้า",      icon: "group_off",     bgCard: "bg-red-50",    border: "border-red-100",    iconColor: "text-red-500",    catColor: "text-red-600",    tipColor: "text-red-600",    titleEn: "Some loyal customers haven't visited in a while", titleTh: "ลูกค้าประจำบางส่วนไม่ได้มาสักพักแล้ว",  bodyEn: "A group of your best customers hasn't been back in 18 days. Send them a discount before they forget you.",                 bodyTh: "ลูกค้าขาประจำกลุ่มหนึ่งไม่ได้กลับมา 18 วัน ส่งส่วนลดให้ก่อนลืมร้านคุณ",         tipEn: "฿62,000/year at risk",            tipTh: "เสี่ยงสูญรายได้ ฿62,000/ปี" },
+      { catEn: "Quick Win",      catTh: "ทำได้เดี๋ยวนี้เลย", icon: "shopping_cart", bgCard: "bg-amber-50",  border: "border-amber-100",  iconColor: "text-amber-600",  catColor: "text-amber-700",  tipColor: "text-amber-700",  titleEn: "Try a bundle deal at Quick Mart",             titleTh: "ลองทำดีลรวมที่ Quick Mart",             bodyEn: "Fewer visitors buy at Quick Mart vs your other shops. A simple \"buy 2 get 1\" or combo offer could bring that number up.", bodyTh: "ผู้เข้าร้าน Quick Mart ซื้อน้อยกว่าร้านอื่น ลอง \"ซื้อ 2 แถม 1\" หรือคอมโบง่ายๆ",    tipEn: "Could add +฿4,500/day",           tipTh: "อาจเพิ่ม +฿4,500/วัน" },
+    ],
+  },
+  coffee: {
+    kpi1: "฿142,000", kpi1Sub_en: "this month",          kpi1Sub_th: "เดือนนี้",
+    kpi2: "340",      kpi2Sub_en: "visitors today",      kpi2Sub_th: "ผู้เข้าร้านวันนี้",
+    kpi3: "38.2%",
+    kpi4: "88/100",
+    ai_en: { pre: "Coffee Corner earned", money: "฿142,000 this month", mid: "— up +18%! About", pct: "38% of visitors make a purchase", post: " — well above the platform average. Saturday afternoons are your busiest time. Staying open 2 extra hours on Saturdays could bring in ฿21,000 more per month." },
+    ai_th: { pre: "Coffee Corner ได้", money: "฿142,000 เดือนนี้", mid: "— เพิ่ม +18%! ประมาณ", pct: "38% ของผู้เข้าร้านซื้อสินค้า", post: " — สูงกว่าค่าเฉลี่ย เปิดนานขึ้น 2 ชั่วโมงวันเสาร์อาจทำให้ได้เงินเพิ่มอีก ฿21,000 ต่อเดือน" },
+    actions: [
+      { catEn: "Earn More",      catTh: "เพิ่มรายได้",      icon: "trending_up",   bgCard: "bg-green-50",  border: "border-green-100",  iconColor: "text-green-600",  catColor: "text-green-700",  tipColor: "text-green-700",  titleEn: "Extend Saturday hours",                      titleTh: "เปิดนานขึ้นวันเสาร์",                  bodyEn: "Customers are already there on Saturday afternoons. Staying open 2 extra hours could bring in ฿21,000 more per month.",    bodyTh: "ลูกค้ามีอยู่แล้วบ่ายวันเสาร์ เปิดนานขึ้น 2 ชั่วโมงอาจได้ ฿21,000 เพิ่มต่อเดือน",   tipEn: "Could earn +฿21,000/mo",          tipTh: "อาจได้เพิ่ม ฿21,000/เดือน" },
+      { catEn: "Keep Customers", catTh: "รักษาลูกค้า",      icon: "group_off",     bgCard: "bg-red-50",    border: "border-red-100",    iconColor: "text-red-500",    catColor: "text-red-600",    tipColor: "text-red-600",    titleEn: "Loyal customers need a nudge",               titleTh: "ลูกค้าประจำต้องการการกระตุ้น",          bodyEn: "A group of your best customers hasn't returned in 18 days. Send them a loyalty reward before they drift away.",              bodyTh: "ลูกค้าขาประจำกลุ่มหนึ่งไม่ได้กลับมา 18 วัน ส่งรางวัลสะสมแต้มก่อนที่พวกเขาจะหนี",     tipEn: "฿62,000/year at risk",            tipTh: "เสี่ยงสูญ ฿62,000/ปี" },
+      { catEn: "Quick Win",      catTh: "ทำได้เดี๋ยวนี้เลย", icon: "shopping_cart", bgCard: "bg-amber-50",  border: "border-amber-100",  iconColor: "text-amber-600",  catColor: "text-amber-700",  tipColor: "text-amber-700",  titleEn: "Add a weekend bundle deal",                  titleTh: "เพิ่มดีลวันหยุด",                      bodyEn: "A coffee + pastry combo on weekends could boost the average basket size by 12–15% without adding more customers.",          bodyTh: "คอมโบกาแฟ + เบเกอรี่วันหยุดอาจเพิ่ม basket size ขึ้น 12–15% โดยไม่ต้องรอลูกค้าเพิ่ม", tipEn: "Could add +฿8,400/mo",            tipTh: "อาจเพิ่ม +฿8,400/เดือน" },
+    ],
+  },
+  quick: {
+    kpi1: "฿143,000", kpi1Sub_en: "this month",          kpi1Sub_th: "เดือนนี้",
+    kpi2: "280",      kpi2Sub_en: "visitors today",      kpi2Sub_th: "ผู้เข้าร้านวันนี้",
+    kpi3: "34.6%",
+    kpi4: "76/100",
+    ai_en: { pre: "Quick Mart earned", money: "฿143,000 this month", mid: "— steady, but only", pct: "35% of visitors buy something", post: " — the lowest across your stores. A simple combo deal (coffee + snack for ฿79) could add about 15 extra sales every day without needing more customers." },
+    ai_th: { pre: "Quick Mart ได้", money: "฿143,000 เดือนนี้", mid: "— คงที่ แต่แค่", pct: "35% ของผู้เข้าร้านซื้อสินค้า", post: " — ต่ำสุดในร้านทั้งหมดของคุณ ดีลรวม (กาแฟ + ขนม ฿79) อาจเพิ่มยอดขายได้ ~15 รายการต่อวัน" },
+    actions: [
+      { catEn: "Boost Sales",    catTh: "เพิ่มยอดขาย",     icon: "shopping_cart", bgCard: "bg-amber-50",  border: "border-amber-100",  iconColor: "text-amber-600",  catColor: "text-amber-700",  tipColor: "text-amber-700",  titleEn: "Try a combo deal",                           titleTh: "ลองทำดีลรวม",                           bodyEn: "Only 35% of visitors buy something — lower than your other stores. A coffee + snack combo for ฿79 could add ~15 extra sales per day.", bodyTh: "35% ของผู้เข้าร้านซื้อสินค้า — ต่ำกว่าร้านอื่น คอมโบกาแฟ + ขนม ฿79 อาจเพิ่มยอดขายได้ ~15 รายการต่อวัน",   tipEn: "Could add +฿4,500/day",           tipTh: "อาจเพิ่ม +฿4,500/วัน" },
+      { catEn: "Earn More",      catTh: "เพิ่มรายได้",      icon: "trending_up",   bgCard: "bg-green-50",  border: "border-green-100",  iconColor: "text-green-600",  catColor: "text-green-700",  tipColor: "text-green-700",  titleEn: "Adjust product placement",                   titleTh: "จัดวางสินค้าใหม่",                      bodyEn: "Move high-margin items to eye level near checkout. Small placement changes can increase impulse buys by 10–15%.",             bodyTh: "ย้ายสินค้ากำไรสูงไปอยู่ระดับสายตาใกล้แคชเชียร์ การจัดวางใหม่อาจเพิ่มยอดซื้อโดยไม่ตั้งใจ 10–15%",         tipEn: "Low cost, high impact",           tipTh: "ต้นทุนต่ำ ผลตอบแทนสูง" },
+      { catEn: "Quick Win",      catTh: "ทำได้เดี๋ยวนี้เลย", icon: "bolt",          bgCard: "bg-red-50",    border: "border-red-100",    iconColor: "text-red-500",    catColor: "text-red-600",    tipColor: "text-red-600",    titleEn: "Run a Tuesday deal",                         titleTh: "ลองโปรวันอังคาร",                       bodyEn: "Tuesdays have been quieter at Quick Mart. A small discount or 2-for-1 offer could bring in extra traffic on slow days.",      bodyTh: "วันอังคารเงียบกว่าปกติที่ Quick Mart ลดราคาเล็กน้อยหรือซื้อ 1 แถม 1 อาจช่วยดึงคนเพิ่ม",              tipEn: "Could earn +฿3,200 more",         tipTh: "อาจได้เพิ่ม +฿3,200" },
+    ],
+  },
+  lumina: {
+    kpi1: "฿318,000", kpi1Sub_en: "this month",          kpi1Sub_th: "เดือนนี้",
+    kpi2: "415",      kpi2Sub_en: "visitors today",      kpi2Sub_th: "ผู้เข้าร้านวันนี้",
+    kpi3: "38.1%",
+    kpi4: "91/100",
+    ai_en: { pre: "Lumina Artisan Roastery earned", money: "฿318,000 this month", mid: "— your highest-earning store! About", pct: "38% of visitors make a purchase", post: " — well above platform average. You're in the top 10% of all stores. Focus on maintaining quality and growing the loyal customer base." },
+    ai_th: { pre: "Lumina Artisan Roastery ได้", money: "฿318,000 เดือนนี้", mid: "— ร้านที่ทำรายได้สูงสุดของคุณ! ประมาณ", pct: "38% ของผู้เข้าร้านซื้อสินค้า", post: " — สูงกว่าค่าเฉลี่ย คุณอยู่ใน top 10% ของแพลตฟอร์ม" },
+    actions: [
+      { catEn: "Earn More",      catTh: "เพิ่มรายได้",      icon: "trending_up",   bgCard: "bg-green-50",  border: "border-green-100",  iconColor: "text-green-600",  catColor: "text-green-700",  tipColor: "text-green-700",  titleEn: "Launch a premium seasonal menu",             titleTh: "เปิดตัวเมนูพรีเมียมตามฤดูกาล",          bodyEn: "Your customers spend ฿310/visit. A seasonal premium offering (e.g. single-origin coffee flight) could push the average basket to ฿340+.", bodyTh: "ลูกค้าใช้จ่าย ฿310 ต่อครั้ง เมนูพรีเมียมตามฤดูกาล (เช่น ชุดกาแฟ single-origin) อาจเพิ่ม basket เป็น ฿340+", tipEn: "Could add +฿12,000/mo",           tipTh: "อาจเพิ่ม +฿12,000/เดือน" },
+      { catEn: "Keep Customers", catTh: "รักษาลูกค้า",      icon: "loyalty",       bgCard: "bg-blue-50",   border: "border-blue-100",   iconColor: "text-blue-600",   catColor: "text-blue-700",   tipColor: "text-blue-700",   titleEn: "Start a loyalty tier program",               titleTh: "เริ่มโปรแกรม loyalty tier",             bodyEn: "Your revisit rate (62%) is great. A 3-tier loyalty system (Bronze/Silver/Gold) could push it past 70% and build a strong regular base.", bodyTh: "Revisit rate (62%) ดีมากแล้ว ระบบ loyalty 3 ระดับ (Bronze/Silver/Gold) อาจดันให้เกิน 70% และสร้างฐานขาประจำแข็งแกร่ง",   tipEn: "High long-term value",            tipTh: "มูลค่าระยะยาวสูง" },
+      { catEn: "Quick Win",      catTh: "ทำได้เดี๋ยวนี้เลย", icon: "business",      bgCard: "bg-amber-50",  border: "border-amber-100",  iconColor: "text-amber-600",  catColor: "text-amber-700",  tipColor: "text-amber-700",  titleEn: "Promote to nearby offices",                  titleTh: "โปรโมทไปยังออฟฟิศใกล้เคียง",            bodyEn: "Lumina is near office buildings. A corporate bulk order program could bring consistent weekday orders and boost revenue.",    bodyTh: "Lumina อยู่ใกล้ออฟฟิศ โปรแกรมสั่งซื้อแบบองค์กรอาจนำมาซึ่งออเดอร์สม่ำเสมอในวันธรรมดา",              tipEn: "Could add +฿25,000/mo",           tipTh: "อาจเพิ่ม +฿25,000/เดือน" },
+    ],
+  },
+};
 
 const STRINGS = {
   en: {
     exportReport: "Export Report",
     headerTitle: "How Are Your Shops Doing?",
-    headerSubtitle: "Here's a summary of your 3 stores this month.",
-    kpi1Label: "Your shops earned this month",
-    kpi1Sub: "3 stores combined",
-    kpi1Trend: "↑ More than last month",
+    headerSubtitle: "Here's a summary of your stores this month.",
+    kpi1Label: "Earned This Month",
     kpi2Label: "People who visited today",
-    kpi2Sub: "across all 3 stores",
-    kpi2Trend: "~345 per store",
+    kpi2Trend_all: "~345 per store",
     kpi3Label: "Visitors who made a purchase",
     kpi3Sub: "~37 in every 100 visitors",
-    kpi3Trend: "↑ Up from last month",
+    kpi3Trend: "Up from last month",
     kpi4Label: "How you rank vs other shops",
     kpi4Sub: "platform score",
     kpi4Trend: "Top 25% of all shops",
-    aiLabel: "Your shops in plain words",
-    aiPre: "Your 3 shops earned",
-    aiMoney: "฿604,000 this month",
-    aiMid: "— up +12% compared to last month, which is great! About",
-    aiPct: "37% of visitors make a purchase",
-    aiPost: "across your stores. Quick Mart has the most room to improve — only 35% of visitors there buy something, a bit lower than your other stores. A simple combo deal could make a real difference.",
+    aiLabel: "Your shop in plain words",
     actionsTitle: "What You Should Do This Week",
-    actionsCount: "3 actions",
-    action1Cat: "Earn More",
-    action1Title: "Tuesdays are busier than usual",
-    action1Body: "Your shops have been getting more customers than normal on Tuesdays lately. Add 1–2 extra staff next Tuesday so no one has to wait.",
-    action1Tip: "Could earn +฿8,400 more",
-    action2Cat: "Keep Customers",
-    action2Title: "Some loyal customers haven't visited in a while",
-    action2Body: "A group of your best (big-spending) customers hasn't been back in 18 days. Send them a discount or loyalty reward now before they forget you.",
-    action2Tip: "฿62,000/year at risk",
-    action3Cat: "Quick Win",
-    action3Title: "Try a bundle deal at Quick Mart",
-    action3Body: "Fewer visitors buy at Quick Mart compared to your other shops. A simple \"buy 2 get 1\" or combo offer could bring that number up.",
-    action3Tip: "Could add +฿4,500/day",
+    actionsCount_all: "3 actions",
     heatmapTitle: "When Are Your Shops Busiest?",
     heatmapSubtitle: "Average visitors by hour — darker = more people",
     heatmapTipBold: "Best time to run a quick promo:",
@@ -201,7 +275,7 @@ const STRINGS = {
     colVisited: "Visited",
     colPct: "% Bought",
     conversionTipBold: "Quick Mart has the most room to improve.",
-    conversionTip: " Only about 35 out of 100 visitors buy something there — a bit lower than your other two stores. A simple combo deal (e.g. \"coffee + snack for ฿79\") could add about 15 more sales every day without needing any more foot traffic.",
+    conversionTip: " Only about 35 out of 100 visitors buy something there — a bit lower than your other two stores. A simple combo deal could add about 15 more sales every day without needing any more foot traffic.",
     storeTypeLabel: "Store type",
     unitsUsedLabel: "Units used",
     earnedLabel: "Earned This Month",
@@ -216,39 +290,19 @@ const STRINGS = {
   th: {
     exportReport: "ดาวน์โหลดรายงาน",
     headerTitle: "ร้านคุณเป็นยังไงบ้าง?",
-    headerSubtitle: "สรุปภาพรวม 3 ร้านของคุณเดือนนี้",
-    kpi1Label: "ร้านคุณได้เงินเดือนนี้",
-    kpi1Sub: "รวม 3 ร้าน",
-    kpi1Trend: "↑ มากกว่าเดือนที่แล้ว",
+    headerSubtitle: "สรุปภาพรวมร้านของคุณเดือนนี้",
+    kpi1Label: "รายได้เดือนนี้",
     kpi2Label: "คนที่มาร้านวันนี้",
-    kpi2Sub: "รวมทั้ง 3 ร้าน",
-    kpi2Trend: "~345 คนต่อร้าน",
+    kpi2Trend_all: "~345 คนต่อร้าน",
     kpi3Label: "ผู้เข้าร้านที่ซื้อสินค้า",
     kpi3Sub: "~37 คนจากทุกๆ 100 คน",
-    kpi3Trend: "↑ เพิ่มขึ้นจากเดือนที่แล้ว",
+    kpi3Trend: "เพิ่มขึ้นจากเดือนที่แล้ว",
     kpi4Label: "คุณอยู่ตรงไหนเทียบกับร้านอื่น",
     kpi4Sub: "คะแนนในระบบ",
     kpi4Trend: "Top 25% ของร้านทั้งหมด",
     aiLabel: "สรุปภาพรวมร้านคุณ",
-    aiPre: "ร้านทั้ง 3 แห่งได้",
-    aiMoney: "฿604,000 เดือนนี้",
-    aiMid: "— เพิ่มขึ้น +12% จากเดือนที่แล้ว ดีมากเลย! ประมาณ",
-    aiPct: "37% ของผู้เข้าร้านซื้อสินค้า",
-    aiPost: "จากร้านทั้งหมดของคุณ Quick Mart ยังมีพื้นที่ให้พัฒนาได้มาก — แค่ 35% ของผู้เข้าร้านซื้อสินค้า ต่ำกว่าร้านอื่นนิดหน่อย ทำดีลรวมง่ายๆ อาจเปลี่ยนได้เลย",
     actionsTitle: "สิ่งที่คุณควรทำสัปดาห์นี้",
-    actionsCount: "3 รายการ",
-    action1Cat: "เพิ่มรายได้",
-    action1Title: "วันอังคารมีคนมากกว่าปกติ",
-    action1Body: "ร้านของคุณมีลูกค้ามากกว่าปกติในวันอังคารช่วงนี้ เพิ่มพนักงาน 1–2 คนวันอังคารหน้า เพื่อไม่ให้ลูกค้ารอนาน",
-    action1Tip: "อาจได้เพิ่ม +฿8,400",
-    action2Cat: "รักษาลูกค้า",
-    action2Title: "ลูกค้าประจำบางส่วนไม่ได้มาสักพักแล้ว",
-    action2Body: "ลูกค้าขาประจำที่ใช้จ่ายสูงกลุ่มหนึ่งไม่ได้กลับมา 18 วันแล้ว ส่งส่วนลดหรือรางวัลสะสมแต้มให้พวกเขาก่อนที่จะลืมร้านคุณ",
-    action2Tip: "เสี่ยงสูญรายได้ ฿62,000/ปี",
-    action3Cat: "ทำได้เดี๋ยวนี้เลย",
-    action3Title: "ลองทำดีลรวมที่ Quick Mart",
-    action3Body: "ผู้เข้าร้าน Quick Mart ซื้อน้อยกว่าร้านอื่นของคุณ ลอง \"ซื้อ 2 แถม 1\" หรือเซ็ตคอมโบง่ายๆ เพื่อเพิ่มยอดขาย",
-    action3Tip: "อาจเพิ่ม +฿4,500/วัน",
+    actionsCount_all: "3 รายการ",
     heatmapTitle: "ร้านคุณคึกคักเวลาไหนมากที่สุด?",
     heatmapSubtitle: "จำนวนผู้เข้าร้านเฉลี่ยแต่ละชั่วโมง — เข้มกว่า = คนมากกว่า",
     heatmapTipBold: "ช่วงเวลาเหมาะโปรโมชั่น:",
@@ -272,7 +326,7 @@ const STRINGS = {
     spendLabel: "ใช้จ่ายเท่าไหร่",
     customersTipPre: "ลูกค้าส่วนใหญ่ของคุณคือ ",
     customersTipBold: "กลุ่มอายุ 26–35 ปี (42%)",
-    customersTip: " แต่กลุ่มอายุน้อยสุด (18–25 ปี) เติบโตเร็วที่สุด — เพิ่ม +8% เดือนนี้ โปรที่แชร์ง่ายหรือส่วนลดนักศึกษาอาจดึงดูดพวกเขาได้มากขึ้น",
+    customersTip: " แต่กลุ่มอายุน้อยสุด (18–25 ปี) เติบโตเร็วที่สุด — เพิ่ม +8% เดือนนี้",
     conversionTitle: "ผู้เข้าร้านซื้อของไหม?",
     conversionSubtitle: "จากทุกคนที่เดินเข้ามา — กี่คนที่ซื้อสินค้าจริงๆ?",
     colStore: "ร้าน",
@@ -280,7 +334,7 @@ const STRINGS = {
     colVisited: "เข้าร้าน",
     colPct: "% ที่ซื้อ",
     conversionTipBold: "Quick Mart ยังมีพื้นที่พัฒนาได้มากที่สุด",
-    conversionTip: " ประมาณ 35 จาก 100 คนซื้อสินค้าที่ร้านนี้ — ต่ำกว่าอีกสองร้านของคุณนิดหน่อย ดีลรวมง่ายๆ (เช่น \"กาแฟ + ขนม ฿79\") อาจเพิ่มยอดขายได้ ~15 รายการต่อวัน โดยไม่ต้องรอลูกค้าเพิ่ม",
+    conversionTip: " ประมาณ 35 จาก 100 คนซื้อสินค้าที่ร้านนี้ ดีลรวมง่ายๆ อาจเพิ่มยอดขายได้ ~15 รายการต่อวัน",
     storeTypeLabel: "ประเภทร้าน",
     unitsUsedLabel: "หน่วยที่ใช้",
     earnedLabel: "รายได้เดือนนี้",
@@ -313,44 +367,53 @@ function DonutChart({ segs, size = 80 }: { segs: { label: string; pct: number; c
 
 export default function RetailerDashboardPage() {
   const { lang } = useLanguage();
+  const { storeId } = useStoreFilter();
   const T = STRINGS[lang];
+
+  const dd = DASH_BY_STORE[storeId];
+  const kpi1Sub = lang === "th" ? dd.kpi1Sub_th : dd.kpi1Sub_en;
+  const kpi2Sub = lang === "th" ? dd.kpi2Sub_th : dd.kpi2Sub_en;
+  const aiText = lang === "th" ? dd.ai_th : dd.ai_en;
+
+  const filteredConversion = storeId === "all"
+    ? CONVERSION
+    : CONVERSION.filter((c) => c.id === storeId);
+
+  const filteredHighlights = storeId === "all"
+    ? HIGHLIGHTS.filter((h) => h.id !== "lumina")
+    : HIGHLIGHTS.filter((h) => h.id === storeId);
 
   return (
     <RetailerBackofficeLayout>
       {/* Header */}
-      <div className="flex items-start justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold italic text-[#1C3A1C]">{T.headerTitle}</h1>
-          <p className="text-sm text-on-surface-variant mt-1">{T.headerSubtitle}</p>
-        </div>
-        <button type="button" className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-full border-0 cursor-pointer hover:brightness-105">
-          {T.exportReport}
-        </button>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold italic text-[#1C3A1C]">{T.headerTitle}</h1>
+        <p className="text-sm text-on-surface-variant mt-1">{T.headerSubtitle}</p>
       </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-4 gap-4 mb-4">
         <div className="bg-white rounded-2xl p-5 shadow-sm">
           <div className="text-xs text-on-surface-variant mb-3">{T.kpi1Label}</div>
-          <div className="text-3xl font-bold text-on-surface">฿604,000</div>
-          <div className="text-sm text-on-surface-variant mb-3">{T.kpi1Sub}</div>
-          <span className="text-xs font-bold text-primary">{T.kpi1Trend}</span>
+          <div className="text-3xl font-bold text-on-surface">{dd.kpi1}</div>
+          <div className="text-sm text-on-surface-variant mb-3">{kpi1Sub}</div>
+          <span className="text-xs font-bold text-primary">More than last month</span>
         </div>
         <div className="bg-white rounded-2xl p-5 shadow-sm">
           <div className="text-xs text-on-surface-variant mb-3">{T.kpi2Label}</div>
-          <div className="text-3xl font-bold text-on-surface">1,035</div>
-          <div className="text-sm text-on-surface-variant mb-3">{T.kpi2Sub}</div>
-          <span className="text-xs text-on-surface-variant">{T.kpi2Trend}</span>
+          <div className="text-3xl font-bold text-on-surface">{dd.kpi2}</div>
+          <div className="text-sm text-on-surface-variant mb-3">{kpi2Sub}</div>
+          {storeId === "all" && <span className="text-xs text-on-surface-variant">{T.kpi2Trend_all}</span>}
         </div>
         <div className="bg-white rounded-2xl p-5 shadow-sm">
           <div className="text-xs text-on-surface-variant mb-3">{T.kpi3Label}</div>
-          <div className="text-3xl font-bold text-on-surface">37%</div>
+          <div className="text-3xl font-bold text-on-surface">{dd.kpi3}</div>
           <div className="text-sm text-on-surface-variant mb-3">{T.kpi3Sub}</div>
           <span className="text-xs font-bold text-primary">{T.kpi3Trend}</span>
         </div>
         <div className="bg-white rounded-2xl p-5 shadow-sm">
           <div className="text-xs text-on-surface-variant mb-3">{T.kpi4Label}</div>
-          <div className="text-3xl font-bold text-on-surface">88/100</div>
+          <div className="text-3xl font-bold text-on-surface">{dd.kpi4}</div>
           <div className="text-sm text-on-surface-variant mb-3">{T.kpi4Sub}</div>
           <span className="text-xs font-bold text-primary">{T.kpi4Trend}</span>
         </div>
@@ -362,8 +425,8 @@ export default function RetailerDashboardPage() {
         <div>
           <div className="text-xs font-bold text-primary mb-1">{T.aiLabel}</div>
           <p className="text-sm text-on-surface-variant leading-relaxed">
-            {T.aiPre} <strong className="text-on-surface">{T.aiMoney}</strong> {T.aiMid}{" "}
-            <strong className="text-on-surface">{T.aiPct}</strong> {T.aiPost}
+            {aiText.pre} <strong className="text-on-surface">{aiText.money}</strong> {aiText.mid}{" "}
+            <strong className="text-on-surface">{aiText.pct}</strong>{aiText.post}
           </p>
         </div>
       </div>
@@ -373,36 +436,28 @@ export default function RetailerDashboardPage() {
         <div className="flex items-center gap-2 mb-4">
           <span className="material-symbols-outlined text-[18px] text-primary">bolt</span>
           <h3 className="text-base font-bold text-on-surface">{T.actionsTitle}</h3>
-          <span className="ml-auto text-[10px] font-bold bg-primary/10 text-primary px-2.5 py-1 rounded-full">{T.actionsCount}</span>
+          <span className="ml-auto text-[10px] font-bold bg-primary/10 text-primary px-2.5 py-1 rounded-full">{T.actionsCount_all}</span>
         </div>
         <div className="grid grid-cols-3 gap-4">
-          <div className="bg-green-50 border border-green-100 rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="material-symbols-outlined text-[15px] text-green-600">trending_up</span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-green-700">{T.action1Cat}</span>
+          {dd.actions.map((a, i) => (
+            <div key={i} className={`${a.bgCard} border ${a.border} rounded-xl p-4`}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className={`material-symbols-outlined text-[15px] ${a.iconColor}`}>{a.icon}</span>
+                <span className={`text-[10px] font-bold uppercase tracking-widest ${a.catColor}`}>
+                  {lang === "th" ? a.catTh : a.catEn}
+                </span>
+              </div>
+              <p className="text-sm font-semibold text-on-surface mb-1">
+                {lang === "th" ? a.titleTh : a.titleEn}
+              </p>
+              <p className="text-xs text-on-surface-variant mb-3 leading-relaxed">
+                {lang === "th" ? a.bodyTh : a.bodyEn}
+              </p>
+              <div className={`text-xs font-bold ${a.tipColor}`}>
+                {lang === "th" ? a.tipTh : a.tipEn}
+              </div>
             </div>
-            <p className="text-sm font-semibold text-on-surface mb-1">{T.action1Title}</p>
-            <p className="text-xs text-on-surface-variant mb-3 leading-relaxed">{T.action1Body}</p>
-            <div className="text-xs font-bold text-green-700">{T.action1Tip}</div>
-          </div>
-          <div className="bg-red-50 border border-red-100 rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="material-symbols-outlined text-[15px] text-red-500">group_off</span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-red-600">{T.action2Cat}</span>
-            </div>
-            <p className="text-sm font-semibold text-on-surface mb-1">{T.action2Title}</p>
-            <p className="text-xs text-on-surface-variant mb-3 leading-relaxed">{T.action2Body}</p>
-            <div className="text-xs font-bold text-red-600">{T.action2Tip}</div>
-          </div>
-          <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="material-symbols-outlined text-[15px] text-amber-600">shopping_cart</span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-amber-700">{T.action3Cat}</span>
-            </div>
-            <p className="text-sm font-semibold text-on-surface mb-1">{T.action3Title}</p>
-            <p className="text-xs text-on-surface-variant mb-3 leading-relaxed">{T.action3Body}</p>
-            <div className="text-xs font-bold text-amber-700">{T.action3Tip}</div>
-          </div>
+          ))}
         </div>
       </div>
 
@@ -548,7 +603,7 @@ export default function RetailerDashboardPage() {
           </div>
 
           <div className="flex-1 divide-y divide-outline-variant/10">
-            {CONVERSION.map((c) => (
+            {filteredConversion.map((c) => (
               <div key={c.name} className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] items-center py-3">
                 <div>
                   <div className="text-sm font-medium text-on-surface">{c.name}</div>
@@ -572,15 +627,23 @@ export default function RetailerDashboardPage() {
           <div className="mt-4 bg-[#F5F2EB] rounded-xl px-4 py-3 flex items-start gap-2">
             <span className="material-symbols-outlined text-primary text-[15px] mt-0.5 flex-shrink-0">auto_awesome</span>
             <p className="text-xs text-on-surface-variant leading-relaxed">
-              <strong className="text-on-surface">{T.conversionTipBold}</strong>{T.conversionTip}
+              {storeId === "all" ? (
+                <><strong className="text-on-surface">{T.conversionTipBold}</strong>{T.conversionTip}</>
+              ) : storeId === "quick" ? (
+                <>Only about <strong className="text-on-surface">35 out of 100 visitors</strong> buy something at Quick Mart — a bit lower than your other stores. A simple combo deal (e.g. coffee + snack for ฿79) could add about 15 more sales every day without any extra foot traffic.</>
+              ) : storeId === "coffee" ? (
+                <>Coffee Corner converts <strong className="text-on-surface">38.2% of visitors into buyers</strong> — well above the platform average. Saturday afternoons bring the most traffic. Extending hours or running a short weekend promo could push this even higher.</>
+              ) : (
+                <>Lumina Artisan Roastery converts <strong className="text-on-surface">38.1% of visitors</strong> — your top conversion rate. Customers who walk in are highly engaged. A loyalty card or upsell prompt at checkout could increase the average basket size further.</>
+              )}
             </p>
           </div>
         </div>
       </div>
 
       {/* Store Report Cards */}
-      <div className="grid grid-cols-2 gap-6">
-        {HIGHLIGHTS.map((h) => {
+      <div className={`grid gap-6 ${filteredHighlights.length === 1 ? "grid-cols-1 max-w-xl" : "grid-cols-2"}`}>
+        {filteredHighlights.map((h) => {
           const isBest = h.type === "best";
           const accentColor = isBest ? "text-primary" : "text-red-500";
           const barColor    = isBest ? "bg-primary"   : "bg-red-400";
