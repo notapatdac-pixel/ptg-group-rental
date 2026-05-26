@@ -9,12 +9,12 @@ import {
 const STRINGS = {
   en: {
     title: "Executive Overview",
-    subtitle: "Welcome back, your retail ecosystem is performing",
-    benchmarkText: "12% above benchmark",
+    subtitle: "Portfolio revenue is tracking",
+    benchmarkText: "12% above network benchmark",
     subtitleSuffix: "this month.",
     aiSummaryLabel: "AI Summary",
-    monthlyRevenueTrend: "Monthly revenue trend",
-    chartSubtitle: "6-month · THB",
+    monthlyRevenueTrend: "Revenue Performance",
+    chartSubtitle: "6-month rolling · THB thousands",
     stationPerformance: "Station Performance",
     stationCol: "Station",
     revenueCol: "Revenue / Mo",
@@ -32,12 +32,12 @@ const STRINGS = {
   },
   th: {
     title: "ภาพรวมทั้งหมด",
-    subtitle: "ยินดีต้อนรับ! ระบบนิเวศค้าปลีกของคุณทำงาน",
-    benchmarkText: "12% เหนือค่ามาตรฐาน",
+    subtitle: "รายได้พอร์ตโฟลิโออยู่ในเกณฑ์ดี",
+    benchmarkText: "12% เหนือค่ามาตรฐานเครือข่าย",
     subtitleSuffix: "เดือนนี้",
     aiSummaryLabel: "สรุปโดย AI",
-    monthlyRevenueTrend: "แนวโน้มรายได้รายเดือน",
-    chartSubtitle: "6 เดือน · บาท",
+    monthlyRevenueTrend: "ประสิทธิภาพรายได้",
+    chartSubtitle: "6 เดือนย้อนหลัง · บาท (พัน)",
     stationPerformance: "ประสิทธิภาพสาขา",
     stationCol: "สาขา",
     revenueCol: "รายได้ / เดือน",
@@ -257,11 +257,11 @@ export default function LandlordOverviewPage() {
       </div>
 
       {/* AI Summary */}
-      <div className="bg-white rounded-2xl shadow-sm px-5 py-4 mb-6 flex items-start gap-3">
-        <span className="material-symbols-outlined text-primary text-[20px] mt-0.5 flex-shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+      <div className="bg-[#1C3A1C] rounded-2xl shadow-sm px-5 py-4 mb-6 flex items-start gap-3">
+        <span className="material-symbols-outlined text-lime-300 text-[20px] mt-0.5 flex-shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
         <div>
-          <div className="text-xs font-bold text-primary mb-1">{T.aiSummaryLabel}</div>
-          <p className="text-sm text-on-surface-variant leading-relaxed">{aiSummary}</p>
+          <div className="text-xs font-bold text-lime-300 mb-1">{T.aiSummaryLabel}</div>
+          <p className="text-sm text-white/80 leading-relaxed">{aiSummary}</p>
         </div>
       </div>
 

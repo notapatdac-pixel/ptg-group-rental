@@ -64,14 +64,9 @@ export default function LandlordEditStationPage() {
             <span className="text-sm text-on-surface-variant">{station.location}</span>
           </div>
         </div>
-        <div className="flex gap-3">
-          <button type="button" className="border border-outline-variant text-on-surface text-sm font-medium px-5 py-2 rounded-full bg-white cursor-pointer hover:bg-[#F5F2EB] transition-colors">
-            Discard
-          </button>
-          <button type="button" className="bg-primary text-white text-sm font-bold px-5 py-2 rounded-full border-0 cursor-pointer hover:brightness-105">
-            Save Changes
-          </button>
-        </div>
+        <button type="button" className="bg-primary text-white text-sm font-bold px-5 py-2 rounded-full border-0 cursor-pointer hover:brightness-105">
+          Save Changes
+        </button>
       </div>
 
       <div className="grid grid-cols-3 gap-6">

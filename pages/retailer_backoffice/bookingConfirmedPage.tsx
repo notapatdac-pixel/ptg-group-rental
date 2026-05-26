@@ -2,61 +2,30 @@
 import { useRouter } from "next/router";
 import Link from "next/link";
 import RetailerBackofficeLayout from "@/components/retailer_backoffice/RetailerBackofficeLayout";
-
-const APP_DATA: Record<string, {
-  stationName: string; unit: string; unitLabel: string; price: string;
-  duration: string; location: string; specialist: string; specialistInitials: string;
-}> = {
-  "PTG-APP-2025-8821": {
-    stationName: "PTG Rama IX",
-    unit: "A-02", unitLabel: "Shopfront Unit",
-    price: "฿22,000", duration: "12 Months",
-    location: "Huai Khwang, Bangkok",
-    specialist: "Kanya Srisuk", specialistInitials: "KS",
-  },
-};
+import { getAppByRetailerId } from "@/lib/applicationsData";
 
 const STEPS = [
-  { label: "Application Submitted",  icon: "description",    done: true  },
-  { label: "Application Approved",   icon: "verified",        done: true  },
-  { label: "Walkthrough Scheduled",  icon: "calendar_month",  done: true  },
-  { label: "Lease Signing",          icon: "edit_document",   done: false },
-  { label: "Move In",                icon: "store",           done: false },
-];
-
-const NEXT_STEPS = [
-  {
-    icon: "calendar_month",
-    title: "Attend your walkthrough",
-    body: "Visit the station at the scheduled time. Your PTG specialist will guide you through the space and answer questions.",
-    active: true,
-  },
-  {
-    icon: "edit_document",
-    title: "Review & sign lease",
-    body: "After the walkthrough, you'll receive a digital lease agreement to review and sign.",
-    active: false,
-  },
-  {
-    icon: "payments",
-    title: "Pay deposit & first month",
-    body: "Once the lease is signed, the deposit and first month's rent are due before your move-in date.",
-    active: false,
-  },
-  {
-    icon: "store",
-    title: "Move in & set up",
-    body: "Collect your keys and get your store ready. Your PTG contact will be on hand for any support.",
-    active: false,
-  },
+  { label: "Application Submitted",  icon: "description",    done: true },
+  { label: "Application Approved",   icon: "verified",        done: true },
+  { label: "Walkthrough Scheduled",  icon: "calendar_month",  done: true },
 ];
 
 export default function BookingConfirmedPage() {
   const router  = useRouter();
-  const appId   = typeof router.query.appId === "string" ? router.query.appId : "PTG-APP-2025-8821";
-  const date    = typeof router.query.date  === "string" ? router.query.date  : "29";
-  const time    = typeof router.query.time  === "string" ? router.query.time  : "14:00";
-  const appInfo = APP_DATA[appId] ?? APP_DATA["PTG-APP-2025-8821"];
+  const appId     = typeof router.query.appId === "string" ? router.query.appId : "PTG-APP-2025-8821";
+  const date      = typeof router.query.date  === "string" ? router.query.date  : "29";
+  const time      = typeof router.query.time  === "string" ? router.query.time  : "14:00";
+  const sharedApp = getAppByRetailerId(appId) ?? getAppByRetailerId("PTG-APP-2025-8821")!;
+  const appInfo   = {
+    stationName:        sharedApp.stationName,
+    unit:               sharedApp.unitCode,
+    unitLabel:          sharedApp.unitLabel,
+    price:              `฿${sharedApp.price.toLocaleString()}`,
+    duration:           sharedApp.duration,
+    location:           sharedApp.location,
+    specialist:         sharedApp.specialistName,
+    specialistInitials: sharedApp.specialistInitials,
+  };
 
   const DAY_MAP: Record<string, string> = {
     "26": "Mon", "27": "Tue", "28": "Wed", "29": "Thu", "30": "Fri", "31": "Sat",
@@ -146,24 +115,6 @@ export default function BookingConfirmedPage() {
             </div>
           </div>
 
-          {/* Next steps */}
-          <div className="bg-white rounded-2xl shadow-sm p-6">
-            <h3 className="font-semibold text-on-surface mb-4">What Happens Next</h3>
-            <div className="space-y-4">
-              {NEXT_STEPS.map((s, i) => (
-                <div key={i} className="flex items-start gap-4">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${s.active ? "bg-[#1C3A1C]" : "bg-outline-variant/10"}`}>
-                    <span className={`material-symbols-outlined text-[17px] ${s.active ? "text-white" : "text-on-surface-variant"}`}>{s.icon}</span>
-                  </div>
-                  <div>
-                    <div className={`text-sm font-semibold mb-0.5 ${s.active ? "text-on-surface" : "text-on-surface-variant"}`}>{s.title}</div>
-                    <div className="text-xs text-on-surface-variant leading-relaxed">{s.body}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
         </div>
 
         {/* ── Right (col 3): Contact + actions ── */}
@@ -190,32 +141,6 @@ export default function BookingConfirmedPage() {
                 Open Chat
               </button>
             </Link>
-          </div>
-
-          {/* Location info */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-3">Visit Location</div>
-            <div className="bg-[#F5F2EB] rounded-xl h-28 flex items-center justify-center mb-3">
-              <div className="text-center">
-                <span className="material-symbols-outlined text-primary text-[28px] block mb-1" style={{ fontVariationSettings: "'FILL' 1" }}>location_on</span>
-                <div className="text-xs font-bold text-on-surface">{appInfo.stationName}</div>
-                <div className="text-[10px] text-on-surface-variant">{appInfo.location}</div>
-              </div>
-            </div>
-            <button type="button" className="w-full flex items-center justify-center gap-2 bg-[#F5F2EB] text-on-surface font-semibold text-sm py-2.5 rounded-xl border-0 cursor-pointer hover:bg-primary/10 transition-colors">
-              <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-              Open in Maps
-            </button>
-          </div>
-
-          {/* Reminder */}
-          <div className="bg-primary/5 rounded-2xl p-4">
-            <div className="flex items-start gap-2">
-              <span className="material-symbols-outlined text-primary text-[16px] mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>notifications_active</span>
-              <p className="text-xs text-on-surface leading-relaxed">
-                A reminder will be sent to your registered email <strong>24 hours before</strong> your walkthrough.
-              </p>
-            </div>
           </div>
 
           {/* CTA */}

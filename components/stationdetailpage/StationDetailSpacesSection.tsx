@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Station } from "@/lib/stations";
+import { useAuth } from "@/lib/authContext";
 
 const BTN_PRIMARY_BLOCK =
   "inline-flex items-center justify-center primary-gradient text-white w-full py-2 rounded-md text-sm font-bold shadow-sm border-0 cursor-pointer transition-all hover:shadow-lime-500/40 hover:ring-2 hover:ring-lime-300 hover:ring-offset-2 hover:ring-offset-white/80 active:scale-95";
@@ -11,6 +12,7 @@ function SpaceCard({
   desc,
   img,
   applyHref,
+  showApply,
 }: {
   unit: string;
   name: string;
@@ -18,6 +20,7 @@ function SpaceCard({
   desc: string;
   img: string;
   applyHref: string;
+  showApply: boolean;
 }) {
   return (
     <div className="group bg-surface-container-lowest rounded-xl editorial-shadow overflow-hidden border border-transparent hover:border-primary/20 transition-all">
@@ -43,15 +46,20 @@ function SpaceCard({
           </p>
         </div>
         <p className="text-sm text-on-surface-variant mb-6 line-clamp-2">{desc}</p>
-        <Link href={applyHref} className={BTN_PRIMARY_BLOCK}>
-          Apply Now
-        </Link>
+        {showApply && (
+          <Link href={applyHref} className={BTN_PRIMARY_BLOCK}>
+            Apply Now
+          </Link>
+        )}
       </div>
     </div>
   );
 }
 
 export default function StationDetailSpacesSection({ station }: { station: Station }) {
+  const { user } = useAuth();
+  const showApply = user?.type !== "landlord";
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -73,6 +81,7 @@ export default function StationDetailSpacesSection({ station }: { station: Stati
             desc={sp.desc}
             img={sp.img}
             applyHref={`/retailer_backoffice/applyFlowPage?applyNow=1&stationId=${station.id}&unitCode=${encodeURIComponent(sp.unit)}`}
+            showApply={showApply}
           />
         ))}
       </div>

@@ -1,8 +1,14 @@
 import LandlordBackofficeLayout from "@/components/landlord_backoffice/LandlordBackofficeLayout";
+import { STATIONS_DATA } from "@/components/landlord_backoffice/stationsData";
 import Link from "next/link";
 import latphrao71Img from "@/components/image/station-ptg-latphrao71.png";
 import ramaIxImg from "@/components/image/station-ptg-ramaix.png";
 import { useLanguage } from "@/lib/languageContext";
+
+const STATION_IMAGES: Record<string, string> = {
+  "PTG Lat Phrao 71": latphrao71Img.src,
+  "PTG Sukhumvit 62": ramaIxImg.src,
+};
 
 const STRINGS = {
   en: {
@@ -21,30 +27,10 @@ const STRINGS = {
   },
 } as const;
 
-const STATIONS = [
-  {
-    name: "PTG Lat Phrao 71",
-    location: "Lat Phrao Road, Bangkok",
-    image: latphrao71Img.src,
-    occupied: 4,
-    total: 5,
-    aiSuggestion: "Primary catchment is office workers and families in the Lat Phrao corridor. Best fit: quick-service restaurants, grab-and-go coffee, or mid-sized convenience retail with strong morning and evening trade.",
-    aiSuggestionTh: "กลุ่มลูกค้าหลักในพื้นที่ Lat Phrao คือคนทำงานออฟฟิศและครอบครัว ประเภทร้านที่เหมาะสม ได้แก่ ร้านอาหารบริการเร็ว กาแฟสะดวกซื้อ หรือร้านสะดวกซื้อขนาดกลางที่ขายดีช่วงเช้าและเย็น",
-  },
-  {
-    name: "PTG Sukhumvit 62",
-    location: "Sukhumvit Road, Bangkok",
-    image: ramaIxImg.src,
-    occupied: 8,
-    total: 8,
-    aiSuggestion: "High-footfall BTS-adjacent location with a strong expat community. Ideal for international dining, premium bakeries, or wellness-focused tenants such as pharmacies or wellness cafés targeting higher spending power.",
-    aiSuggestionTh: "ทำเลติด BTS มีผู้อาศัยชาวต่างชาติหนาแน่น เหมาะสำหรับร้านอาหารนานาชาติ เบเกอรี่พรีเมียม หรือร้านสุขภาพ เช่น ร้านยาหรือคาเฟ่เพื่อสุขภาพ ที่รองรับกำลังซื้อสูง",
-  },
-];
-
 export default function LandlordMyStationsPage() {
   const { lang } = useLanguage();
   const T = STRINGS[lang];
+  const stationEntries = Object.values(STATIONS_DATA);
 
   return (
     <LandlordBackofficeLayout>
@@ -52,13 +38,12 @@ export default function LandlordMyStationsPage() {
         <h1 className="text-2xl font-bold text-on-surface">{T.title}</h1>
       </div>
 
-      {/* Station cards */}
       <div className="grid grid-cols-2 gap-6">
-        {STATIONS.map((st) => (
+        {stationEntries.map((st) => (
           <div key={st.name} className="bg-white rounded-2xl shadow-sm overflow-hidden">
             <div className="rounded-t-2xl overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={st.image} alt={st.name} className="w-full h-48 object-cover" />
+              <img src={STATION_IMAGES[st.name] ?? latphrao71Img.src} alt={st.name} className="w-full h-48 object-cover" />
             </div>
             <div className="p-5">
               <div className="flex items-start justify-between mb-4">
@@ -77,16 +62,18 @@ export default function LandlordMyStationsPage() {
                   </div>
                 </div>
               </div>
+
               {/* AI Suggestion */}
-              <div className="bg-[#F5F2EB] rounded-xl p-4 mb-4">
+              <div className="bg-[#1C3A1C] rounded-xl p-4 mb-4">
                 <div className="flex items-center gap-1.5 mb-2">
-                  <span className="material-symbols-outlined text-[14px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
-                  <span className="text-[9px] font-bold tracking-widest text-primary">{T.aiSuggestion}</span>
+                  <span className="material-symbols-outlined text-[14px] text-lime-300" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+                  <span className="text-[9px] font-bold tracking-widest text-lime-300">{T.aiSuggestion}</span>
                 </div>
-                <p className="text-xs text-on-surface-variant leading-relaxed">
-                  {lang === "th" ? st.aiSuggestionTh : st.aiSuggestion}
+                <p className="text-xs text-white/80 leading-relaxed">
+                  {lang === "th" ? st.aiNoteTh : st.aiNote}
                 </p>
               </div>
+
               <Link
                 href={`/landlord_backoffice/landlordEditStationPage?name=${encodeURIComponent(st.name)}`}
                 className="no-underline block w-full text-center bg-surface-container-low border border-outline-variant/40 rounded-full px-4 py-2.5 text-sm font-bold text-on-surface hover:bg-surface-container transition-colors"

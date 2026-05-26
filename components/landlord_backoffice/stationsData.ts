@@ -23,6 +23,7 @@ export type StationData = {
   footfall: string;
   aiScore: number;
   aiNote: string;
+  aiNoteTh: string;
   units: StationUnit[];
 };
 
@@ -45,6 +46,8 @@ export const STATIONS_DATA: Record<string, StationData> = {
     aiScore: 88,
     aiNote:
       "Strong performer. Recommend targeting premium F&B or wellness tenants for the two vacant units to maximise revenue per sqm.",
+    aiNoteTh:
+      "สาขานี้มีผลงานดี แนะนำให้เน้นหา F&B พรีเมียมหรือผู้เช่าด้านสุขภาพสำหรับยูนิตว่าง 2 แห่ง เพื่อเพิ่มรายได้ต่อตารางเมตรให้สูงสุด",
     units: [
       { id: "A1", type: "Premium Kiosk",   sqm: 25, rent: 65000, status: "occupied", tenant: "Coffee Corner Co." },
       { id: "A2", type: "Pop-up Corner",   sqm: 8,  rent: 18000, status: "occupied", tenant: "Artisan Brew" },
@@ -74,6 +77,8 @@ export const STATIONS_DATA: Record<string, StationData> = {
     aiScore: 94,
     aiNote:
       "Top 10% of PTG network. Fully occupied — consider a waitlist strategy and premium pricing at next renewal cycle.",
+    aiNoteTh:
+      "ติด 10% สูงสุดของเครือข่าย PTG เช่าเต็มทุกยูนิต — ควรพิจารณาสร้างรายชื่อรอและปรับราคาเบี้ยเช่าขึ้นในรอบต่อสัญญา",
     units: [
       { id: "A1", type: "Premium Kiosk",   sqm: 30,  rent: 85000,  status: "occupied", tenant: "7-Eleven Express" },
       { id: "A2", type: "Pop-up Corner",   sqm: 8,   rent: 22000,  status: "occupied", tenant: "Coffee Corner Co." },

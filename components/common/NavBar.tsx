@@ -180,7 +180,9 @@ export default function NavBar({ showSearch = false }: NavBarProps) {
   const links = (
     <div className="hidden md:flex gap-10 items-center">
       <Link href="/explorepage/explorePage" className="nav-link-lime font-sans">Explore Locations</Link>
-      <Link href="/pricingpage/pricingPage" className="nav-link-lime font-sans">Pricing</Link>
+      {user?.type !== "landlord" && (
+        <Link href="/pricingpage/pricingPage" className="nav-link-lime font-sans">Pricing</Link>
+      )}
       {user && (
         <Link href={dashDest} className="nav-link-lime font-sans">Dashboard</Link>
       )}

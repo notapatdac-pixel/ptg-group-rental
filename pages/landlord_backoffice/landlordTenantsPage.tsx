@@ -6,9 +6,9 @@ const STRINGS = {
   en: {
     title: "Active Tenants",
     subtitle: "Lease registry across all managed retail stations.",
-    kpis: ["Total Tenants", "Active Leases", "Expiring (60 Days)", "Avg AI Score"],
+    kpis: ["Total Tenants", "Active Leases", "Expiring (60 Days)"],
     searchPlaceholder: "Search tenants…",
-    tableHeaders: ["Brand", "Station · Unit", "Monthly Rent (THB)", "Lease Period", "Pay History", "AI Score", "Status"],
+    tableHeaders: ["Brand", "Station · Unit", "Monthly Rent (THB)", "Lease Period", "Pay History", "Status"],
     unit: "Unit",
     noTenants: "No tenants for this station.",
     statusLabels: {
@@ -21,9 +21,9 @@ const STRINGS = {
   th: {
     title: "ผู้เช่าที่ใช้งาน",
     subtitle: "ทะเบียนการเช่าทั้งหมดของสาขาที่คุณดูแล",
-    kpis: ["ผู้เช่าทั้งหมด", "สัญญาที่ใช้งาน", "หมดอายุใน 60 วัน", "คะแนน AI เฉลี่ย"],
+    kpis: ["ผู้เช่าทั้งหมด", "สัญญาที่ใช้งาน", "หมดอายุใน 60 วัน"],
     searchPlaceholder: "ค้นหาผู้เช่า…",
-    tableHeaders: ["แบรนด์", "สาขา · ยูนิต", "ค่าเช่ารายเดือน (บาท)", "ระยะเวลาสัญญา", "ประวัติการชำระ", "คะแนน AI", "สถานะ"],
+    tableHeaders: ["แบรนด์", "สาขา · ยูนิต", "ค่าเช่ารายเดือน (บาท)", "ระยะเวลาสัญญา", "ประวัติการชำระ", "สถานะ"],
     unit: "ยูนิต",
     noTenants: "ไม่มีผู้เช่าสำหรับสาขานี้",
     statusLabels: {
@@ -66,12 +66,11 @@ export default function LandlordTenantsPage() {
       </div>
 
       {/* Summary KPIs */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-4 mb-6">
         {[
           { label: T.kpis[0], value: String(visible.length) },
           { label: T.kpis[1], value: String(visible.filter((t) => t.status === "active").length) },
           { label: T.kpis[2], value: String(visible.filter((t) => t.status === "expiring").length) },
-          { label: T.kpis[3], value: visible.length ? (visible.reduce((s, t) => s + t.score, 0) / visible.length).toFixed(1) : "—" },
         ].map((k) => (
           <div key={k.label} className="bg-white rounded-2xl p-4 shadow-sm text-center">
             <div className="text-2xl font-bold text-on-surface">{k.value}</div>
@@ -118,9 +117,6 @@ export default function LandlordTenantsPage() {
                     <span className={`text-xs font-bold ${t.payHistory === "100%" ? "text-primary" : "text-amber-600"}`}>{t.payHistory}</span>
                   </td>
                   <td className="px-4 py-4">
-                    <span className="text-sm font-bold text-primary">{t.score}</span>
-                  </td>
-                  <td className="px-4 py-4">
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_STYLE[t.status]}`}>
                       {T.statusLabels[t.status]}
                     </span>
@@ -129,7 +125,7 @@ export default function LandlordTenantsPage() {
               ))}
               {visible.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-6 py-10 text-center text-sm text-on-surface-variant">
+                  <td colSpan={6} className="px-6 py-10 text-center text-sm text-on-surface-variant">
                     {T.noTenants}
                   </td>
                 </tr>

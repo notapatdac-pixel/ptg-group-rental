@@ -420,13 +420,13 @@ export default function RetailerDashboardPage() {
       </div>
 
       {/* AI Advisor */}
-      <div className="bg-white rounded-2xl shadow-sm px-5 py-4 mb-6 flex items-start gap-3">
-        <span className="material-symbols-outlined text-primary text-[20px] mt-0.5 flex-shrink-0">auto_awesome</span>
+      <div className="bg-[#1C3A1C] rounded-2xl shadow-sm px-5 py-4 mb-6 flex items-start gap-3">
+        <span className="material-symbols-outlined text-lime-300 text-[20px] mt-0.5 flex-shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
         <div>
-          <div className="text-xs font-bold text-primary mb-1">{T.aiLabel}</div>
-          <p className="text-sm text-on-surface-variant leading-relaxed">
-            {aiText.pre} <strong className="text-on-surface">{aiText.money}</strong> {aiText.mid}{" "}
-            <strong className="text-on-surface">{aiText.pct}</strong>{aiText.post}
+          <div className="text-xs font-bold text-lime-300 mb-1">{T.aiLabel}</div>
+          <p className="text-sm text-white/80 leading-relaxed">
+            {aiText.pre} <strong className="text-white">{aiText.money}</strong> {aiText.mid}{" "}
+            <strong className="text-white">{aiText.pct}</strong>{aiText.post}
           </p>
         </div>
       </div>

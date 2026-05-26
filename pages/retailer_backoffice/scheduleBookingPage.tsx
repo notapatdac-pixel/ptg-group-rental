@@ -4,20 +4,7 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import RetailerBackofficeLayout from "@/components/retailer_backoffice/RetailerBackofficeLayout";
 import { addNotification } from "@/lib/notificationStore";
-
-// ── Static data ────────────────────────────────────────────────────────────────
-
-const APP_DATA: Record<string, {
-  stationName: string; unit: string; unitLabel: string;
-  price: string; duration: string; location: string;
-}> = {
-  "PTG-APP-2025-8821": {
-    stationName: "PTG Rama IX",
-    unit: "A-02", unitLabel: "Shopfront Unit",
-    price: "฿22,000", duration: "12 Months",
-    location: "Huai Khwang, Bangkok",
-  },
-};
+import { getAppByRetailerId, RETAILER_TO_LANDLORD } from "@/lib/applicationsData";
 
 const DAYS = [
   { day: "Mon", date: "26" }, { day: "Tue", date: "27" }, { day: "Wed", date: "28" },
@@ -36,7 +23,7 @@ const DOCS = [
 const SEED_MESSAGES = [
   {
     from: "specialist" as const, name: "Kanya S.", time: "09:14",
-    text: "Hi! I've reviewed your application for Unit A-02 at PTG Rama IX. Everything looks great — congratulations on the approval! When would you like to schedule your site walkthrough?",
+    text: "Hi! I've reviewed your application and everything looks great — congratulations on the approval! When would you like to schedule your site walkthrough?",
   },
   {
     from: "user" as const, name: "You", time: "09:28",
@@ -57,8 +44,16 @@ interface Message {
 
 export default function ScheduleBookingPage() {
   const router   = useRouter();
-  const appId    = typeof router.query.appId === "string" ? router.query.appId : "PTG-APP-2025-8821";
-  const appInfo  = APP_DATA[appId] ?? APP_DATA["PTG-APP-2025-8821"];
+  const appId     = typeof router.query.appId === "string" ? router.query.appId : "PTG-APP-2025-8821";
+  const sharedApp = getAppByRetailerId(appId) ?? getAppByRetailerId("PTG-APP-2025-8821")!;
+  const appInfo   = {
+    stationName: sharedApp.stationName,
+    unit:        sharedApp.unitCode,
+    unitLabel:   sharedApp.unitLabel,
+    price:       `฿${sharedApp.price.toLocaleString()}`,
+    duration:    sharedApp.duration,
+    location:    sharedApp.location,
+  };
 
   const [selectedDate, setSelectedDate] = useState("29");
   const [selectedTime, setSelectedTime] = useState("14:00");
@@ -91,14 +86,33 @@ export default function ScheduleBookingPage() {
   }
 
   function handleConfirm() {
-    setConfirmed(true);
+    try {
+      localStorage.setItem(
+        `ptg_booking_confirmed_${appId}`,
+        JSON.stringify({ date: selectedDate, time: selectedTime })
+      );
+    } catch {}
+
     addNotification({
       type: "booking", userType: "retailer",
       title: "Walkthrough Scheduled",
-      body: `Your site visit at ${appInfo.stationName} is confirmed for ${selectedDate} May at ${selectedTime}.`,
+      body: `Your site visit at ${sharedApp.stationName} is confirmed for ${selectedDate} May at ${selectedTime}.`,
       href: `/retailer_backoffice/bookingConfirmedPage?appId=${appId}&date=${selectedDate}&time=${selectedTime}`,
       timestamp: new Date().toISOString(),
     });
+
+    const landlordAppId = RETAILER_TO_LANDLORD[appId];
+    if (landlordAppId) {
+      addNotification({
+        type: "booking", userType: "landlord",
+        title: "Walkthrough Confirmed by Tenant",
+        body: `${sharedApp.storeName} confirmed the walkthrough for ${selectedDate} May at ${selectedTime} at ${sharedApp.stationName}.`,
+        href: `/landlord_backoffice/landlordUpcomingBookingPage?appId=${landlordAppId}&date=${selectedDate}&time=${selectedTime}`,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    setConfirmed(true);
     router.push(`/retailer_backoffice/bookingConfirmedPage?appId=${appId}&date=${selectedDate}&time=${selectedTime}`);
   }
 
@@ -242,9 +256,9 @@ export default function ScheduleBookingPage() {
         <div className="col-span-2 bg-white rounded-2xl shadow-sm flex flex-col overflow-hidden" style={{ minHeight: "620px" }}>
           {/* Chat header */}
           <div className="flex items-center gap-3 px-5 py-4 border-b border-outline-variant/10">
-            <div className="w-9 h-9 bg-lime-400 rounded-full flex items-center justify-center text-[#1C3A1C] font-bold text-sm flex-shrink-0">KS</div>
+            <div className="w-9 h-9 bg-lime-400 rounded-full flex items-center justify-center text-[#1C3A1C] font-bold text-sm flex-shrink-0">{sharedApp.specialistInitials}</div>
             <div className="flex-1 min-w-0">
-              <div className="font-semibold text-sm text-on-surface">Kanya Srisuk · PTG Leasing Specialist</div>
+              <div className="font-semibold text-sm text-on-surface">{sharedApp.specialistName} · PTG Leasing Specialist</div>
               <div className="text-xs text-on-surface-variant flex items-center gap-1">
                 <span className="w-1.5 h-1.5 bg-green-500 rounded-full inline-block" />
                 Online · responds within minutes
@@ -271,7 +285,7 @@ export default function ScheduleBookingPage() {
             {messages.map((msg, i) => (
               <div key={i} className={`flex gap-3 ${msg.from === "user" ? "flex-row-reverse" : ""}`}>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${msg.from === "specialist" ? "bg-lime-400 text-[#1C3A1C]" : "bg-[#1C3A1C] text-white"}`}>
-                  {msg.from === "specialist" ? "KS" : "Me"}
+                  {msg.from === "specialist" ? sharedApp.specialistInitials : "Me"}
                 </div>
                 <div className={`max-w-[72%] flex flex-col ${msg.from === "user" ? "items-end" : "items-start"}`}>
                   <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.from === "user" ? "bg-[#1C3A1C] text-white rounded-tr-sm" : "bg-white text-on-surface rounded-tl-sm shadow-sm"}`}>

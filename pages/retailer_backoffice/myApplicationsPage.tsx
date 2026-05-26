@@ -1,10 +1,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import RetailerBackofficeLayout from "@/components/retailer_backoffice/RetailerBackofficeLayout";
-
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-type AppBadge = "PENDING REVIEW" | "APPROVED" | "NOT APPROVED";
+import { SHARED_APPS, type AppBadge } from "@/lib/applicationsData";
 
 type AppItem = {
   id: string;
@@ -22,35 +19,19 @@ type AppItem = {
 
 // ── Static applications ───────────────────────────────────────────────────────
 
-const STATIC_APPS: AppItem[] = [
-  {
-    id: "PTG-APP-2025-8821",
-    stationName: "PTG Rama IX",
-    unitCode: "A-02", unitLabel: "Shopfront Unit",
-    location: "Huai Khwang, Bangkok",
-    price: 22000, leaseType: "Shopfront · 35 sqm",
-    duration: "12 Months", applied: "12 Jan 2026",
-    progress: 2, badge: "APPROVED",
-  },
-  {
-    id: "PTG-APP-2025-6174",
-    stationName: "PTG Sukhumvit 62",
-    unitCode: "B-02", unitLabel: "Premium Shopfront",
-    location: "Khlong Toei, Bangkok",
-    price: 28000, leaseType: "Premium Shopfront · 38 sqm",
-    duration: "12 Months", applied: "04 Mar 2026",
-    progress: 1, badge: "PENDING REVIEW",
-  },
-  {
-    id: "PTG-APP-2025-3302",
-    stationName: "PTG Lat Phrao 71",
-    unitCode: "F-02", unitLabel: "Pop-up Bay",
-    location: "Lat Phrao, Bangkok",
-    price: 12000, leaseType: "Pop-up Bay · 20 sqm",
-    duration: "3 Months", applied: "18 Nov 2025",
-    progress: 1, badge: "NOT APPROVED",
-  },
-];
+const STATIC_APPS: AppItem[] = SHARED_APPS.map(app => ({
+  id:          app.retailerAppId,
+  stationName: app.stationName,
+  unitCode:    app.unitCode,
+  unitLabel:   app.unitLabel,
+  location:    app.location,
+  price:       app.price,
+  leaseType:   app.leaseType,
+  duration:    app.duration,
+  applied:     app.appliedDate,
+  progress:    0,
+  badge:       app.retailerBadge,
+}));
 
 // ── Progress labels ───────────────────────────────────────────────────────────
 
@@ -100,8 +81,20 @@ const STATUS_CONFIG: Record<AppBadge, {
 };
 
 // ── Progress step helper ──────────────────────────────────────────────────────
+// effectiveProgress:
+//   NOT APPROVED → only step 0 shown (red X), rest grey
+//   PENDING REVIEW → step 0 filled green, steps 1+ empty
+//   APPROVED → steps 0+1 filled green, step 2 empty
+//   bookingStarted (APPROVED + clicked) → all 3 steps filled
 
-function StepDot({ badge, stepIndex, progress }: { badge: AppBadge; stepIndex: number; progress: number }) {
+function getEffectiveProgress(badge: AppBadge, bookingStarted: boolean): number {
+  if (badge === "NOT APPROVED")  return 0;
+  if (badge === "PENDING REVIEW") return 1;
+  if (badge === "APPROVED")      return bookingStarted ? 3 : 2;
+  return 1;
+}
+
+function StepDot({ badge, stepIndex, effectiveProgress }: { badge: AppBadge; stepIndex: number; effectiveProgress: number }) {
   if (badge === "NOT APPROVED") {
     const active = stepIndex === 0;
     return (
@@ -110,7 +103,7 @@ function StepDot({ badge, stepIndex, progress }: { badge: AppBadge; stepIndex: n
       </div>
     );
   }
-  const filled = stepIndex < progress;
+  const filled = stepIndex < effectiveProgress;
   return (
     <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${filled ? "bg-primary text-white" : "bg-outline-variant/20 text-on-surface-variant"}`}>
       {filled ? <span className="material-symbols-outlined text-[12px]">check</span> : stepIndex + 1}
@@ -122,6 +115,18 @@ function StepDot({ badge, stepIndex, progress }: { badge: AppBadge; stepIndex: n
 
 function AppCard({ app }: { app: AppItem }) {
   const cfg = STATUS_CONFIG[app.badge];
+
+  const [bookingStarted, setBookingStarted] = useState(() => {
+    try { return !!localStorage.getItem(`ptg_booking_started_${app.id}`); } catch { return false; }
+  });
+
+  const effectiveProgress = getEffectiveProgress(app.badge, bookingStarted);
+
+  function handleContinueToBooking() {
+    try { localStorage.setItem(`ptg_booking_started_${app.id}`, "1"); } catch {}
+    setBookingStarted(true);
+  }
+
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
 
@@ -168,14 +173,12 @@ function AppCard({ app }: { app: AppItem }) {
           {STEP_LABELS.map((step, i) => (
             <div key={step} className="flex items-center gap-2 flex-1">
               <div className="flex flex-col items-center gap-1">
-                <StepDot badge={app.badge} stepIndex={i} progress={app.progress} />
+                <StepDot badge={app.badge} stepIndex={i} effectiveProgress={effectiveProgress} />
                 <span className="text-[9px] text-on-surface-variant whitespace-nowrap">{step}</span>
               </div>
               {i < STEP_LABELS.length - 1 && (
                 <div className={`flex-1 h-0.5 mb-4 ${
-                  app.badge !== "NOT APPROVED" && i < app.progress - 1
-                    ? "bg-primary"
-                    : "bg-outline-variant/20"
+                  i < effectiveProgress ? "bg-primary" : "bg-outline-variant/20"
                 }`} />
               )}
             </div>
@@ -191,7 +194,7 @@ function AppCard({ app }: { app: AppItem }) {
                 <strong>Approved.</strong> Proceed to schedule your site visit and sign the lease.
               </p>
             </div>
-            <Link href={`/retailer_backoffice/scheduleBookingPage?appId=${app.id}`}>
+            <Link href={`/retailer_backoffice/scheduleBookingPage?appId=${app.id}`} onClick={handleContinueToBooking}>
               <button
                 type="button"
                 className="flex-shrink-0 flex items-center gap-1.5 bg-[#1C3A1C] text-white font-bold px-4 py-2 rounded-full text-xs cursor-pointer border-0 hover:brightness-105 transition-all"
@@ -292,21 +295,6 @@ export default function MyApplicationsPage() {
         <p className="text-sm text-on-surface-variant mt-1">
           Track and manage your retail space applications across PTG locations.
         </p>
-      </div>
-
-      {/* ── Summary chips ── */}
-      <div className="flex items-center gap-3 mb-5 flex-wrap">
-        {[
-          { label: "Total",       count: counts.all,      bg: "bg-white border border-outline-variant/20",           text: "text-on-surface" },
-          { label: "Approved",    count: counts.approved,  bg: "bg-[#1C3A1C]/8",                                    text: "text-[#1C3A1C] font-semibold" },
-          { label: "Pending",     count: counts.pending,   bg: "bg-blue-50",                                         text: "text-blue-700 font-semibold" },
-          { label: "Not Approved",count: counts.rejected,  bg: "bg-red-50",                                          text: "text-red-600 font-semibold" },
-        ].map(chip => (
-          <div key={chip.label} className={`flex items-center gap-2 px-3.5 py-2 rounded-full text-xs ${chip.bg}`}>
-            <span className={chip.text}>{chip.count}</span>
-            <span className="text-on-surface-variant">{chip.label}</span>
-          </div>
-        ))}
       </div>
 
       {/* ── Tab bar ── */}

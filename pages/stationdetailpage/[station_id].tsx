@@ -4,7 +4,6 @@ import Footer from "@/components/common/Footer";
 import StationDetailHeader from "@/components/stationdetailpage/StationDetailHeader";
 import StationDetailKpiSection from "@/components/stationdetailpage/StationDetailKpiSection";
 import TrafficTrendChart from "@/components/stationdetailpage/TrafficTrendChart";
-import ProInsightsCard from "@/components/stationdetailpage/ProInsightsCard";
 import StationDetailSpacesSection from "@/components/stationdetailpage/StationDetailSpacesSection";
 import LocationSpecTable from "@/components/stationdetailpage/LocationSpecTable";
 import { STATIONS_BY_ID, type Station } from "@/lib/stations";
@@ -38,10 +37,7 @@ export default function StationDetailPage({ station }: { station: Station }) {
             <StationDetailHeader station={station} />
 <div className="space-y-12">
               <StationDetailKpiSection station={station} />
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:items-stretch">
-                <TrafficTrendChart station={station} />
-                <ProInsightsCard />
-              </div>
+              <TrafficTrendChart station={station} />
               <StationDetailSpacesSection station={station} />
               <LocationSpecTable station={station} />
             </div>
