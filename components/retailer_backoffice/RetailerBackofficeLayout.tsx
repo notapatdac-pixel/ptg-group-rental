@@ -5,10 +5,10 @@ import NavBar from "@/components/common/NavBar";
 import AiAdvisorChat from "@/components/common/AiAdvisorChat";
 
 const NAV_ITEMS = [
-  { label: "Overview",       icon: "dashboard",     href: "/retailer_backoffice/retailerDashboardPage" },
-  { label: "Performance",    icon: "bar_chart",      href: "/retailer_backoffice/performancePage" },
-  { label: "ML Predictions", icon: "model_training", href: "/retailer_backoffice/mlPredictionsPage" },
-  { label: "My Applications",icon: "folder_open",    href: "/retailer_backoffice/myApplicationsPage" },
+  { label: "Overview",        icon: "dashboard",      href: "/retailer_backoffice/retailerDashboardPage" },
+  { label: "Performance",     icon: "bar_chart",       href: "/retailer_backoffice/performancePage" },
+  { label: "ML Predictions",  icon: "model_training",  href: "/retailer_backoffice/mlPredictionsPage" },
+  { label: "My Applications", icon: "folder_open",     href: "/retailer_backoffice/myApplicationsPage" },
 ];
 
 function LayoutInner({ children }: { children: ReactNode }) {

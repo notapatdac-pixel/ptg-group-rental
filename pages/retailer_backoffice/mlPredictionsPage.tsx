@@ -97,6 +97,8 @@ const EXPANSION_UNITS = [
     dotCls: "bg-emerald-500",
     revenueUplift: "฿38,000–฿52,000",
     whyMatch: ["Matches your daily customer volume", "Within your rental budget", "High EV-user traffic — fits your product mix"],
+    stationId: "bangna",
+    unitId: "bn_a01",
   },
   {
     name: "PTG Lat Phrao 71",
@@ -112,6 +114,8 @@ const EXPANSION_UNITS = [
     dotCls: "bg-emerald-500",
     revenueUplift: "฿28,000–฿40,000",
     whyMatch: ["Strong morning commuter overlap with your peak hours", "Lower rent = faster break-even", "MRT access drives repeat visits"],
+    stationId: "latphrao",
+    unitId: "lp_e01",
   },
   {
     name: "PTG Rama 9",
@@ -127,6 +131,8 @@ const EXPANSION_UNITS = [
     dotCls: "bg-amber-400",
     revenueUplift: "฿18,000–฿28,000",
     whyMatch: ["Lowest entry cost in your shortlist", "Complements your existing cluster", "Medium traffic — lower risk for a first expansion"],
+    stationId: "rama9",
+    unitId: "rama9_a02",
   },
 ];
 
@@ -458,23 +464,9 @@ export default function MlPredictionsPage() {
     <RetailerBackofficeLayout>
 
       {/* ── Header ── */}
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <div className="flex items-center gap-1.5 mb-1">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-              {T.aiPowered}
-            </span>
-          </div>
-          <h1 className="text-3xl font-bold italic text-[#1C3A1C]">{T.pageTitle}</h1>
-          <p className="text-sm text-on-surface-variant mt-1">{T.pageSubtitle}</p>
-        </div>
-        <button
-          type="button"
-          className="flex items-center gap-1.5 border border-outline-variant text-on-surface text-xs font-medium px-4 py-2.5 rounded-full bg-white cursor-pointer hover:bg-surface-container-low transition-colors"
-        >
-          <span className="material-symbols-outlined text-[15px]">refresh</span>{T.refresh}
-        </button>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold italic text-[#1C3A1C]">{T.pageTitle}</h1>
+        <p className="text-sm text-on-surface-variant mt-1">{T.pageSubtitle}</p>
       </div>
 
       {/* ── KPI Cards ── */}

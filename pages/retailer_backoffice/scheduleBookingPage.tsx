@@ -1,0 +1,313 @@
+"use client";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/router";
+import Link from "next/link";
+import RetailerBackofficeLayout from "@/components/retailer_backoffice/RetailerBackofficeLayout";
+import { addNotification } from "@/lib/notificationStore";
+
+// ── Static data ────────────────────────────────────────────────────────────────
+
+const APP_DATA: Record<string, {
+  stationName: string; unit: string; unitLabel: string;
+  price: string; duration: string; location: string;
+}> = {
+  "PTG-APP-2025-8821": {
+    stationName: "PTG Rama IX",
+    unit: "A-02", unitLabel: "Shopfront Unit",
+    price: "฿22,000", duration: "12 Months",
+    location: "Huai Khwang, Bangkok",
+  },
+};
+
+const DAYS = [
+  { day: "Mon", date: "26" }, { day: "Tue", date: "27" }, { day: "Wed", date: "28" },
+  { day: "Thu", date: "29" }, { day: "Fri", date: "30" }, { day: "Sat", date: "31" },
+];
+const TIMES = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"];
+
+const DOCS = [
+  { id: "d1", label: "Company Registration / Business License",   done: true  },
+  { id: "d2", label: "Applicant ID (National ID or Passport)",   done: true  },
+  { id: "d3", label: "Store Concept Presentation (PDF or PPT)",  done: false },
+  { id: "d4", label: "Financial Statement or Bank Statement",    done: false },
+  { id: "d5", label: "Signed Letter of Intent (LOI)",            done: false },
+];
+
+const SEED_MESSAGES = [
+  {
+    from: "specialist" as const, name: "Kanya S.", time: "09:14",
+    text: "Hi! I've reviewed your application for Unit A-02 at PTG Rama IX. Everything looks great — congratulations on the approval! When would you like to schedule your site walkthrough?",
+  },
+  {
+    from: "user" as const, name: "You", time: "09:28",
+    text: "Hi Kanya, thanks so much! I'm flexible Thursday or Friday this week — afternoon works best for me.",
+  },
+  {
+    from: "specialist" as const, name: "Kanya S.", time: "09:35",
+    text: "Perfect. I have Thursday 29th at 14:00 or 15:00, and Friday 30th at 10:00 available. Would any of those suit you?",
+  },
+];
+
+interface Message {
+  from: "specialist" | "user";
+  name: string;
+  time: string;
+  text: string;
+}
+
+export default function ScheduleBookingPage() {
+  const router   = useRouter();
+  const appId    = typeof router.query.appId === "string" ? router.query.appId : "PTG-APP-2025-8821";
+  const appInfo  = APP_DATA[appId] ?? APP_DATA["PTG-APP-2025-8821"];
+
+  const [selectedDate, setSelectedDate] = useState("29");
+  const [selectedTime, setSelectedTime] = useState("14:00");
+  const [confirmed, setConfirmed]       = useState(false);
+  const [messages, setMessages]         = useState<Message[]>(SEED_MESSAGES);
+  const [draft, setDraft]               = useState("");
+  const [docs, setDocs]                 = useState(DOCS);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  function sendMessage() {
+    if (!draft.trim()) return;
+    const now = new Date();
+    setMessages(prev => [...prev, {
+      from: "user", name: "You",
+      time: `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`,
+      text: draft.trim(),
+    }]);
+    setDraft("");
+    setTimeout(() => {
+      setMessages(prev => [...prev, {
+        from: "specialist", name: "Kanya S.",
+        time: new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
+        text: "Thanks for confirming! I'll send you the final details and location pin shortly.",
+      }]);
+    }, 1800);
+  }
+
+  function handleConfirm() {
+    setConfirmed(true);
+    addNotification({
+      type: "booking", userType: "retailer",
+      title: "Walkthrough Scheduled",
+      body: `Your site visit at ${appInfo.stationName} is confirmed for ${selectedDate} May at ${selectedTime}.`,
+      href: `/retailer_backoffice/bookingConfirmedPage?appId=${appId}&date=${selectedDate}&time=${selectedTime}`,
+      timestamp: new Date().toISOString(),
+    });
+    router.push(`/retailer_backoffice/bookingConfirmedPage?appId=${appId}&date=${selectedDate}&time=${selectedTime}`);
+  }
+
+  function toggleDoc(id: string) {
+    setDocs(prev => prev.map(d => d.id === id ? { ...d, done: !d.done } : d));
+  }
+
+  const doneDocs  = docs.filter(d => d.done).length;
+  const dayLabel  = DAYS.find(d => d.date === selectedDate);
+
+  return (
+    <RetailerBackofficeLayout>
+
+      {/* ── Breadcrumb ── */}
+      <div className="flex items-center gap-2 mb-5 text-sm text-on-surface-variant">
+        <Link href="/retailer_backoffice/myApplicationsPage" className="hover:text-primary cursor-pointer">My Applications</Link>
+        <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+        <span className="text-on-surface font-medium">Schedule Booking</span>
+      </div>
+
+      {/* ── App summary strip ── */}
+      <div className="bg-white rounded-2xl shadow-sm px-6 py-4 mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+            <span className="material-symbols-outlined text-primary text-[20px]">store</span>
+          </div>
+          <div>
+            <div className="text-sm font-bold text-on-surface">{appInfo.stationName} · {appInfo.unit} — {appInfo.unitLabel}</div>
+            <div className="text-xs text-on-surface-variant">{appInfo.location} · {appInfo.price}/mo · {appInfo.duration}</div>
+          </div>
+        </div>
+        <span className="text-[10px] font-bold px-3 py-1.5 rounded-full bg-primary/10 text-primary">APPROVED</span>
+      </div>
+
+      {/* ── 3-col layout ── */}
+      <div className="grid grid-cols-3 gap-5">
+
+        {/* Col 1: Calendar + Confirm */}
+        <div className="space-y-4">
+          <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <h3 className="font-semibold text-on-surface mb-0.5">Book Site Walkthrough</h3>
+            <p className="text-xs text-on-surface-variant mb-4">Select a date and time for your visit to {appInfo.stationName}.</p>
+
+            {/* Month */}
+            <div className="flex items-center justify-between mb-3">
+              <button type="button" className="text-on-surface-variant bg-transparent border-0 cursor-pointer">
+                <span className="material-symbols-outlined text-xl">chevron_left</span>
+              </button>
+              <span className="text-sm font-semibold text-on-surface">May 2026</span>
+              <button type="button" className="text-on-surface-variant bg-transparent border-0 cursor-pointer">
+                <span className="material-symbols-outlined text-xl">chevron_right</span>
+              </button>
+            </div>
+
+            {/* Days */}
+            <div className="grid grid-cols-6 gap-1 mb-4">
+              {DAYS.map(d => (
+                <button
+                  key={d.date}
+                  type="button"
+                  onClick={() => setSelectedDate(d.date)}
+                  className={`rounded-xl py-2 flex flex-col items-center gap-0.5 border-0 cursor-pointer transition-colors ${
+                    d.date === selectedDate ? "bg-[#1C3A1C] text-white" : "bg-[#F5F2EB] text-on-surface hover:bg-primary/10"
+                  }`}
+                >
+                  <span className="text-[9px] font-bold uppercase">{d.day}</span>
+                  <span className="text-sm font-bold">{d.date}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Times */}
+            <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Available Times</div>
+            <div className="grid grid-cols-3 gap-1.5 mb-5">
+              {TIMES.map(t => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setSelectedTime(t)}
+                  className={`py-2 rounded-lg text-xs font-medium border-0 cursor-pointer transition-colors ${
+                    t === selectedTime ? "bg-[#1C3A1C] text-white" : "bg-[#F5F2EB] text-on-surface-variant hover:bg-primary/10"
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+
+            {/* Selection summary */}
+            <div className="bg-primary/5 rounded-xl p-3 mb-4 flex items-center gap-2.5">
+              <span className="material-symbols-outlined text-primary text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>event</span>
+              <div>
+                <div className="text-xs font-bold text-on-surface">
+                  {dayLabel?.day}, {dayLabel?.date} May 2026 · {selectedTime}
+                </div>
+                <div className="text-[10px] text-on-surface-variant">{appInfo.stationName} · 1-hr walkthrough</div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleConfirm}
+              disabled={confirmed}
+              className="w-full bg-[#1C3A1C] text-white font-bold py-3 rounded-xl text-sm cursor-pointer border-0 hover:brightness-105 disabled:opacity-60 flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-outlined text-[16px]">check_circle</span>
+              {confirmed ? "Booking Confirmed" : "Confirm Walkthrough"}
+            </button>
+          </div>
+
+          {/* Document checklist */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-on-surface">Documents Required</h3>
+              <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${doneDocs === docs.length ? "bg-primary/10 text-primary" : "bg-amber-100 text-amber-700"}`}>
+                {doneDocs}/{docs.length} ready
+              </span>
+            </div>
+            <p className="text-xs text-on-surface-variant mb-3">Prepare these before your site walkthrough.</p>
+            <div className="space-y-2">
+              {docs.map(d => (
+                <button
+                  key={d.id}
+                  type="button"
+                  onClick={() => toggleDoc(d.id)}
+                  className={`w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left cursor-pointer transition-colors border-0 ${
+                    d.done ? "bg-primary/5" : "bg-[#F5F2EB] hover:bg-primary/5"
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${d.done ? "bg-primary" : "bg-outline-variant/30"}`}>
+                    {d.done && <span className="material-symbols-outlined text-white text-[12px]">check</span>}
+                  </div>
+                  <span className={`text-xs ${d.done ? "text-on-surface font-medium" : "text-on-surface-variant"}`}>{d.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Col 2+3: Chat */}
+        <div className="col-span-2 bg-white rounded-2xl shadow-sm flex flex-col overflow-hidden" style={{ minHeight: "620px" }}>
+          {/* Chat header */}
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-outline-variant/10">
+            <div className="w-9 h-9 bg-lime-400 rounded-full flex items-center justify-center text-[#1C3A1C] font-bold text-sm flex-shrink-0">KS</div>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-sm text-on-surface">Kanya Srisuk · PTG Leasing Specialist</div>
+              <div className="text-xs text-on-surface-variant flex items-center gap-1">
+                <span className="w-1.5 h-1.5 bg-green-500 rounded-full inline-block" />
+                Online · responds within minutes
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button type="button" className="w-8 h-8 rounded-xl bg-[#F5F2EB] flex items-center justify-center hover:bg-primary/10 transition-colors border-0 cursor-pointer">
+                <span className="material-symbols-outlined text-[18px] text-on-surface-variant">phone</span>
+              </button>
+              <button type="button" className="w-8 h-8 rounded-xl bg-[#F5F2EB] flex items-center justify-center hover:bg-primary/10 transition-colors border-0 cursor-pointer">
+                <span className="material-symbols-outlined text-[18px] text-on-surface-variant">video_call</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Info strip */}
+          <div className="px-5 py-2.5 bg-primary/[0.04] border-b border-outline-variant/10 flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
+            <span className="text-[10px] text-on-surface-variant">Messages are private between you and the PTG leasing team · Ref: {appId}</span>
+          </div>
+
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-[#F5F2EB]">
+            {messages.map((msg, i) => (
+              <div key={i} className={`flex gap-3 ${msg.from === "user" ? "flex-row-reverse" : ""}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${msg.from === "specialist" ? "bg-lime-400 text-[#1C3A1C]" : "bg-[#1C3A1C] text-white"}`}>
+                  {msg.from === "specialist" ? "KS" : "Me"}
+                </div>
+                <div className={`max-w-[72%] flex flex-col ${msg.from === "user" ? "items-end" : "items-start"}`}>
+                  <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.from === "user" ? "bg-[#1C3A1C] text-white rounded-tr-sm" : "bg-white text-on-surface rounded-tl-sm shadow-sm"}`}>
+                    {msg.text}
+                  </div>
+                  <span className="text-[10px] text-on-surface-variant mt-1">{msg.time}</span>
+                </div>
+              </div>
+            ))}
+            <div ref={chatEndRef} />
+          </div>
+
+          {/* Input */}
+          <div className="p-4 border-t border-outline-variant/10 flex gap-3 items-center bg-white">
+            <button type="button" className="text-on-surface-variant hover:text-on-surface bg-transparent border-0 cursor-pointer">
+              <span className="material-symbols-outlined text-[20px]">attach_file</span>
+            </button>
+            <input
+              value={draft}
+              onChange={e => setDraft(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && sendMessage()}
+              placeholder="Type a message…"
+              className="flex-1 bg-[#F5F2EB] rounded-full px-4 py-2.5 text-sm border-none outline-none"
+            />
+            <button
+              type="button"
+              onClick={sendMessage}
+              disabled={!draft.trim()}
+              className="w-9 h-9 bg-[#1C3A1C] rounded-full flex items-center justify-center border-0 cursor-pointer disabled:opacity-40"
+            >
+              <span className="material-symbols-outlined text-white text-[18px]">send</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </RetailerBackofficeLayout>
+  );
+}

@@ -10,12 +10,14 @@ function SpaceCard({
   price,
   desc,
   img,
+  applyHref,
 }: {
   unit: string;
   name: string;
   price: string;
   desc: string;
   img: string;
+  applyHref: string;
 }) {
   return (
     <div className="group bg-surface-container-lowest rounded-xl editorial-shadow overflow-hidden border border-transparent hover:border-primary/20 transition-all">
@@ -41,9 +43,9 @@ function SpaceCard({
           </p>
         </div>
         <p className="text-sm text-on-surface-variant mb-6 line-clamp-2">{desc}</p>
-        <button type="button" className={BTN_PRIMARY_BLOCK}>
+        <Link href={applyHref} className={BTN_PRIMARY_BLOCK}>
           Apply Now
-        </button>
+        </Link>
       </div>
     </div>
   );
@@ -70,6 +72,7 @@ export default function StationDetailSpacesSection({ station }: { station: Stati
             price={sp.price}
             desc={sp.desc}
             img={sp.img}
+            applyHref={`/retailer_backoffice/applyFlowPage?applyNow=1&stationId=${station.id}&unitCode=${encodeURIComponent(sp.unit)}`}
           />
         ))}
       </div>

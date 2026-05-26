@@ -44,9 +44,15 @@ export default function StationDetailHeader({ station }: { station: Station }) {
         </div>
         {user?.type !== "landlord" && (
           <div className="flex-shrink-0">
-            <button type="button" className={BTN_LANDING_PRIMARY}>
-              {user?.type === "retailer" ? "Apply" : "Sign in to Apply"}
-            </button>
+            {user?.type === "retailer" ? (
+              <Link href={`/retailer_backoffice/applyFlowPage?stationId=${station.id}`} className={BTN_LANDING_PRIMARY}>
+                Apply
+              </Link>
+            ) : (
+              <Link href="/loginpage/loginPage" className={BTN_LANDING_PRIMARY}>
+                Sign in to Apply
+              </Link>
+            )}
           </div>
         )}
       </div>

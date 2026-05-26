@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/authContext";
 import { useLanguage } from "@/lib/languageContext";
 import { useStoreFilter, STORE_LIST } from "@/lib/storeFilterContext";
 import { useStationFilter, STATION_LIST } from "@/lib/stationFilterContext";
+import NotificationBell from "@/components/common/NotificationBell";
 
 interface NavBarProps {
   showSearch?: boolean;
@@ -191,6 +192,7 @@ export default function NavBar({ showSearch = false }: NavBarProps) {
       <StoreFilterPicker />
       <StationFilterPicker />
       <LanguageSwitcher />
+      <NotificationBell />
       <ProfileMenu />
     </div>
   ) : (
