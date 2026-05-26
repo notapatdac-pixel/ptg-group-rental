@@ -54,25 +54,25 @@ export default function AiSuggestionInline({ role, pageContext, dataContext, lab
   }, [storeId, stationId, dataContext]);
 
   return (
-    <div className="bg-[#1C3A1C] rounded-xl p-4">
+    <div className="bg-[#D9EDD9] rounded-xl p-4 shadow-sm">
       <div className="flex items-center gap-1.5 mb-2">
         <span
-          className="material-symbols-outlined text-[14px] text-lime-300"
+          className="material-symbols-outlined text-[14px] text-primary"
           style={{ fontVariationSettings: "'FILL' 1" }}
         >
           auto_awesome
         </span>
-        <span className="text-[9px] font-bold tracking-widest text-lime-300">{label ?? "AI SUGGESTION"}</span>
+        <span className="text-[9px] font-bold tracking-widest text-primary">{label ?? "AI SUGGESTION"}</span>
       </div>
 
       {loading ? (
         <div className="flex items-center gap-1.5 py-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: "0ms" }} />
-          <span className="w-1.5 h-1.5 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: "150ms" }} />
-          <span className="w-1.5 h-1.5 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: "300ms" }} />
+          <span className="w-1.5 h-1.5 rounded-full bg-primary/30 animate-bounce" style={{ animationDelay: "0ms" }} />
+          <span className="w-1.5 h-1.5 rounded-full bg-primary/30 animate-bounce" style={{ animationDelay: "150ms" }} />
+          <span className="w-1.5 h-1.5 rounded-full bg-primary/30 animate-bounce" style={{ animationDelay: "300ms" }} />
         </div>
       ) : (
-        <p className="text-xs text-white/80 leading-relaxed">{summary}</p>
+        <p className="text-xs text-on-surface-variant leading-relaxed">{summary}</p>
       )}
     </div>
   );

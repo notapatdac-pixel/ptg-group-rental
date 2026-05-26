@@ -87,10 +87,10 @@ export default function LandlordBookingDiscussionPage() {
         </span>
       </div>
 
-      <div className="grid grid-cols-3 gap-5">
+      <div>
 
-        {/* Left: Chat */}
-        <div className="col-span-2">
+        {/* Chat */}
+        <div>
           <div className="bg-white rounded-2xl shadow-sm flex flex-col h-[500px]">
             <div className="px-5 py-4 border-b border-outline-variant/10 flex items-center gap-3">
               <span className="material-symbols-outlined text-primary text-[20px]">chat</span>
@@ -128,42 +128,6 @@ export default function LandlordBookingDiscussionPage() {
                 <span className="material-symbols-outlined text-[18px]">send</span>
               </button>
             </div>
-          </div>
-        </div>
-
-        {/* Right: Booking Status */}
-        <div>
-          <div className="bg-white rounded-2xl shadow-sm p-5">
-            <div className="text-sm font-bold text-on-surface mb-4">Booking Status</div>
-            {!bookingConfirmed ? (
-              <div className="bg-[#F5F2EB] rounded-xl p-5 text-center">
-                <span className="material-symbols-outlined text-on-surface-variant/40 text-[40px] mb-2 block">pending</span>
-                <div className="text-sm font-semibold text-on-surface mb-2">Awaiting Tenant Confirmation</div>
-                <div className="text-xs text-on-surface-variant leading-relaxed">
-                  The tenant is selecting a date and time from their booking dashboard. You will be notified once they confirm.
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="bg-[#F5F2EB] rounded-xl p-4 mb-4">
-                  <div className="text-xs text-on-surface-variant mb-0.5">Date</div>
-                  <div className="text-sm font-bold text-on-surface">{confirmedDate} May 2026</div>
-                  <div className="text-xs text-on-surface-variant mt-2 mb-0.5">Time</div>
-                  <div className="text-sm font-bold text-on-surface">{confirmedTime}</div>
-                  <div className="text-xs text-on-surface-variant mt-2 mb-0.5">Location</div>
-                  <div className="text-sm font-bold text-on-surface">{appInfo.stationName}</div>
-                </div>
-                <div className="flex items-center gap-2 text-primary text-xs font-semibold mb-4">
-                  <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                  Walkthrough confirmed by tenant
-                </div>
-                <Link href={`/landlord_backoffice/landlordUpcomingBookingPage?appId=${appId}&date=${confirmedDate}&time=${confirmedTime}`}>
-                  <button type="button" className="w-full bg-[#1C3A1C] text-white font-bold py-3 rounded-xl text-sm cursor-pointer border-0 hover:brightness-105">
-                    View Upcoming Booking
-                  </button>
-                </Link>
-              </>
-            )}
           </div>
         </div>
 

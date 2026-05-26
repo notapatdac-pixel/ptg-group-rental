@@ -13,7 +13,7 @@ export default function LandlordRevenuePage() {
       {/* Header */}
       <div className="flex items-start justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold italic text-[#1C3A1C]">Revenue Portfolio</h1>
+          <h1 className="text-3xl font-bold text-on-surface">Revenue Portfolio</h1>
           <p className="text-sm text-on-surface-variant mt-1">Rental income tracking and financial forecasting.</p>
         </div>
         <div className="flex gap-3">

@@ -1,6 +1,16 @@
 import stationLatphrao71 from "@/components/image/station-ptg-latphrao71.png";
 import stationRamaix from "@/components/image/station-ptg-ramaix.png";
 import stationBangna from "@/components/image/station-ptg-bangna.png";
+import { STATIONS_DATA } from "@/components/landlord_backoffice/stationsData";
+
+const D = {
+  latphrao71: STATIONS_DATA["PTG Lat Phrao 71"],
+  ramaix:     STATIONS_DATA["PTG Sukhumvit 62"],
+  bangna:     STATIONS_DATA["PTG Bang Na"],
+} as const;
+
+function parseFootfall(s: string): number { return parseInt(s.replace(/,/g, ""), 10); }
+function parseRevenueK(s: string): number { return parseInt(s, 10); }
 
 export interface StationSpace {
   unit: string;
@@ -8,6 +18,15 @@ export interface StationSpace {
   price: string;
   desc: string;
   img: string;
+}
+
+export interface TenantUnit {
+  id: string;
+  type: string;
+  tenant: string | null;
+  sqm: number;
+  rent: number;
+  status: "occupied" | "vacant";
 }
 
 export interface StationDetail {
@@ -25,6 +44,16 @@ export interface StationDetail {
   chart_peak_label: string;
   specs: [string, string, string][];
   spaces: StationSpace[];
+  // landlord-aligned fields
+  operating_hours: string;
+  total_area: number;
+  vacant_count: number;
+  occupied_count: number;
+  rent_min: number;
+  rent_max: number;
+  ai_score_landlord: number;
+  ai_note: string;
+  tenant_mix: TenantUnit[];
 }
 
 export interface Station {
@@ -66,15 +95,24 @@ export const STATIONS: Station[] = [
     traffic_badge_short: "High",
     region_line: "Bangkok, Thailand",
     detail: {
-      daily_customers: "890",
-      daily_delta: "+12%",
-      dwell_min: "12",
-      est_revenue: "285K",
+      daily_customers: D.latphrao71.footfall,
+      daily_delta: D.latphrao71.dailyDelta,
+      dwell_min: String(D.latphrao71.dwellMinNum),
+      est_revenue: D.latphrao71.revenue,
       ai_score: "87%",
-      daily_customers_num: 890,
-      dwell_min_num: 12,
-      est_revenue_k: 285,
+      daily_customers_num: parseFootfall(D.latphrao71.footfall),
+      dwell_min_num: D.latphrao71.dwellMinNum,
+      est_revenue_k: parseRevenueK(D.latphrao71.revenue),
       ai_score_num: 87,
+      operating_hours: D.latphrao71.hours,
+      total_area: D.latphrao71.area,
+      vacant_count: D.latphrao71.total - D.latphrao71.occupied,
+      occupied_count: D.latphrao71.occupied,
+      rent_min: Math.min(...D.latphrao71.units.map(u => u.rent)),
+      rent_max: Math.max(...D.latphrao71.units.map(u => u.rent)),
+      ai_score_landlord: D.latphrao71.aiScore,
+      ai_note: D.latphrao71.aiNote,
+      tenant_mix: D.latphrao71.units.map(u => ({ ...u })),
       pro_card_stat: { value: 98, suffix: "%", label: "Match confidence" },
       chart_heights_pct: [40, 55, 85, 60, 45, 70],
       chart_peak_label: "924 Peak",
@@ -127,15 +165,24 @@ export const STATIONS: Station[] = [
     traffic_badge_short: "Medium",
     region_line: "Bangkok, Thailand",
     detail: {
-      daily_customers: "720",
-      daily_delta: "+8%",
-      dwell_min: "9",
-      est_revenue: "198K",
+      daily_customers: D.ramaix.footfall,
+      daily_delta: D.ramaix.dailyDelta,
+      dwell_min: String(D.ramaix.dwellMinNum),
+      est_revenue: D.ramaix.revenue,
       ai_score: "81%",
-      daily_customers_num: 720,
-      dwell_min_num: 9,
-      est_revenue_k: 198,
+      daily_customers_num: parseFootfall(D.ramaix.footfall),
+      dwell_min_num: D.ramaix.dwellMinNum,
+      est_revenue_k: parseRevenueK(D.ramaix.revenue),
       ai_score_num: 81,
+      operating_hours: D.ramaix.hours,
+      total_area: D.ramaix.area,
+      vacant_count: D.ramaix.total - D.ramaix.occupied,
+      occupied_count: D.ramaix.occupied,
+      rent_min: Math.min(...D.ramaix.units.map(u => u.rent)),
+      rent_max: Math.max(...D.ramaix.units.map(u => u.rent)),
+      ai_score_landlord: D.ramaix.aiScore,
+      ai_note: D.ramaix.aiNote,
+      tenant_mix: D.ramaix.units.map(u => ({ ...u })),
       pro_card_stat: { value: 92, suffix: "%", label: "Match confidence" },
       chart_heights_pct: [35, 48, 62, 55, 50, 58],
       chart_peak_label: "780 Peak",
@@ -188,15 +235,24 @@ export const STATIONS: Station[] = [
     traffic_badge_short: "High",
     region_line: "Samut Prakan, Thailand",
     detail: {
-      daily_customers: "640",
-      daily_delta: "+15%",
-      dwell_min: "11",
-      est_revenue: "210K",
+      daily_customers: D.bangna.footfall,
+      daily_delta: D.bangna.dailyDelta,
+      dwell_min: String(D.bangna.dwellMinNum),
+      est_revenue: D.bangna.revenue,
       ai_score: "84%",
-      daily_customers_num: 640,
-      dwell_min_num: 11,
-      est_revenue_k: 210,
+      daily_customers_num: parseFootfall(D.bangna.footfall),
+      dwell_min_num: D.bangna.dwellMinNum,
+      est_revenue_k: parseRevenueK(D.bangna.revenue),
       ai_score_num: 84,
+      operating_hours: D.bangna.hours,
+      total_area: D.bangna.area,
+      vacant_count: D.bangna.total - D.bangna.occupied,
+      occupied_count: D.bangna.occupied,
+      rent_min: Math.min(...D.bangna.units.map(u => u.rent)),
+      rent_max: Math.max(...D.bangna.units.map(u => u.rent)),
+      ai_score_landlord: D.bangna.aiScore,
+      ai_note: D.bangna.aiNote,
+      tenant_mix: D.bangna.units.map(u => ({ ...u })),
       pro_card_stat: { value: 85, suffix: "%", label: "Match confidence" },
       chart_heights_pct: [42, 50, 78, 52, 48, 65],
       chart_peak_label: "702 Peak",

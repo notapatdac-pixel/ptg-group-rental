@@ -234,7 +234,7 @@ export default function LandlordOverviewPage() {
     <LandlordBackofficeLayout>
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold italic text-[#1C3A1C]">{T.title}</h1>
+        <h1 className="text-3xl font-bold text-on-surface">{T.title}</h1>
         <p className="text-sm text-on-surface-variant mt-1">
           {T.subtitle}{" "}
           <span className="font-bold text-primary">{T.benchmarkText}</span>{" "}

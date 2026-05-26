@@ -9,13 +9,14 @@ import type { SharedApp, AppBadge } from "@/lib/applicationsData";
 import { getStoreImages } from "@/lib/storeImages";
 import { supabase } from "@/lib/supabaseClient";
 
-type TabId = "pending" | "approved" | "booking_confirmed";
+type TabId = "all" | "pending" | "approved" | "booking_confirmed";
 type LandlordStatus = "pending" | "approved" | "declined";
 
 const STRINGS = {
   en: {
     titlePlain: "Tenant ",
     titleItalic: "Applications",
+    tabAll: "All",
     tabPending: "Pending Review",
     tabApproved: "Approved",
     tabConfirmed: "Booking Confirmed",
@@ -38,6 +39,7 @@ const STRINGS = {
   th: {
     titlePlain: "ใบสมัคร",
     titleItalic: "ผู้เช่า",
+    tabAll: "ทั้งหมด",
     tabPending: "รอการพิจารณา",
     tabApproved: "อนุมัติแล้ว",
     tabConfirmed: "ยืนยันการจอง",
@@ -270,12 +272,12 @@ function AppCard({
           </div>
 
           {/* AI Business Summary */}
-          <div className="bg-[#1C3A1C] rounded-xl p-4 mb-4">
+          <div className="bg-[#D9EDD9] rounded-xl p-4 mb-4 shadow-sm">
             <div className="flex items-center gap-1 mb-2">
-              <span className="material-symbols-outlined text-[14px] text-lime-300" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
-              <span className="text-[9px] font-bold tracking-widest text-lime-300">{T.aiSummary}</span>
+              <span className="material-symbols-outlined text-[14px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+              <span className="text-[9px] font-bold tracking-widest text-primary">{T.aiSummary}</span>
             </div>
-            <p className="text-sm text-white/80 leading-relaxed">{aiText}</p>
+            <p className="text-sm text-on-surface-variant leading-relaxed">{aiText}</p>
           </div>
 
           {/* Action row */}
@@ -457,6 +459,7 @@ export default function LandlordApplicationsPage() {
   const confirmedApps  = allFiltered.filter(a => !!bookingConfirmed[a.landlordAppId]);
 
   const tabApps: Record<TabId, SharedApp[]> = {
+    all:               allFiltered,
     pending:           pendingApps,
     approved:          approvedApps,
     booking_confirmed: confirmedApps,
@@ -464,6 +467,7 @@ export default function LandlordApplicationsPage() {
   const visibleApps = tabApps[activeTab];
 
   const TABS: { id: TabId; label: string; count: number }[] = [
+    { id: "all",               label: T.tabAll,       count: allFiltered.length   },
     { id: "pending",           label: T.tabPending,   count: pendingApps.length   },
     { id: "approved",          label: T.tabApproved,  count: approvedApps.length  },
     { id: "booking_confirmed", label: T.tabConfirmed, count: confirmedApps.length },
@@ -472,19 +476,9 @@ export default function LandlordApplicationsPage() {
   return (
     <LandlordBackofficeLayout>
       <div className="mb-6">
-        <div className="flex items-baseline gap-0">
-          {lang === "th" ? (
-            <>
-              <h1 className="text-3xl font-bold text-on-surface">ใบสมัคร&nbsp;</h1>
-              <h1 className="text-3xl font-bold italic text-primary">ผู้เช่า</h1>
-            </>
-          ) : (
-            <>
-              <h1 className="text-3xl font-bold text-on-surface">Tenant&nbsp;</h1>
-              <h1 className="text-3xl font-bold italic text-primary">Applications</h1>
-            </>
-          )}
-        </div>
+        <h1 className="text-3xl font-bold text-on-surface">
+          {lang === "th" ? "ใบสมัครผู้เช่า" : "Tenant Applications"}
+        </h1>
       </div>
 
       {/* Tab bar */}

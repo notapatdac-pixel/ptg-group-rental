@@ -239,7 +239,7 @@ export default function PerformancePage() {
     <RetailerBackofficeLayout>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold italic text-[#1C3A1C]">{T.headerTitle}</h1>
+        <h1 className="text-3xl font-bold text-on-surface">{T.headerTitle}</h1>
         <p className="text-sm text-on-surface-variant mt-1">{T.headerSub}</p>
       </div>
 

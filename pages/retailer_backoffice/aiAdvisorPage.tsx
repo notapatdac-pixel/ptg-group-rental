@@ -40,7 +40,7 @@ export default function AiAdvisorPage() {
             <h3 className="font-semibold text-on-surface mb-4">Strategic Recommendations</h3>
             <div className="grid grid-cols-3 gap-4">
               {RECOMMENDATIONS.map((r) => (
-                <div key={r.title} className="bg-[#F5F2EB] rounded-xl p-4 flex flex-col">
+                <div key={r.title} className="bg-[#D9EDD9] rounded-xl p-4 flex flex-col shadow-sm">
                   <span className="material-symbols-outlined text-primary text-xl mb-2">{r.icon}</span>
                   <h4 className="text-sm font-semibold text-on-surface mb-2">{r.title}</h4>
                   <p className="text-xs text-on-surface-variant flex-1">{r.body}</p>
@@ -50,9 +50,9 @@ export default function AiAdvisorPage() {
             </div>
           </div>
 
-          <div className="bg-[#F5F2EB] rounded-2xl p-6 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-full bg-[#1C3A1C] flex items-center justify-center flex-shrink-0">
-              <span className="material-symbols-outlined text-white text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>chat</span>
+          <div className="bg-[#D9EDD9] rounded-2xl p-6 flex items-center gap-4 shadow-sm">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <span className="material-symbols-outlined text-primary text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>chat</span>
             </div>
             <div>
               <div className="text-sm font-bold text-on-surface mb-0.5">Ask your AI Retail Advisor</div>

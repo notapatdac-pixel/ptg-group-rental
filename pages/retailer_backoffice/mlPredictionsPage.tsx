@@ -354,7 +354,7 @@ const ML_BY_STORE: Record<StoreId, StoreML> = {
 
 function AiBox({ text, suggestionLabel }: { text: string; suggestionLabel: string }) {
   return (
-    <div className="bg-[#F5F2EB] rounded-xl p-4 mt-4">
+    <div className="bg-[#D9EDD9] rounded-xl p-4 mt-4 shadow-sm">
       <div className="flex items-center gap-1.5 mb-2">
         <span className="material-symbols-outlined text-[14px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
           auto_awesome
@@ -465,7 +465,7 @@ export default function MlPredictionsPage() {
 
       {/* ── Header ── */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold italic text-[#1C3A1C]">{T.pageTitle}</h1>
+        <h1 className="text-3xl font-bold text-on-surface">{T.pageTitle}</h1>
         <p className="text-sm text-on-surface-variant mt-1">{T.pageSubtitle}</p>
       </div>
 
@@ -498,7 +498,7 @@ export default function MlPredictionsPage() {
       </div>
 
       {/* ── AI Predictions Summary ── */}
-      <div className="bg-white rounded-2xl shadow-sm px-5 py-4 mb-6 flex items-start gap-3">
+      <div className="bg-[#D9EDD9] rounded-2xl px-5 py-4 mb-6 flex items-start gap-3 shadow-sm">
         <span className="material-symbols-outlined text-primary text-[20px] mt-0.5 flex-shrink-0">auto_awesome</span>
         <div>
           <div className="text-xs font-bold text-primary mb-1">{T.aiPredLabel}</div>

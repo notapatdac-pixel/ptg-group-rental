@@ -25,6 +25,11 @@ export type StationData = {
   aiNote: string;
   aiNoteTh: string;
   units: StationUnit[];
+  // retailer-facing KPIs (shared source of truth with lib/stations.ts)
+  dailyCustomersNum: number;
+  dailyDelta: string;
+  dwellMinNum: number;
+  estRevenueK: number;
 };
 
 export const STATIONS_DATA: Record<string, StationData> = {
@@ -48,6 +53,10 @@ export const STATIONS_DATA: Record<string, StationData> = {
       "Strong performer. Recommend targeting premium F&B or wellness tenants for the two vacant units to maximise revenue per sqm.",
     aiNoteTh:
       "สาขานี้มีผลงานดี แนะนำให้เน้นหา F&B พรีเมียมหรือผู้เช่าด้านสุขภาพสำหรับยูนิตว่าง 2 แห่ง เพื่อเพิ่มรายได้ต่อตารางเมตรให้สูงสุด",
+    dailyCustomersNum: 890,
+    dailyDelta: "+12%",
+    dwellMinNum: 12,
+    estRevenueK: 285,
     units: [
       { id: "A1", type: "Premium Kiosk",   sqm: 25, rent: 65000, status: "occupied", tenant: "Coffee Corner Co." },
       { id: "A2", type: "Pop-up Corner",   sqm: 8,  rent: 18000, status: "occupied", tenant: "Artisan Brew" },
@@ -79,6 +88,10 @@ export const STATIONS_DATA: Record<string, StationData> = {
       "Top 10% of PTG network. Fully occupied — consider a waitlist strategy and premium pricing at next renewal cycle.",
     aiNoteTh:
       "ติด 10% สูงสุดของเครือข่าย PTG เช่าเต็มทุกยูนิต — ควรพิจารณาสร้างรายชื่อรอและปรับราคาเบี้ยเช่าขึ้นในรอบต่อสัญญา",
+    dailyCustomersNum: 720,
+    dailyDelta: "+8%",
+    dwellMinNum: 9,
+    estRevenueK: 198,
     units: [
       { id: "A1", type: "Premium Kiosk",   sqm: 30,  rent: 85000,  status: "occupied", tenant: "7-Eleven Express" },
       { id: "A2", type: "Pop-up Corner",   sqm: 8,   rent: 22000,  status: "occupied", tenant: "Coffee Corner Co." },
@@ -88,6 +101,34 @@ export const STATIONS_DATA: Record<string, StationData> = {
       { id: "B3", type: "Flagship Store",  sqm: 120, rent: 280000, status: "occupied", tenant: "Tanaka Premium Market" },
       { id: "C1", type: "Express Counter", sqm: 10,  rent: 28000,  status: "occupied", tenant: "PharmaPlus Express" },
       { id: "C2", type: "Standard Kiosk",  sqm: 18,  rent: 42000,  status: "occupied", tenant: "Artisan Brew" },
+    ],
+  },
+  "PTG Bang Na": {
+    name: "PTG Bang Na",
+    fullName: "PTG Bang Na – Highway Stop",
+    location: "Bang Na Road, Samut Prakan",
+    province: "Samut Prakan",
+    type: "Highway Stop",
+    area: 1900,
+    hours: "06:30 – 23:00",
+    description:
+      "Highway-facing station serving Bang Na–Trat corridor traffic. High transient volume with strong fuel-stop conversion.",
+    image: "/images/station-ptg-bangna.png",
+    occupied: 1,
+    total: 1,
+    revenue: "210K",
+    footfall: "8,420",
+    aiScore: 84,
+    aiNote:
+      "High growth trajectory. Single unit fully leased — consider subdividing the space at lease renewal to increase revenue per sqm.",
+    aiNoteTh:
+      "ศักยภาพเติบโตสูง ยูนิตเดียวเช่าเต็ม — พิจารณาแบ่งพื้นที่เมื่อต่อสัญญาเพื่อเพิ่มรายได้ต่อตารางเมตร",
+    dailyCustomersNum: 640,
+    dailyDelta: "+15%",
+    dwellMinNum: 11,
+    estRevenueK: 210,
+    units: [
+      { id: "A1", type: "Highway Frontage", sqm: 80, rent: 180000, status: "occupied", tenant: "QSR Express" },
     ],
   },
 };

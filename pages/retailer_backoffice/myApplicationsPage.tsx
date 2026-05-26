@@ -176,14 +176,6 @@ function AppCard({ app }: { app: AppItem }) {
             <div className="font-medium text-on-surface">{app.unitCode} — {app.unitLabel}</div>
           </div>
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Lease Type</span>
-            <div className="font-medium text-on-surface">{app.leaseType}</div>
-          </div>
-          <div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Duration</span>
-            <div className="font-medium text-on-surface">{app.duration}</div>
-          </div>
-          <div>
             <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Monthly Rent</span>
             <div className="font-medium text-on-surface">฿{app.price.toLocaleString()}</div>
           </div>

@@ -35,7 +35,7 @@ export default function StationDetailPage({ station }: { station: Station }) {
           />
           <div className="relative z-10 max-w-[1200px] mx-auto w-full px-6 py-8 pt-28 pb-28">
             <StationDetailHeader station={station} />
-<div className="space-y-12">
+            <div className="space-y-12">
               <StationDetailKpiSection station={station} />
               <TrafficTrendChart station={station} />
               <StationDetailSpacesSection station={station} />

@@ -111,7 +111,7 @@ export default function ApplyFlowPage() {
       {/* ── Step 1: Choose Station ── */}
       {step === 1 && (
         <>
-          <h1 className="text-2xl font-bold text-[#1C3A1C] mb-1">Choose a PTG Station</h1>
+          <h1 className="text-2xl font-bold text-on-surface mb-1">Choose a PTG Station</h1>
           <p className="text-sm text-on-surface-variant mb-6">Select the location where you&apos;d like to open your shop.</p>
 
           <div className="grid grid-cols-3 gap-4 mb-8">
@@ -186,7 +186,7 @@ export default function ApplyFlowPage() {
             <span className="material-symbols-outlined text-[16px]">arrow_back</span>
             Back to Stations
           </button>
-          <h1 className="text-2xl font-bold text-[#1C3A1C] mb-0.5">Choose Your Space</h1>
+          <h1 className="text-2xl font-bold text-on-surface mb-0.5">Choose Your Space</h1>
           <p className="text-sm text-on-surface-variant mb-5">{station?.title} · {station?.region_line}</p>
 
           <div className="grid grid-cols-3 gap-5 mb-6">
@@ -405,7 +405,7 @@ export default function ApplyFlowPage() {
             </button>
           )}
 
-          <h1 className="text-2xl font-bold text-[#1C3A1C] mb-1">Application Details</h1>
+          <h1 className="text-2xl font-bold text-on-surface mb-1">Application Details</h1>
           <p className="text-sm text-on-surface-variant mb-6">
             Review your details below and submit your application to the landlord.
           </p>
@@ -544,7 +544,7 @@ export default function ApplyFlowPage() {
           <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
             <span className="material-symbols-outlined text-primary text-[44px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
           </div>
-          <h1 className="text-3xl font-bold text-[#1C3A1C] mb-2 text-center">Application Submitted</h1>
+          <h1 className="text-3xl font-bold text-on-surface mb-2 text-center">Application Submitted</h1>
           <p className="text-sm text-on-surface-variant text-center mb-2">
             Your application has been sent to the PTG landlord team for review.
           </p>

@@ -399,7 +399,7 @@ export default function RetailerDashboardPage() {
     <RetailerBackofficeLayout>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold italic text-[#1C3A1C]">{T.headerTitle}</h1>
+        <h1 className="text-3xl font-bold text-on-surface">{T.headerTitle}</h1>
         <p className="text-sm text-on-surface-variant mt-1">{T.headerSubtitle}</p>
       </div>
 
@@ -498,7 +498,7 @@ export default function RetailerDashboardPage() {
               </div>
             </div>
           </div>
-          <div className="mt-4 bg-[#F5F2EB] rounded-xl px-4 py-3 flex items-start gap-2">
+          <div className="mt-4 bg-[#D9EDD9] rounded-xl px-4 py-3 flex items-start gap-2 shadow-sm">
             <span className="material-symbols-outlined text-primary text-[15px] mt-0.5 flex-shrink-0">auto_awesome</span>
             <p className="text-xs text-on-surface-variant leading-relaxed">
               <strong className="text-on-surface">{T.heatmapTipBold}</strong>{T.heatmapTip}
@@ -545,7 +545,7 @@ export default function RetailerDashboardPage() {
               ))}
             </div>
           </div>
-          <div className="bg-[#F5F2EB] rounded-xl px-3 py-3 flex items-start gap-2">
+          <div className="bg-[#D9EDD9] rounded-xl px-3 py-3 flex items-start gap-2 shadow-sm">
             <span className="material-symbols-outlined text-primary text-[15px] mt-0.5 flex-shrink-0">auto_awesome</span>
             <p className="text-xs text-on-surface-variant leading-relaxed">
               {T.hoursTipPre}<strong className="text-on-surface">{T.hoursTipBold1}</strong>{T.hoursTipMid1}<strong className="text-on-surface">{T.hoursTipBold2}</strong>{T.hoursTipMid2}<strong className="text-on-surface">{T.hoursTipBold3}</strong>{T.hoursTipPost}
@@ -592,7 +592,7 @@ export default function RetailerDashboardPage() {
             </div>
           </div>
 
-          <div className="mt-auto bg-[#F5F2EB] rounded-xl px-3 py-3 flex items-start gap-2">
+          <div className="mt-auto bg-[#D9EDD9] rounded-xl px-3 py-3 flex items-start gap-2 shadow-sm">
             <span className="material-symbols-outlined text-primary text-[15px] mt-0.5 flex-shrink-0">auto_awesome</span>
             <p className="text-xs text-on-surface-variant leading-relaxed">
               {T.customersTipPre}<strong className="text-on-surface">{T.customersTipBold}</strong>{T.customersTip}
@@ -634,7 +634,7 @@ export default function RetailerDashboardPage() {
             ))}
           </div>
 
-          <div className="mt-4 bg-[#F5F2EB] rounded-xl px-4 py-3 flex items-start gap-2">
+          <div className="mt-4 bg-[#D9EDD9] rounded-xl px-4 py-3 flex items-start gap-2 shadow-sm">
             <span className="material-symbols-outlined text-primary text-[15px] mt-0.5 flex-shrink-0">auto_awesome</span>
             <p className="text-xs text-on-surface-variant leading-relaxed">
               {storeId === "all" ? (
@@ -750,7 +750,7 @@ export default function RetailerDashboardPage() {
                 </svg>
               </div>
 
-              <div className="bg-[#F5F2EB] rounded-xl px-4 py-3 flex items-start gap-2">
+              <div className="bg-[#D9EDD9] rounded-xl px-4 py-3 flex items-start gap-2 shadow-sm">
                 <span className="material-symbols-outlined text-primary text-[15px] mt-0.5 flex-shrink-0">auto_awesome</span>
                 <p className="text-xs text-on-surface-variant leading-relaxed">
                   <strong className="text-on-surface">{T.ourSuggestion}</strong> {hLang.suggestion}

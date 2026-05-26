@@ -233,12 +233,12 @@ export default function TenantDetailPage() {
           </div>
 
           {/* AI Business Summary */}
-          <div className="bg-[#1C3A1C] rounded-2xl p-5">
+          <div className="bg-[#D9EDD9] rounded-2xl p-5 shadow-sm">
             <div className="flex items-center gap-1.5 mb-3">
-              <span className="material-symbols-outlined text-[16px] text-lime-300" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
-              <span className="text-[9px] font-bold tracking-widest text-lime-300">{T.aiSummary}</span>
+              <span className="material-symbols-outlined text-[16px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+              <span className="text-[9px] font-bold tracking-widest text-primary">{T.aiSummary}</span>
             </div>
-            <p className="text-sm text-white/80 leading-relaxed">{aiText}</p>
+            <p className="text-sm text-on-surface-variant leading-relaxed">{aiText}</p>
           </div>
 
           {/* Action button */}
