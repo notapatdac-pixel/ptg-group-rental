@@ -6,6 +6,12 @@ const RECOMMENDATIONS = [
   { icon: "people", title: "Tenant Retention Alert", body: "FreshMart's lease expires in 45 days. Based on payment history and foot traffic correlation, AI gives 72% retention probability without proactive engagement.", link: "Initiate renewal →" },
 ];
 
+const SUGGESTIONS = [
+  "Which unit has highest ROI?",
+  "When should I renegotiate leases?",
+  "Best tenant mix for Rama 9?",
+];
+
 export default function LandlordAiAdvisorPage() {
   return (
     <LandlordBackofficeLayout>
@@ -44,21 +50,13 @@ export default function LandlordAiAdvisorPage() {
             </div>
           </div>
 
-          {/* AI chat bar */}
-          <div className="bg-white rounded-2xl p-4 shadow-sm">
-            <div className="flex items-center gap-3 mb-3">
-              <input
-                placeholder="Ask about your portfolio…"
-                className="flex-1 bg-[#F5F2EB] rounded-full px-4 py-2.5 text-sm border-none outline-none"
-              />
-              <button type="button" className="w-9 h-9 bg-primary rounded-full flex items-center justify-center border-0 cursor-pointer">
-                <span className="material-symbols-outlined text-white text-sm">send</span>
-              </button>
+          <div className="bg-[#F5F2EB] rounded-2xl p-6 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-full bg-[#1C3A1C] flex items-center justify-center flex-shrink-0">
+              <span className="material-symbols-outlined text-white text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>chat</span>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {["Which unit has highest ROI?", "When should I renegotiate leases?", "Best tenant mix for Rama 9?"].map((p) => (
-                <button key={p} type="button" className="text-xs bg-surface-container-low text-on-surface-variant px-3 py-1.5 rounded-full border-none cursor-pointer hover:bg-primary/10 hover:text-primary transition-colors">{p}</button>
-              ))}
+            <div>
+              <div className="text-sm font-bold text-on-surface mb-0.5">Ask your AI Property Advisor</div>
+              <div className="text-xs text-on-surface-variant">Use the chat button in the bottom-right corner to ask anything about your portfolio, stations, or tenant pipeline.</div>
             </div>
           </div>
         </div>

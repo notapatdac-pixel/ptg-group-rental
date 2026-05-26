@@ -1,6 +1,7 @@
 import { useLanguage } from "@/lib/languageContext";
 import { useStoreFilter } from "@/lib/storeFilterContext";
 import RetailerBackofficeLayout from "@/components/retailer_backoffice/RetailerBackofficeLayout";
+import AiSuggestionInline from "@/components/shared/AiSuggestionInline";
 
 const BREAKEVEN = [
   { id: "coffee", name: "Coffee Corner",           rent: 22, utilities: 3, revenue: 142, net: 117 },
@@ -197,6 +198,43 @@ export default function PerformancePage() {
   const pctRet = `${((ret.r / retTotal) * 100).toFixed(1)}% ${T.ofTotal}`;
   const pctLap = `${((ret.l / retTotal) * 100).toFixed(1)}% ${T.ofTotal}`;
 
+  const STORE_NAMES = { all: "All Stores", coffee: "Coffee Corner", quick: "Quick Mart", lumina: "Lumina Artisan Roastery" } as const;
+  const storeName = STORE_NAMES[storeId];
+
+  const beDataContext = [
+    `${storeName} — Breakeven Analysis`,
+    `Annual Revenue: ${pd.kpi1}`,
+    `Monthly Rent: ${pd.kpi3}`,
+    `Cost-to-Revenue: ${pd.kpi4}`,
+    filteredBreakeven.map(b => `${b.name}: rent ฿${b.rent}k, utilities ฿${b.utilities}k, revenue ฿${b.revenue}k, net profit ฿${b.net}k`).join("; "),
+    `${pd.tip_be.pre}${pd.tip_be.b1}${pd.tip_be.mid}${pd.tip_be.b2}${pd.tip_be.post}`,
+  ].join(" | ");
+
+  const bmDataContext = [
+    `${storeName} — Benchmark vs Platform`,
+    `Sales/sqm: you=${pd.benchYou[0].label}, top=฿5,200/sqm, median=฿3,100/sqm`,
+    `Daily Visitors: you=${pd.benchYou[1].label}, top=420/day, median=285/day`,
+    `Revisit Rate: you=${pd.benchYou[2].label}, top=68%, median=47%`,
+    `${pd.tip_bm.pre}${pd.tip_bm.b}${pd.tip_bm.post}`,
+  ].join(" | ");
+
+  const retDataContext = [
+    `${storeName} — Customer Retention`,
+    `New customers: ${ret.n} (${ret.tn})`,
+    `Returning customers: ${ret.r} (${ret.tr})`,
+    `Lapsed customers: ${ret.l} (${ret.tl})`,
+    `${pd.tip_ret.pre}${pd.tip_ret.b}${pd.tip_ret.post}`,
+  ].join(" | ");
+
+  const segDataContext = [
+    `${storeName} — Customer Segments`,
+    `Gen Z 28%: ฿195/visit, +8% revenue growth`,
+    `Millennial 42%: ฿265/visit, +12% growth`,
+    `Gen X 20%: ฿270/visit, +3% growth`,
+    `Boomer 10%: ฿240/visit, +1% growth`,
+    `26-35 year olds are top spenders today; Gen Z (18-25) is the fastest-growing segment`,
+  ].join(" | ");
+
   return (
     <RetailerBackofficeLayout>
       {/* Header */}
@@ -282,16 +320,11 @@ export default function PerformancePage() {
           })}
         </div>
 
-        <div className="bg-[#F5F2EB] rounded-xl px-4 py-3 flex items-start gap-2">
-          <span className="material-symbols-outlined text-primary text-[16px] mt-0.5 flex-shrink-0">auto_awesome</span>
-          <p className="text-xs text-on-surface-variant leading-relaxed">
-            {pd.tip_be.pre}
-            <strong className="text-on-surface">{pd.tip_be.b1}</strong>
-            {pd.tip_be.mid}
-            {pd.tip_be.b2 && <strong className="text-on-surface">{pd.tip_be.b2}</strong>}
-            {pd.tip_be.post}
-          </p>
-        </div>
+        <AiSuggestionInline
+          role="retailer"
+          pageContext="Performance — Breakeven Analysis"
+          staticText={`${pd.tip_be.pre}${pd.tip_be.b1}${pd.tip_be.mid}${pd.tip_be.b2}${pd.tip_be.post}`}
+        />
       </div>
 
       {/* How Do You Stack Up? */}
@@ -334,12 +367,11 @@ export default function PerformancePage() {
             );
           })}
         </div>
-        <div className="bg-[#F5F2EB] rounded-xl px-4 py-3 flex items-start gap-2">
-          <span className="material-symbols-outlined text-primary text-[16px] mt-0.5 flex-shrink-0">auto_awesome</span>
-          <p className="text-xs text-on-surface-variant leading-relaxed">
-            {pd.tip_bm.pre}<strong className="text-on-surface">{pd.tip_bm.b}</strong>{pd.tip_bm.post}
-          </p>
-        </div>
+        <AiSuggestionInline
+          role="retailer"
+          pageContext="Performance — Benchmark Comparison"
+          staticText={`${pd.tip_bm.pre}${pd.tip_bm.b}${pd.tip_bm.post}`}
+        />
       </div>
 
       {/* Are Customers Coming Back? */}
@@ -366,12 +398,11 @@ export default function PerformancePage() {
             <div className="text-xs font-bold text-red-600">{ret.tl}</div>
           </div>
         </div>
-        <div className="bg-[#F5F2EB] rounded-xl px-4 py-3 flex items-start gap-2">
-          <span className="material-symbols-outlined text-primary text-[16px] mt-0.5 flex-shrink-0">auto_awesome</span>
-          <p className="text-xs text-on-surface-variant leading-relaxed">
-            {pd.tip_ret.pre}<strong className="text-on-surface">{pd.tip_ret.b}</strong>{pd.tip_ret.post}
-          </p>
-        </div>
+        <AiSuggestionInline
+          role="retailer"
+          pageContext="Performance — Customer Retention"
+          staticText={`${pd.tip_ret.pre}${pd.tip_ret.b}${pd.tip_ret.post}`}
+        />
       </div>
 
       {/* Which Customers Spend the Most? */}
@@ -393,12 +424,11 @@ export default function PerformancePage() {
             </div>
           ))}
         </div>
-        <div className="bg-[#F5F2EB] rounded-xl px-4 py-3 flex items-start gap-2">
-          <span className="material-symbols-outlined text-primary text-[16px] mt-0.5 flex-shrink-0">auto_awesome</span>
-          <p className="text-xs text-on-surface-variant leading-relaxed">
-            <strong className="text-on-surface">{T.segmentsTipBold}</strong>{T.segmentsTipPost}
-          </p>
-        </div>
+        <AiSuggestionInline
+          role="retailer"
+          pageContext="Performance — Customer Segments"
+          staticText={`${T.segmentsTipBold}${T.segmentsTipPost}`}
+        />
       </div>
     </RetailerBackofficeLayout>
   );

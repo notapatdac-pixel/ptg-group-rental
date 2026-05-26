@@ -1,5 +1,6 @@
 import RetailerBackofficeLayout from "@/components/retailer_backoffice/RetailerBackofficeLayout";
 import Link from "next/link";
+import AiSuggestionInline from "@/components/shared/AiSuggestionInline";
 
 const STATS = [
   { label: "Daily Customers", value: "12,450+", icon: "group" },
@@ -102,11 +103,12 @@ export default function ExploreLocationPage() {
               ))}
             </div>
           </div>
-          <div className="bg-[#1C3A1C] rounded-2xl p-5 text-white">
-            <h3 className="font-semibold mb-2">AI Location Score</h3>
-            <div className="text-4xl font-bold text-lime-400 mb-1">94</div>
-            <p className="text-xs text-white/70">Top performer in Lat Phrao cluster. High repeat footfall, premium commuter profile. Ideal for coffee & specialty F&B.</p>
-          </div>
+          <AiSuggestionInline
+            role="retailer"
+            pageContext="Explore Location — PTG Lat Phrao 71"
+            staticText="Score 94 — Top performer in Lat Phrao cluster. High repeat footfall, premium commuter profile. Ideal for coffee & specialty F&B."
+            label="AI LOCATION SCORE"
+          />
         </div>
       </div>
     </RetailerBackofficeLayout>

@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import RetailerBackofficeLayout from "@/components/retailer_backoffice/RetailerBackofficeLayout";
-import { SHARED_APPS, type AppBadge } from "@/lib/applicationsData";
+import type { AppBadge } from "@/lib/applicationsData";
+import { supabase } from "@/lib/supabaseClient";
 
 type AppItem = {
   id: string;
@@ -17,21 +18,41 @@ type AppItem = {
   badge: AppBadge;
 };
 
-// ── Static applications ───────────────────────────────────────────────────────
+// ── DB → AppItem mapping ──────────────────────────────────────────────────────
 
-const STATIC_APPS: AppItem[] = SHARED_APPS.map(app => ({
-  id:          app.retailerAppId,
-  stationName: app.stationName,
-  unitCode:    app.unitCode,
-  unitLabel:   app.unitLabel,
-  location:    app.location,
-  price:       app.price,
-  leaseType:   app.leaseType,
-  duration:    app.duration,
-  applied:     app.appliedDate,
-  progress:    0,
-  badge:       app.retailerBadge,
-}));
+type DbApp = {
+  retailer_display_id: string;
+  status: string;
+  applied_date: string;
+  station_units?: {
+    unit_code: string;
+    unit_label: string;
+    price_thb: number;
+    lease_type: string;
+    stations?: { name: string; location_text: string } | null;
+  } | null;
+};
+
+function dbToAppItem(row: DbApp): AppItem {
+  const badge: AppBadge =
+    row.status === "approved" ? "APPROVED" :
+    row.status === "not_approved" ? "NOT APPROVED" : "PENDING REVIEW";
+  return {
+    id: row.retailer_display_id,
+    stationName: row.station_units?.stations?.name ?? "",
+    unitCode: row.station_units?.unit_code ?? "",
+    unitLabel: row.station_units?.unit_label ?? "",
+    location: row.station_units?.stations?.location_text ?? "",
+    price: row.station_units?.price_thb ?? 0,
+    leaseType: row.station_units?.lease_type ?? "",
+    duration: "—",
+    applied: row.applied_date
+      ? new Date(row.applied_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+      : "—",
+    progress: 0,
+    badge,
+  };
+}
 
 // ── Progress labels ───────────────────────────────────────────────────────────
 
@@ -211,7 +232,7 @@ function AppCard({ app }: { app: AppItem }) {
           <div className="bg-blue-50 rounded-xl px-4 py-3 flex items-center gap-2">
             <span className="material-symbols-outlined text-blue-500 text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>schedule</span>
             <p className="text-xs text-on-surface-variant">
-              Your application is under review. The landlord team typically responds within <strong>3–5 business days</strong>.
+              Your application is currently under review by the landlord.
             </p>
           </div>
         )}
@@ -244,31 +265,90 @@ type NewApp = {
 
 export default function MyApplicationsPage() {
   const [activeTab, setActiveTab] = useState<TabId>("all");
-  const [allApps, setAllApps]     = useState<AppItem[]>(STATIC_APPS);
+  const [allApps, setAllApps]     = useState<AppItem[]>([]);
 
   useEffect(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem("ptg_applications") ?? "[]") as NewApp[];
-      const converted: AppItem[] = stored.map(a => ({
-        id:          a.refNum,
-        stationName: a.stationName,
-        unitCode:    a.unitCode,
-        unitLabel:   a.unitLabel,
-        location:    "",
-        price:       a.price,
-        leaseType:   a.unitLabel,
-        duration:    "—",
-        applied:     new Date(a.submittedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
-        progress:    1,
-        badge:       "PENDING REVIEW",
-      }));
-      // prepend new apps, deduplicate by id
-      const merged = [...converted, ...STATIC_APPS].reduce<AppItem[]>((acc, cur) => {
+    async function loadApps() {
+      let fromDb: AppItem[] = [];
+      try {
+        const res = await fetch("/api/applications");
+        if (res.ok) {
+          const rows = await res.json() as DbApp[];
+          fromDb = rows.map(dbToAppItem);
+        }
+      } catch {}
+
+      // Merge with any locally-submitted (not yet in DB) apps
+      let localApps: AppItem[] = [];
+      try {
+        const stored = JSON.parse(localStorage.getItem("ptg_applications") ?? "[]") as NewApp[];
+        localApps = stored.map(a => ({
+          id:          a.refNum,
+          stationName: a.stationName,
+          unitCode:    a.unitCode,
+          unitLabel:   a.unitLabel,
+          location:    "",
+          price:       a.price,
+          leaseType:   a.unitLabel,
+          duration:    "—",
+          applied:     new Date(a.submittedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
+          progress:    1,
+          badge:       "PENDING REVIEW" as AppBadge,
+        }));
+      } catch {}
+
+      const merged = [...localApps, ...fromDb].reduce<AppItem[]>((acc, cur) => {
         if (!acc.find(a => a.id === cur.id)) acc.push(cur);
         return acc;
       }, []);
-      setAllApps(merged);
-    } catch {}
+
+      const withOverrides = merged.map(app => {
+        try {
+          const override = localStorage.getItem(`ptg_app_badge_${app.id}`);
+          if (override) return { ...app, badge: override as AppBadge };
+        } catch {}
+        return app;
+      });
+      setAllApps(withOverrides);
+    }
+    loadApps();
+  }, []);
+
+  // localStorage polling (fallback for when Supabase is not connected)
+  useEffect(() => {
+    const checkOverrides = () => {
+      setAllApps(prev => prev.map(app => {
+        try {
+          const override = localStorage.getItem(`ptg_app_badge_${app.id}`);
+          if (override && override !== app.badge) return { ...app, badge: override as AppBadge };
+        } catch {}
+        return app;
+      }));
+    };
+    const timer = setInterval(checkOverrides, 2000);
+    window.addEventListener("storage", checkOverrides);
+    return () => { clearInterval(timer); window.removeEventListener("storage", checkOverrides); };
+  }, []);
+
+  // Supabase Realtime — updates badge immediately when landlord approves/declines
+  useEffect(() => {
+    const dbToBadge: Record<string, AppBadge> = {
+      approved:      "APPROVED",
+      pending_review: "PENDING REVIEW",
+      not_approved:  "NOT APPROVED",
+    };
+    const channel = supabase
+      .channel("retailer-applications-status")
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "applications" }, (payload) => {
+        const updated = payload.new as { retailer_display_id: string; status: string };
+        const badge = dbToBadge[updated.status];
+        if (!badge) return;
+        setAllApps(prev => prev.map(app =>
+          app.id === updated.retailer_display_id ? { ...app, badge } : app
+        ));
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const filtered = activeTab === "all"

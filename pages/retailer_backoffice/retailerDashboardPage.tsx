@@ -1,6 +1,7 @@
 import { useLanguage } from "@/lib/languageContext";
 import { useStoreFilter } from "@/lib/storeFilterContext";
 import RetailerBackofficeLayout from "@/components/retailer_backoffice/RetailerBackofficeLayout";
+import AiSuggestionInline from "@/components/shared/AiSuggestionInline";
 
 const HOURS = ["06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23"];
 
@@ -375,6 +376,17 @@ export default function RetailerDashboardPage() {
   const kpi2Sub = lang === "th" ? dd.kpi2Sub_th : dd.kpi2Sub_en;
   const aiText = lang === "th" ? dd.ai_th : dd.ai_en;
 
+  const STORE_NAMES = { all: "All 3 Stores", coffee: "Coffee Corner", quick: "Quick Mart", lumina: "Lumina Artisan Roastery" } as const;
+  const storeName = STORE_NAMES[storeId];
+  const dashDataContext = [
+    `Store: ${storeName}`,
+    `Monthly Revenue: ${dd.kpi1}`,
+    `Daily Visitors: ${dd.kpi2}`,
+    `Conversion Rate: ${dd.kpi3}`,
+    `Platform Score: ${dd.kpi4}`,
+    `${dd.ai_en.pre} ${dd.ai_en.money} ${dd.ai_en.mid} ${dd.ai_en.pct}${dd.ai_en.post}`,
+  ].join(" | ");
+
   const filteredConversion = storeId === "all"
     ? CONVERSION
     : CONVERSION.filter((c) => c.id === storeId);
@@ -420,15 +432,13 @@ export default function RetailerDashboardPage() {
       </div>
 
       {/* AI Advisor */}
-      <div className="bg-[#1C3A1C] rounded-2xl shadow-sm px-5 py-4 mb-6 flex items-start gap-3">
-        <span className="material-symbols-outlined text-lime-300 text-[20px] mt-0.5 flex-shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
-        <div>
-          <div className="text-xs font-bold text-lime-300 mb-1">{T.aiLabel}</div>
-          <p className="text-sm text-white/80 leading-relaxed">
-            {aiText.pre} <strong className="text-white">{aiText.money}</strong> {aiText.mid}{" "}
-            <strong className="text-white">{aiText.pct}</strong>{aiText.post}
-          </p>
-        </div>
+      <div className="mb-6">
+        <AiSuggestionInline
+          role="retailer"
+          pageContext="Retailer Dashboard"
+          dataContext={dashDataContext}
+          label={T.aiLabel}
+        />
       </div>
 
       {/* What You Should Do This Week */}

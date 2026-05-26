@@ -1,9 +1,11 @@
+import { useState, useEffect } from "react";
 import LandlordBackofficeLayout from "@/components/landlord_backoffice/LandlordBackofficeLayout";
 import { STATIONS_DATA } from "@/components/landlord_backoffice/stationsData";
 import Link from "next/link";
 import latphrao71Img from "@/components/image/station-ptg-latphrao71.png";
 import ramaIxImg from "@/components/image/station-ptg-ramaix.png";
 import { useLanguage } from "@/lib/languageContext";
+import AiSuggestionInline from "@/components/shared/AiSuggestionInline";
 
 const STATION_IMAGES: Record<string, string> = {
   "PTG Lat Phrao 71": latphrao71Img.src,
@@ -27,10 +29,58 @@ const STRINGS = {
   },
 } as const;
 
+type DbStation = {
+  id: string;
+  name: string;
+  location_text: string;
+  station_units: { id: string; available: boolean }[];
+};
+
+type StationEntry = {
+  name: string;
+  location: string;
+  occupied: number;
+  total: number;
+  aiNote: string;
+  aiNoteTh: string;
+};
+
 export default function LandlordMyStationsPage() {
   const { lang } = useLanguage();
   const T = STRINGS[lang];
-  const stationEntries = Object.values(STATIONS_DATA);
+
+  const [stationEntries, setStationEntries] = useState<StationEntry[]>(
+    Object.values(STATIONS_DATA).map(st => ({
+      name: st.name,
+      location: st.location,
+      occupied: st.occupied,
+      total: st.total,
+      aiNote: st.aiNote,
+      aiNoteTh: st.aiNoteTh,
+    }))
+  );
+
+  useEffect(() => {
+    async function loadStations() {
+      try {
+        const res = await fetch("/api/stations");
+        if (res.ok) {
+          const data = await res.json() as DbStation[];
+          setStationEntries(
+            data.map(st => ({
+              name: st.name,
+              location: st.location_text,
+              occupied: st.station_units.filter(u => !u.available).length,
+              total: st.station_units.length,
+              aiNote: STATIONS_DATA[st.name]?.aiNote ?? "",
+              aiNoteTh: STATIONS_DATA[st.name]?.aiNoteTh ?? "",
+            }))
+          );
+        }
+      } catch {}
+    }
+    loadStations();
+  }, []);
 
   return (
     <LandlordBackofficeLayout>
@@ -64,14 +114,13 @@ export default function LandlordMyStationsPage() {
               </div>
 
               {/* AI Suggestion */}
-              <div className="bg-[#1C3A1C] rounded-xl p-4 mb-4">
-                <div className="flex items-center gap-1.5 mb-2">
-                  <span className="material-symbols-outlined text-[14px] text-lime-300" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
-                  <span className="text-[9px] font-bold tracking-widest text-lime-300">{T.aiSuggestion}</span>
-                </div>
-                <p className="text-xs text-white/80 leading-relaxed">
-                  {lang === "th" ? st.aiNoteTh : st.aiNote}
-                </p>
+              <div className="mb-4">
+                <AiSuggestionInline
+                  role="landlord"
+                  pageContext={`My Stations — ${st.name}`}
+                  staticText={lang === "th" ? st.aiNoteTh : st.aiNote}
+                  label={T.aiSuggestion}
+                />
               </div>
 
               <Link

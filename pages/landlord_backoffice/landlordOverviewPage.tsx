@@ -5,6 +5,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
 } from "recharts";
+import AiSuggestionInline from "@/components/shared/AiSuggestionInline";
 
 const STRINGS = {
   en: {
@@ -257,12 +258,13 @@ export default function LandlordOverviewPage() {
       </div>
 
       {/* AI Summary */}
-      <div className="bg-[#1C3A1C] rounded-2xl shadow-sm px-5 py-4 mb-6 flex items-start gap-3">
-        <span className="material-symbols-outlined text-lime-300 text-[20px] mt-0.5 flex-shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
-        <div>
-          <div className="text-xs font-bold text-lime-300 mb-1">{T.aiSummaryLabel}</div>
-          <p className="text-sm text-white/80 leading-relaxed">{aiSummary}</p>
-        </div>
+      <div className="mb-6">
+        <AiSuggestionInline
+          role="landlord"
+          pageContext={`Executive Overview — ${label}`}
+          staticText={aiSummary}
+          label={T.aiSummaryLabel}
+        />
       </div>
 
       {/* Line chart */}

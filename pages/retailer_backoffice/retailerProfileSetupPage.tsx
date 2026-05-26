@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import RetailerBackofficeLayout from "@/components/retailer_backoffice/RetailerBackofficeLayout";
 
@@ -14,6 +14,9 @@ export interface RetailerProfile {
   numStores: string;
   yearsExperience: string;
   maxRentBudget: string;
+  coverImage?: string;
+  logoImage?: string;
+  productImages?: string[];
 }
 
 export const PROFILE_KEY = "ptg_retailer_profile";
@@ -76,8 +79,53 @@ export default function RetailerProfileSetupPage() {
 
   const active = profiles[activeIdx] ?? EMPTY_PROFILE;
 
-  function updateField(field: keyof RetailerProfile, value: string) {
+  function updateField<K extends keyof RetailerProfile>(field: K, value: RetailerProfile[K]) {
     setProfiles(prev => prev.map((p, i) => i === activeIdx ? { ...p, [field]: value } : p));
+  }
+
+  const coverInputRef    = useRef<HTMLInputElement>(null);
+  const logoInputRef     = useRef<HTMLInputElement>(null);
+  const productInputRefs = useRef<(HTMLInputElement | null)[]>([null, null, null]);
+
+  function handleImageUpload(field: "coverImage" | "logoImage", file: File) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target?.result as string;
+      updateField(field, base64);
+      const name = profiles[activeIdx]?.businessName;
+      if (name) {
+        try {
+          const key = `ptg_store_images_${name}`;
+          const existing = JSON.parse(localStorage.getItem(key) ?? "{}");
+          existing[field === "coverImage" ? "cover" : "logo"] = base64;
+          localStorage.setItem(key, JSON.stringify(existing));
+        } catch {}
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleProductUpload(index: number, file: File) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target?.result as string;
+      const current = active.productImages ?? [];
+      const next = [...current];
+      next[index] = base64;
+      updateField("productImages", next);
+      const name = profiles[activeIdx]?.businessName;
+      if (name) {
+        try {
+          const key = `ptg_store_images_${name}`;
+          const existing = JSON.parse(localStorage.getItem(key) ?? "{}");
+          const products = [...((existing.products as string[]) ?? [])];
+          products[index] = base64;
+          existing.products = products;
+          localStorage.setItem(key, JSON.stringify(existing));
+        } catch {}
+      }
+    };
+    reader.readAsDataURL(file);
   }
 
   const filledCount = [active.businessName, active.contactName, active.phone, active.category, active.concept, active.numStores, active.yearsExperience, active.maxRentBudget].filter(Boolean).length;
@@ -88,6 +136,17 @@ export default function RetailerProfileSetupPage() {
       localStorage.setItem("ptg_retailer_profiles", JSON.stringify(profiles));
       localStorage.setItem("ptg_active_store_index", String(activeIdx));
       localStorage.setItem(PROFILE_KEY, JSON.stringify(profiles[0]));
+      profiles.forEach(p => {
+        if (!p.businessName) return;
+        try {
+          const key = `ptg_store_images_${p.businessName}`;
+          const existing = JSON.parse(localStorage.getItem(key) ?? "{}");
+          if (p.coverImage)    existing.cover    = p.coverImage;
+          if (p.logoImage)     existing.logo     = p.logoImage;
+          if (p.productImages) existing.products = p.productImages;
+          localStorage.setItem(key, JSON.stringify(existing));
+        } catch {}
+      });
     } catch {}
     router.push("/retailer_backoffice/retailerDashboardPage");
   }
@@ -184,6 +243,114 @@ export default function RetailerProfileSetupPage() {
                 className="w-full bg-[#F5F2EB] rounded-xl px-4 py-3 text-sm border-none outline-none"
               />
             </div>
+          </div>
+        </div>
+
+        {/* Section 1b – Store Photos */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm">
+          <div className="mb-4">
+            <h3 className="font-semibold text-on-surface">Store Photos</h3>
+            <p className="text-xs text-on-surface-variant mt-0.5">Uploaded photos are shown to landlords when reviewing your application.</p>
+          </div>
+
+          {/* Cover photo */}
+          <div className="mb-4">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant block mb-1.5">Cover Photo</label>
+            <div
+              className="relative w-full h-36 rounded-xl overflow-hidden cursor-pointer group"
+              style={{ backgroundColor: active.coverImage ? undefined : "#F5F2EB" }}
+              onClick={() => coverInputRef.current?.click()}
+            >
+              {active.coverImage ? (
+                <>
+                  <img src={active.coverImage} alt="cover" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <span className="material-symbols-outlined text-white text-[20px]">photo_camera</span>
+                    <span className="text-white text-xs font-semibold">Change Photo</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full gap-2 text-on-surface-variant">
+                  <span className="material-symbols-outlined text-[32px]">add_photo_alternate</span>
+                  <span className="text-xs font-medium">Upload cover photo</span>
+                </div>
+              )}
+            </div>
+            <input
+              ref={coverInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload("coverImage", f); }}
+            />
+          </div>
+
+          {/* Logo + product images */}
+          <div className="grid grid-cols-4 gap-3">
+            {/* Logo */}
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant block mb-1.5">Logo</label>
+              <div
+                className="relative w-full aspect-square rounded-xl overflow-hidden cursor-pointer group"
+                style={{ backgroundColor: "#F5F2EB" }}
+                onClick={() => logoInputRef.current?.click()}
+              >
+                {active.logoImage ? (
+                  <>
+                    <img src={active.logoImage} alt="logo" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <span className="material-symbols-outlined text-white text-[18px]">edit</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full gap-1 text-on-surface-variant">
+                    <span className="material-symbols-outlined text-[24px]">store</span>
+                    <span className="text-[10px]">Logo</span>
+                  </div>
+                )}
+              </div>
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload("logoImage", f); }}
+              />
+            </div>
+
+            {/* Product images × 3 */}
+            {[0, 1, 2].map(idx => (
+              <div key={idx}>
+                {idx === 0 && <label className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant block mb-1.5">Product Photos</label>}
+                {idx > 0 && <div className="mb-1.5 h-[14px]" />}
+                <div
+                  className="relative w-full aspect-square rounded-xl overflow-hidden cursor-pointer group"
+                  style={{ backgroundColor: "#F5F2EB" }}
+                  onClick={() => productInputRefs.current[idx]?.click()}
+                >
+                  {active.productImages?.[idx] ? (
+                    <>
+                      <img src={active.productImages[idx]} alt={`product ${idx + 1}`} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="material-symbols-outlined text-white text-[18px]">edit</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full gap-1 text-on-surface-variant">
+                      <span className="material-symbols-outlined text-[24px]">add_photo_alternate</span>
+                      <span className="text-[10px]">Photo {idx + 1}</span>
+                    </div>
+                  )}
+                </div>
+                <input
+                  ref={el => { productInputRefs.current[idx] = el; }}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={e => { const f = e.target.files?.[0]; if (f) handleProductUpload(idx, f); }}
+                />
+              </div>
+            ))}
           </div>
         </div>
 

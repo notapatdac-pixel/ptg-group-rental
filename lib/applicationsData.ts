@@ -26,6 +26,9 @@ export interface SharedApp {
   concept: string;
   panelColor: string;
   aiText: string;
+  aiTextTh: string;
+  aiScore: string;
+  estRevenue: string;
 
   // Specialist
   specialistName: string;
@@ -55,6 +58,9 @@ export const SHARED_APPS: SharedApp[] = [
     concept: "Specialty coffee kiosk serving the EV charging community with premium single-origin brews and artisan pastry.",
     panelColor: "#4a5568",
     aiText: "High potential for morning commuter synergy. Proximity to EV chargers aligns with customer dwell times of 20–30 minutes. Budget fits the available units at this station.",
+    aiTextTh: "มีศักยภาพสูงในการดึงดูดลูกค้าช่วงเช้า ใกล้จุดชาร์จ EV เหมาะกับเวลาจอดรอ 20–30 นาที งบค่าเช่าสอดคล้องกับยูนิตที่มีอยู่ในสถานี",
+    aiScore: "89%",
+    estRevenue: "14,200",
     specialistName: "Kanya Srisuk",
     specialistInitials: "KS",
   },
@@ -80,6 +86,9 @@ export const SHARED_APPS: SharedApp[] = [
     concept: "Premium Japanese convenience market with curated snacks, ready meals, and lifestyle products for urban commuters.",
     panelColor: "#744210",
     aiText: "Enterprise-grade tenant with stable long-term outlook. Strong brand fit for the Lat Phrao residential catchment — ideal anchor for the vacant boutique unit.",
+    aiTextTh: "ผู้เช่าระดับองค์กรที่มีความมั่นคงระยะยาว แบรนด์เข้ากับกลุ่มลูกค้าที่พักอาศัยในลาดพร้าว เหมาะเป็นผู้เช่าหลักสำหรับยูนิตบูทีคที่ว่างอยู่",
+    aiScore: "94%",
+    estRevenue: "32,800",
     specialistName: "Kanya Srisuk",
     specialistInitials: "KS",
   },
@@ -105,6 +114,9 @@ export const SHARED_APPS: SharedApp[] = [
     concept: "Express pharmacy and health essentials kiosk offering OTC medication, vitamins, and wellness products for daily commuters.",
     panelColor: "#1a4a5e",
     aiText: "Service-oriented anchor with consistent repeat-visit draw. May require specialized ventilation and security upgrades — factor into lease terms. Good fit for underperforming Rama 9 unit.",
+    aiTextTh: "ผู้เช่าที่เน้นบริการและดึงดูดลูกค้าซ้ำได้สม่ำเสมอ อาจต้องปรับปรุงระบบระบายอากาศและความปลอดภัยเพิ่มเติม เหมาะสำหรับยูนิต Rama 9 ที่มีผลประกอบการต่ำ",
+    aiScore: "76%",
+    estRevenue: "21,500",
     specialistName: "Kanya Srisuk",
     specialistInitials: "KS",
   },

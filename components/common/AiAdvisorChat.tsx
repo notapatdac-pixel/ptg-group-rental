@@ -21,6 +21,8 @@ export default function AiAdvisorChat() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const welcomeSent = useRef(false);
 
@@ -37,18 +39,38 @@ export default function AiAdvisorChat() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const send = () => {
+  async function send() {
     const text = input.trim();
-    if (!text) return;
+    if (!text || loading) return;
     setMessages((prev) => [...prev, { role: "user", text }]);
     setInput("");
-    setTimeout(() => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: text,
+          role: userType,
+          conversationId: conversationId ?? undefined,
+          userId: user?.id ?? null,
+        }),
+      });
+      const data = await res.json() as { reply: string; conversationId?: string; error?: string };
+      if (data.conversationId) setConversationId(data.conversationId);
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", text: "AI responses are coming soon — I'm still being trained on your data. Stay tuned!" },
+        { role: "assistant", text: data.error ? "Sorry, I'm unavailable right now. Please try again." : data.reply },
       ]);
-    }, 650);
-  };
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", text: "Sorry, I'm unavailable right now. Please try again." },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <>
@@ -89,7 +111,7 @@ export default function AiAdvisorChat() {
             </div>
             <span className="ml-auto flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-lime-400 animate-pulse" />
-              <span className="text-[10px] text-white/50">Beta</span>
+              <span className="text-[10px] text-white/50">Live</span>
             </span>
           </div>
 
@@ -118,6 +140,18 @@ export default function AiAdvisorChat() {
                 </div>
               </div>
             ))}
+            {loading && (
+              <div className="flex items-end gap-2 justify-start">
+                <div className="w-6 h-6 rounded-full bg-[#1C3A1C] flex items-center justify-center flex-shrink-0 mb-0.5">
+                  <span className="material-symbols-outlined text-white text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>smart_toy</span>
+                </div>
+                <div className="bg-white rounded-2xl rounded-bl-none px-3.5 py-2.5 shadow-sm border border-outline-variant/10 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-on-surface-variant/30 animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-on-surface-variant/30 animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-on-surface-variant/30 animate-bounce" style={{ animationDelay: "300ms" }} />
+                </div>
+              </div>
+            )}
             <div ref={bottomRef} />
           </div>
 
@@ -127,14 +161,14 @@ export default function AiAdvisorChat() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && send()}
+              onKeyDown={(e) => e.key === "Enter" && !loading && send()}
               placeholder="Ask anything..."
               className="flex-1 bg-[#F5F2EB] rounded-full px-4 py-2 text-xs outline-none border-none placeholder:text-on-surface-variant/50"
             />
             <button
               type="button"
               onClick={send}
-              disabled={!input.trim()}
+              disabled={!input.trim() || loading}
               className="w-8 h-8 rounded-full bg-[#1C3A1C] flex items-center justify-center border-0 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-opacity hover:opacity-80"
             >
               <span className="material-symbols-outlined text-white text-[15px]">send</span>
