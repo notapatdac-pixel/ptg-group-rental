@@ -1,0 +1,55 @@
+# Render Blueprint — deploys the PTG platform as two services:
+#   1. web  : the Next.js app (frontend + API routes)
+#   2. ml   : the Python FastAPI inference service (agent/ml/service)
+#
+# Usage: push this file, then in Render → New → Blueprint → pick this repo.
+# Render reads it and creates both services. Secret values (sync: false) are
+# entered once in the Render dashboard; they are NOT committed here.
+services:
+  # ── 1. Next.js web app ──────────────────────────────────────────────────────
+  - type: web
+    name: ptg-web
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start          # `next start` listens on $PORT automatically
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      # Supabase (the web app's names). Public ones are safe; service role is secret.
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      # Google Gemini
+      - key: GEMINI_API_KEY
+        sync: false
+      # Full base URL of the ML service below (needs the https:// scheme, which
+      # fromService can't supply). After first deploy, set this to the ML
+      # service's URL, e.g. https://ptg-ml.onrender.com
+      - key: ML_SERVICE_URL
+        sync: false
+      # Secret guarding /api/cron/ml-run — Render generates a random value.
+      - key: CRON_SECRET
+        generateValue: true
+
+  # ── 2. Python ML inference service ──────────────────────────────────────────
+  - type: web
+    name: ptg-ml
+    runtime: python
+    plan: free
+    rootDir: agent/ml/service
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      # NOTE: the Python service uses DIFFERENT variable names than the web app.
+      - key: SUPABASE_URL
+        sync: false               # same value as NEXT_PUBLIC_SUPABASE_URL
+      - key: SUPABASE_SERVICE_KEY
+        sync: false               # same value as SUPABASE_SERVICE_ROLE_KEY
