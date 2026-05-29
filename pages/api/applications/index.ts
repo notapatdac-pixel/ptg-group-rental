@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createClient } from "@supabase/supabase-js";
-import { RETAILER_PROFILE_ID, storeBrand, storeType } from "@/lib/retailerStores";
 
 const serviceSupabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -88,19 +87,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Applicant person = the business's own contact, never the seed/landlord user.
     const contact = rp.owner_name ?? rp.users?.name ?? rp.business_name;
     rp.users = { name: contact ?? "" };
-    // Lumina's seeded storefronts span several stores; show each store's own
-    // brand + type — but ONLY for the stations that are actually configured
-    // Lumina stores. For a NEW application the demo account files at any other
-    // station, keep the real profile name (storeType="" → not a Lumina store,
-    // so storeBrand would otherwise return the raw "STN-xxx").
-    if (row.retailer_profile_id === RETAILER_PROFILE_ID) {
-      const displayId = row.station_units?.stations?.display_id;
-      const type = displayId ? storeType(displayId) : "";
-      if (type) {
-        rp.business_name = storeBrand(displayId!);
-        rp.category = type;
-      }
-    }
+    // Store name + category are shown exactly as saved on the retailer's profile
+    // (no per-station brand substitution) so the landlord always sees what the
+    // applicant actually entered.
     // Surface confirmed-booking state from the DB (not localStorage) so the
     // landlord sees the retailer's confirmation cross-session.
     const confirmed = (row.bookings ?? []).find((b) => b.status === "confirmed");

@@ -71,20 +71,21 @@ export default function RetailerProfileSetupPage() {
               category?: string; experience?: string; numStores?: string;
               maxBudget?: string; concept?: string;
             };
-            if (p?.businessName) {
-              setProfiles([{
-                businessName:    p.businessName ?? "",
-                contactName:     p.contactName ?? "",
-                phone:           p.phone ?? "",
-                category:        p.category ?? "",
-                concept:         p.concept ?? "",
-                numStores:       p.numStores ?? "",
-                yearsExperience: p.experience ?? "",
-                maxRentBudget:   p.maxBudget ?? "",
-              }]);
-              setActiveIdx(0);
-              return;
-            }
+            // The DB is authoritative: use it whether populated or empty. An empty
+            // profile (first-login / reset account) yields a blank form rather than
+            // resurrecting a stale localStorage draft.
+            setProfiles([{
+              businessName:    p.businessName ?? "",
+              contactName:     p.contactName ?? "",
+              phone:           p.phone ?? "",
+              category:        p.category ?? "",
+              concept:         p.concept ?? "",
+              numStores:       p.numStores ?? "",
+              yearsExperience: p.experience ?? "",
+              maxRentBudget:   p.maxBudget ?? "",
+            }]);
+            setActiveIdx(0);
+            return;
           }
         } catch {}
       }

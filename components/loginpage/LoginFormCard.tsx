@@ -47,10 +47,18 @@ export default function LoginFormCard() {
       );
       return;
     }
-    // First-login: retailer with no saved profile → profile setup
+    // First-login: retailer whose DB profile has no business name → profile setup.
+    // DB-driven (not localStorage) so a reset profile reliably triggers first-login.
     if (result.userType === "retailer" && result.userId) {
-      const profileDone = localStorage.getItem(`ptg_retailer_profile_done_${result.userId}`);
-      if (!profileDone) {
+      let hasProfile = false;
+      try {
+        const res = await fetch(`/api/retailer/profile?userId=${result.userId}`);
+        if (res.ok) {
+          const p = await res.json() as { businessName?: string };
+          hasProfile = !!(p.businessName && p.businessName.trim());
+        }
+      } catch {}
+      if (!hasProfile) {
         router.push(PROFILE_SETUP_DEST);
         return;
       }
