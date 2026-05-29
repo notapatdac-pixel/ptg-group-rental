@@ -19,6 +19,10 @@ type JoinedApp = {
   station_units?: {
     stations?: { display_id?: string } | null;
   } | null;
+  bookings?: { visit_date: string; visit_time: string; status: string }[] | null;
+  // Derived below for the landlord pages:
+  booking_confirmed?: boolean;
+  booking?: { visitDate: string; visitTime: string } | null;
 };
 
 // GET /api/applications?role=retailer&profileId=...
@@ -58,6 +62,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           name,
           location_text
         )
+      ),
+      bookings (
+        visit_date,
+        visit_time,
+        status
       )
     `)
     .order("applied_date", { ascending: false });
@@ -91,6 +100,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         rp.category = type;
       }
     }
+    // Surface confirmed-booking state from the DB (not localStorage) so the
+    // landlord sees the retailer's confirmation cross-session.
+    const confirmed = (row.bookings ?? []).find((b) => b.status === "confirmed");
+    row.booking_confirmed = !!confirmed;
+    row.booking = confirmed ? { visitDate: confirmed.visit_date, visitTime: confirmed.visit_time } : null;
   }
 
   return res.status(200).json(data ?? []);

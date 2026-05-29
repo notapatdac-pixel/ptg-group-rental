@@ -1,23 +1,88 @@
 "use client";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import LandlordBackofficeLayout from "@/components/landlord_backoffice/LandlordBackofficeLayout";
-import { getAppByLandlordId } from "@/lib/applicationsData";
 
-const DAY_MAP: Record<string, string> = {
-  "26": "Tue", "27": "Wed", "28": "Thu", "29": "Fri", "30": "Sat", "31": "Sun",
+// Live application row (from /api/applications), including the confirmed booking
+// surfaced by the API. Replaces the old hardcoded `applicationsData` mock so the
+// page shows the REAL tenant/store name and the actual walkthrough date/time.
+type Row = {
+  landlord_display_id: string;
+  panel_color?: string;
+  booking?: { visitDate: string; visitTime: string } | null;
+  retailer_profiles?: { business_name?: string; category?: string; users?: { name?: string } | null } | null;
+  station_units?: { unit_code?: string; stations?: { name?: string } | null } | null;
 };
 
-export default function LandlordUpcomingBookingPage() {
-  const router  = useRouter();
-  const appId   = typeof router.query.appId === "string" ? router.query.appId : "LAND-APP-2025-001";
-  const date    = typeof router.query.date   === "string" ? router.query.date  : "29";
-  const time    = typeof router.query.time   === "string" ? router.query.time  : "14:00";
-  const appInfo = getAppByLandlordId(appId) ?? getAppByLandlordId("LAND-APP-2025-001")!;
+function fmtDate(iso?: string): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long", year: "numeric" });
+}
+function fmtTimeRange(t?: string): string {
+  if (!t) return "—";
+  const [h, m] = t.split(":");
+  const endH = String(Number(h) + 1).padStart(2, "0");
+  return `${t} – ${endH}:${m ?? "00"} ICT`;
+}
 
-  const dayLabel  = `${DAY_MAP[date] ?? ""}, ${date} May 2026`;
-  const endHour   = String(Number(time.split(":")[0]) + 1).padStart(2, "0");
-  const timeRange = `${time} – ${endHour}:${time.split(":")[1]} ICT`;
+export default function LandlordUpcomingBookingPage() {
+  const router = useRouter();
+  const appId  = typeof router.query.appId === "string" ? router.query.appId : "";
+
+  const [row, setRow]         = useState<Row | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/applications?role=landlord");
+        if (res.ok && !cancelled) {
+          const rows = (await res.json()) as Row[];
+          setRow(rows.find(r => r.landlord_display_id === appId) ?? null);
+        }
+      } catch {}
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [router.isReady, appId]);
+
+  if (loading) {
+    return (
+      <LandlordBackofficeLayout>
+        <div className="flex items-center justify-center py-24 text-sm text-on-surface-variant">Loading booking…</div>
+      </LandlordBackofficeLayout>
+    );
+  }
+
+  if (!row) {
+    return (
+      <LandlordBackofficeLayout>
+        <div className="flex flex-col items-center justify-center py-24 gap-3">
+          <span className="material-symbols-outlined text-outline/30 text-[48px]">event_busy</span>
+          <p className="text-sm font-semibold text-on-surface-variant">Booking not found.</p>
+          <Link href="/landlord_backoffice/landlordApplicationsPage" className="text-xs text-primary underline">Back to Applications</Link>
+        </div>
+      </LandlordBackofficeLayout>
+    );
+  }
+
+  const storeName     = row.retailer_profiles?.business_name ?? "Tenant";
+  const applicantName = row.retailer_profiles?.users?.name ?? "—";
+  const category      = row.retailer_profiles?.category ?? "—";
+  const stationName   = row.station_units?.stations?.name ?? "—";
+  const unitCode      = row.station_units?.unit_code ?? "—";
+
+  // Prefer the DB booking date/time; fall back to query params if present.
+  const visitDate = row.booking?.visitDate ?? (typeof router.query.date === "string" ? router.query.date : "");
+  const visitTime = row.booking?.visitTime ?? (typeof router.query.time === "string" ? router.query.time : "");
+  const dayLabel  = fmtDate(visitDate);
+  const timeRange = fmtTimeRange(visitTime);
 
   return (
     <LandlordBackofficeLayout>
@@ -39,7 +104,7 @@ export default function LandlordUpcomingBookingPage() {
         <div className="flex-1 min-w-0">
           <div className="text-[10px] font-bold uppercase tracking-widest text-lime-400 mb-1">Walkthrough Confirmed</div>
           <h1 className="text-2xl font-bold text-white mb-1">Upcoming Booking</h1>
-          <p className="text-white/70 text-sm">Site visit scheduled with {appInfo.storeName} at {appInfo.stationName}.</p>
+          <p className="text-white/70 text-sm">Site visit scheduled with {storeName} at {stationName}.</p>
         </div>
         <div className="flex-shrink-0 text-right">
           <div className="text-xs text-white/50 mb-0.5">Reference</div>
@@ -57,11 +122,11 @@ export default function LandlordUpcomingBookingPage() {
             </div>
             <div className="p-6 grid grid-cols-2 gap-y-5 gap-x-8">
               {[
-                { label: "Tenant",           value: appInfo.storeName },
-                { label: "Applicant",        value: appInfo.applicantName },
-                { label: "Station",          value: appInfo.stationName },
-                { label: "Unit",             value: appInfo.unitCode },
-                { label: "Category",         value: appInfo.category },
+                { label: "Tenant",           value: storeName },
+                { label: "Applicant",        value: applicantName },
+                { label: "Station",          value: stationName },
+                { label: "Unit",             value: unitCode },
+                { label: "Category",         value: category },
                 { label: "Walkthrough Date", value: dayLabel },
                 { label: "Walkthrough Time", value: timeRange },
                 { label: "Status",           value: "Confirmed" },
@@ -85,7 +150,7 @@ export default function LandlordUpcomingBookingPage() {
               <div className="text-xs text-on-surface-variant mt-2 mb-0.5">Time</div>
               <div className="text-sm font-bold text-on-surface">{timeRange}</div>
               <div className="text-xs text-on-surface-variant mt-2 mb-0.5">Location</div>
-              <div className="text-sm font-bold text-on-surface">{appInfo.stationName}</div>
+              <div className="text-sm font-bold text-on-surface">{stationName}</div>
             </div>
             <div className="flex items-center gap-2 text-primary text-xs font-semibold">
               <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>

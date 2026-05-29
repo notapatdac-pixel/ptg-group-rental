@@ -111,6 +111,8 @@ type DbApp = {
   applied_date: string;
   specialist_name: string;
   specialist_initials: string;
+  booking_confirmed?: boolean;
+  booking?: { visitDate: string; visitTime: string } | null;
   retailer_profiles?: {
     business_name: string;
     category: string;
@@ -433,7 +435,11 @@ export default function LandlordApplicationsPage() {
           else                                  fromDb[a.landlord_display_id] = "pending";
         });
         setStatuses(fromDb);
-        setBookingConfirmed(loadBookingConfirmations(mapped));
+        // Confirmed bookings come from the DB (cross-session, set by the
+        // retailer) merged with any same-browser localStorage flag.
+        const bookingFromDb: Record<string, boolean> = {};
+        rows.forEach(a => { if (a.booking_confirmed) bookingFromDb[a.landlord_display_id] = true; });
+        setBookingConfirmed({ ...loadBookingConfirmations(mapped), ...bookingFromDb });
       }
     } catch {}
   }
@@ -459,6 +465,11 @@ export default function LandlordApplicationsPage() {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "applications" }, () => {
         // New application arrived — refetch the full list with all joins,
         // since the realtime payload doesn't include nested station/profile data.
+        loadFromSupabase();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "bookings" }, () => {
+        // Retailer confirmed (or changed) a walkthrough booking — refetch so the
+        // application moves to the "Booking Confirmed" tab without a manual reload.
         loadFromSupabase();
       })
       .subscribe();
