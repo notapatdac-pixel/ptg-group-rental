@@ -1,172 +1,307 @@
+import { useState, useEffect } from "react";
 import LandlordBackofficeLayout from "@/components/landlord_backoffice/LandlordBackofficeLayout";
+import { useStationFilter, type StationId } from "@/lib/stationFilterContext";
+import { useLanguage } from "@/lib/languageContext";
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer,
+} from "recharts";
+import AiSuggestionInline from "@/components/shared/AiSuggestionInline";
+import StationFitPanel from "@/components/landlord_backoffice/StationFitPanel";
 
-const REVENUE_BARS = [
-  { month: "JAN", gross: 58, net: 42 },
-  { month: "FEB", gross: 64, net: 48 },
-  { month: "MAR", gross: 90, net: 68 },
-  { month: "APR", gross: 82, net: 62 },
-  { month: "MAY", gross: 112, net: 85 },
-  { month: "JUN", gross: 76, net: 56 },
-];
+const STRINGS = {
+  en: {
+    title: "Executive Overview",
+    subtitle: "Portfolio revenue is tracking",
+    benchmarkText: "12% above network benchmark",
+    subtitleSuffix: "this month.",
+    aiSummaryLabel: "AI Summary",
+    monthlyRevenueTrend: "Revenue Performance",
+    chartSubtitle: "6-month rolling · THB thousands",
+    stationPerformance: "Station Performance",
+    stationCol: "Station",
+    revenueCol: "Revenue / Mo",
+    customersCol: "Customers",
+    occupancyCol: "Occupancy",
+    perMonth: "/ month",
+    avgPerDay: "avg / day",
+    occupied: "occupied",
+    kpiLabels: {
+      "MONTHLY REVENUE (THB)": "MONTHLY REVENUE (THB)",
+      "DAILY CUSTOMERS": "DAILY CUSTOMERS",
+      "AVG BASKET SIZE (THB)": "AVG BASKET SIZE (THB)",
+      "REPEAT VISIT RATE (%)": "REPEAT VISIT RATE (%)",
+    } as Record<string, string>,
+  },
+  th: {
+    title: "ภาพรวมทั้งหมด",
+    subtitle: "รายได้พอร์ตโฟลิโออยู่ในเกณฑ์ดี",
+    benchmarkText: "12% เหนือค่ามาตรฐานเครือข่าย",
+    subtitleSuffix: "เดือนนี้",
+    aiSummaryLabel: "สรุปโดย AI",
+    monthlyRevenueTrend: "ประสิทธิภาพรายได้",
+    chartSubtitle: "6 เดือนย้อนหลัง · บาท (พัน)",
+    stationPerformance: "ประสิทธิภาพสาขา",
+    stationCol: "สาขา",
+    revenueCol: "รายได้ / เดือน",
+    customersCol: "ลูกค้า",
+    occupancyCol: "อัตราการใช้งาน",
+    perMonth: "/ เดือน",
+    avgPerDay: "เฉลี่ย / วัน",
+    occupied: "ถูกใช้งาน",
+    kpiLabels: {
+      "MONTHLY REVENUE (THB)": "รายได้รายเดือน (บาท)",
+      "DAILY CUSTOMERS": "ลูกค้าต่อวัน",
+      "AVG BASKET SIZE (THB)": "มูลค่าเฉลี่ยต่อครั้ง (บาท)",
+      "REPEAT VISIT RATE (%)": "อัตราการกลับมาซื้อซ้ำ (%)",
+    } as Record<string, string>,
+  },
+} as const;
 
-const PENDING = [
-  { name: "Artisan Brew Co.", sub: "Kasemsawat S.", station: "Sukhumvit 62 (B-04)", category: "FOOD & BEVERAGE", score: 92, status: "Under Review" },
-  { name: "PureHealth Pharma", sub: "Nongnooch T.", station: "Rama IV (C-02)", category: "WELLNESS", score: 88, status: "In Verification" },
-];
+// ── Station display labels ───────────────────────────────────────────────────
+
+const STATION_LABEL: Record<StationId, string> = {
+  all:       "All Stations (avg)",
+  lat_phrao: "PTG Lat Phrao 71",
+  sukhumvit: "PTG Sukhumvit 62",
+  rama9:     "PTG Rama IX",
+  bang_na:   "PTG Bang Na Complex",
+  main:      "PTG Chatuchak",
+};
+
+// ── Display types ────────────────────────────────────────────────────────────
+
+type KpiRow = { label: string; value: string; trend: string; trendTh: string; up: boolean };
+
+const OCCUPANCY_COLOR: Record<string, string> = {
+  Full:    "text-primary",
+  Partial: "text-amber-600",
+  Low:     "text-red-500",
+};
+
+// ── API types ────────────────────────────────────────────────────────────────
+
+type ApiKpis = {
+  revenue: number;
+  revenueChange: string;
+  revenueUp: boolean;
+  dailyCustomers: number;
+  customersChange: string;
+  customersUp: boolean;
+  basketSize: number;
+  repeatRate: string;
+  repeatChange: string;
+  repeatUp: boolean;
+};
+
+type ApiTrendRow = { month: string; station: number };
+
+type ApiStation = {
+  filterKey: string;
+  name: string;
+  location: string;
+  revenue: number;
+  dailyCustomers: number;
+  occupied: number;
+  total: number;
+  status: "Full" | "Partial" | "Low";
+};
+
+type OverviewData = {
+  kpis: ApiKpis;
+  trend: ApiTrendRow[];
+  stations: ApiStation[];
+};
+
+// ── Page ─────────────────────────────────────────────────────────────────────
+
+const FMT_MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function fmtYM(ym: string): string {
+  const [y, m] = ym.split("-");
+  return `${FMT_MONTHS[parseInt(m) - 1]} ${y.slice(2)}`;
+}
 
 export default function LandlordOverviewPage() {
-  const maxGross = Math.max(...REVENUE_BARS.map((b) => b.gross));
+  const { stationId } = useStationFilter();
+  const { lang } = useLanguage();
+  const T = STRINGS[lang];
+
+  const [apiData, setApiData] = useState<OverviewData | null>(null);
+
+  useEffect(() => {
+    setApiData(null);
+    fetch(`/api/landlord/overview?stationId=${stationId}`)
+      .then(r => r.ok ? r.json() : null)
+      .then((d: OverviewData | null) => { if (d) setApiData(d); })
+      .catch(() => {});
+  }, [stationId]);
+
+  const label = STATION_LABEL[stationId];
+
+  // ── KPI display (from live API only) ─────────────────────────────────────
+  const kpis: KpiRow[] = apiData ? [
+    {
+      label: "MONTHLY REVENUE (THB)",
+      value: `฿${Math.round(apiData.kpis.revenue).toLocaleString()}`,
+      trend: apiData.kpis.revenueChange,
+      trendTh: apiData.kpis.revenueChange,
+      up: apiData.kpis.revenueUp,
+    },
+    {
+      label: "DAILY CUSTOMERS",
+      value: apiData.kpis.dailyCustomers.toLocaleString(),
+      trend: apiData.kpis.customersChange,
+      trendTh: apiData.kpis.customersChange,
+      up: apiData.kpis.customersUp,
+    },
+    {
+      label: "AVG BASKET SIZE (THB)",
+      value: `฿${apiData.kpis.basketSize.toFixed(1)}`,
+      trend: "latest month",
+      trendTh: "เดือนล่าสุด",
+      up: true,
+    },
+    {
+      label: "REPEAT VISIT RATE (%)",
+      value: apiData.kpis.repeatRate,
+      trend: apiData.kpis.repeatChange,
+      trendTh: apiData.kpis.repeatChange,
+      up: apiData.kpis.repeatUp,
+    },
+  ] : [];
+
+  const trend = apiData
+    ? apiData.trend.map(t => ({ ...t, month: fmtYM(t.month) }))
+    : [];
+
+  const visibleStations = apiData
+    ? (stationId === "all" ? apiData.stations : apiData.stations.filter(s => s.filterKey === stationId)).map(s => ({
+        id: s.filterKey,
+        name: s.name,
+        location: s.location,
+        revenue: `฿${Math.round(s.revenue).toLocaleString()}`,
+        customers: s.dailyCustomers.toLocaleString(),
+        occupied: s.occupied,
+        total: s.total,
+        status: s.status,
+      }))
+    : [];
+
+  // AI context = the SELECTED station only, so the summary matches the KPIs on
+  // screen (the filter is per-station; never aggregate all stations here).
+  const aiSummary = apiData
+    ? [
+        `Station: ${label}`,
+        `Monthly Revenue: ฿${Math.round(apiData.kpis.revenue).toLocaleString()} (${apiData.kpis.revenueChange})`,
+        `Daily Customers: ${apiData.kpis.dailyCustomers.toLocaleString()} (${apiData.kpis.customersChange})`,
+        `Avg Basket Size: ฿${apiData.kpis.basketSize.toFixed(1)} | Repeat Rate: ${apiData.kpis.repeatRate} (${apiData.kpis.repeatChange})`,
+        visibleStations.map(s => `${s.name}: ${s.revenue}/mo, ${s.customers} daily customers, ${s.occupied}/${s.total} units occupied (${s.total - s.occupied} vacant)`).join("; "),
+      ].join(" | ")
+    : `Loading data for ${label}...`;
+
+  const vals = trend.length ? trend.map((t) => t.station) : [0, 100];
+  const yMin = Math.floor(Math.min(...vals) / 20) * 20 - 20;
+  const yMax = Math.ceil(Math.max(...vals) / 20) * 20 + 20;
 
   return (
     <LandlordBackofficeLayout>
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold italic text-[#1C3A1C]">Executive Overview</h1>
-          <p className="text-sm text-on-surface-variant mt-1">
-            Welcome back, your retail ecosystem is performing{" "}
-            <span className="font-bold text-primary">12% above benchmark</span> this month.
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <button type="button" className="border border-outline-variant text-on-surface text-xs font-medium px-4 py-2 rounded-full bg-white cursor-pointer">Last 30 Days</button>
-          <button type="button" className="border border-outline-variant text-on-surface text-xs font-medium px-4 py-2 rounded-full bg-white cursor-pointer flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-base">download</span>Export
-          </button>
-        </div>
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-on-surface">{T.title}</h1>
+        <p className="text-sm text-on-surface-variant mt-1">
+          {T.subtitle}{" "}
+          <span className="font-bold text-primary">{T.benchmarkText}</span>{" "}
+          {T.subtitleSuffix}
+        </p>
       </div>
 
-      {/* KPIs */}
+      {/* KPIs — 4×1 */}
       <div className="grid grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-2xl p-5 shadow-sm">
-          <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Total Revenue</div>
-          <div className="text-3xl font-bold text-on-surface mb-1">฿4.2M</div>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-xs font-bold text-primary">+8.4%</span>
-            <span className="text-[11px] text-on-surface-variant uppercase tracking-wide">VS LAST MONTH</span>
+        {kpis.map((m) => (
+          <div key={m.label} className="bg-white rounded-2xl p-5 shadow-sm">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-3">
+              {T.kpiLabels[m.label] ?? m.label}
+            </div>
+            <div className="text-3xl font-bold text-on-surface mb-1">{m.value}</div>
+            <div className={`text-xs font-medium ${m.up ? "text-primary" : "text-red-500"}`}>
+              {lang === "th" ? m.trendTh : m.trend}
+            </div>
           </div>
-        </div>
-        <div className="bg-white rounded-2xl p-5 shadow-sm">
-          <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Occupancy</div>
-          <div className="text-3xl font-bold text-on-surface mb-1">94.2%</div>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-xs font-bold text-primary">Optimal</span>
-            <span className="text-[11px] text-on-surface-variant uppercase tracking-wide">2 UNITS VACANT</span>
-          </div>
-        </div>
-        <div className="bg-white rounded-2xl p-5 shadow-sm">
-          <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Pending Reviews</div>
-          <div className="text-3xl font-bold text-on-surface mb-1">12</div>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-xs font-bold text-primary">4 Urgent</span>
-            <span className="text-[11px] text-on-surface-variant uppercase tracking-wide">EXPIRING SOON</span>
-          </div>
-        </div>
-        <div className="bg-white rounded-2xl p-5 shadow-sm">
-          <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Active Tenants</div>
-          <div className="text-3xl font-bold text-on-surface mb-1">7</div>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-xs font-bold text-primary">+1 this month</span>
-            <span className="text-[11px] text-on-surface-variant uppercase tracking-wide">ACTIVE LEASES</span>
-          </div>
-        </div>
+        ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-6 mb-6">
-        {/* Dual-bar revenue chart */}
-        <div className="col-span-2 bg-white rounded-2xl p-6 shadow-sm">
-          <div className="flex justify-between items-center mb-4">
+      {/* AI Summary */}
+      <div className="mb-6">
+        <AiSuggestionInline
+          role="landlord"
+          pageContext={`Executive Overview — ${label}`}
+          dataContext={aiSummary}
+          label={T.aiSummaryLabel}
+        />
+      </div>
+
+      {/* AI — best-fit store types per station (Predictive → Symbolic → Generative) */}
+      <div className="mb-6">
+        <StationFitPanel stationId={stationId} lang={lang} />
+      </div>
+
+      {/* Line chart */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm mb-6">
+        <h3 className="text-base font-bold text-on-surface">{T.monthlyRevenueTrend}</h3>
+        <p className="text-xs text-on-surface-variant mb-4">{T.chartSubtitle}</p>
+        <ResponsiveContainer width="100%" height={260}>
+          <LineChart data={trend} margin={{ top: 8, right: 16, left: 8, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+            <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
+            <YAxis
+              domain={[yMin, yMax]}
+              tickFormatter={(v: number) => `฿${v}K`}
+              tick={{ fontSize: 9, fill: "#9ca3af" }}
+              axisLine={false}
+              tickLine={false}
+              width={52}
+            />
+            <Tooltip
+              formatter={(value: unknown) => [`฿${value}K`, "Revenue"]}
+              contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e5e7eb" }}
+            />
+            <Line type="monotone" dataKey="station" stroke="#6ab04c" strokeWidth={2.5}
+              dot={{ r: 4, fill: "#6ab04c" }} activeDot={{ r: 5 }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Station Performance */}
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="px-6 pt-5 pb-3 border-b border-outline-variant/20">
+          <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-3">{T.stationPerformance}</div>
+          <div className="grid text-[10px] font-bold uppercase tracking-widest text-on-surface-variant"
+            style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr" }}>
+            <span>{T.stationCol}</span>
+            <span className="text-right">{T.revenueCol}</span>
+            <span className="text-right">{T.customersCol}</span>
+            <span className="text-right">{T.occupancyCol}</span>
+          </div>
+        </div>
+        {visibleStations.map((s) => (
+          <div key={s.name}
+            className="grid items-center px-6 py-5 border-b border-outline-variant/10 last:border-0 hover:bg-[#F5F2EB]/50 transition-colors"
+            style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr" }}>
             <div>
-              <h3 className="text-base font-bold text-on-surface">Rental Revenue Trend</h3>
-              <p className="text-xs text-on-surface-variant">Monthly gross vs net (THB thousands)</p>
+              <div className="text-sm font-bold text-on-surface">{s.name}</div>
+              <div className="text-xs text-on-surface-variant mt-0.5">{s.location}</div>
             </div>
-            <div className="flex items-center gap-4 text-xs text-on-surface-variant">
-              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#344e00] inline-block" />Gross</span>
-              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-primary inline-block" />Net</span>
+            <div className="text-right">
+              <div className="text-sm font-bold text-on-surface">{s.revenue}</div>
+              <div className="text-[10px] text-on-surface-variant">{T.perMonth}</div>
             </div>
-          </div>
-          <div className="flex items-end gap-3 h-44">
-            {REVENUE_BARS.map((b) => (
-              <div key={b.month} className="flex-1 flex flex-col items-center gap-1">
-                <div className="w-full flex gap-1 items-end">
-                  <div className="flex-1 bg-[#344e00] rounded-t" style={{ height: `${(b.gross / maxGross) * 100}%`, minHeight: "6px" }} />
-                  <div className="flex-1 bg-primary rounded-t" style={{ height: `${(b.net / maxGross) * 100}%`, minHeight: "6px" }} />
-                </div>
-                <span className="text-[10px] text-on-surface-variant">{b.month}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Space occupancy */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm">
-          <h3 className="text-base font-bold text-on-surface mb-4">Space Occupancy</h3>
-          {[
-            { station: "Sukhumvit 62", location: "Bang Chak, Bangkok", badge: "8/10 Units", cls: "bg-primary/10 text-primary" },
-            { station: "Lat Phrao 71", location: "Wang Thonglang, Bangkok", badge: "10/10 Units", cls: "bg-secondary/10 text-secondary" },
-            { station: "Rama IV", location: "Khlong Toei, Bangkok", badge: "5/6 Units", cls: "bg-primary/10 text-primary" },
-          ].map((s) => (
-            <div key={s.station} className="flex items-center justify-between py-3 border-b border-outline-variant/20 last:border-0">
-              <div>
-                <div className="text-sm font-bold text-on-surface">{s.station}</div>
-                <div className="text-[11px] text-on-surface-variant mt-0.5">{s.location}</div>
-              </div>
-              <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${s.cls}`}>{s.badge}</span>
+            <div className="text-right">
+              <div className="text-sm font-bold text-on-surface">{s.customers}</div>
+              <div className="text-[10px] text-on-surface-variant">{T.avgPerDay}</div>
             </div>
-          ))}
-          <a href="/landlord_backoffice/landlordMyStationsPage" className="text-[11px] font-bold tracking-widest text-primary no-underline block text-center pt-3 hover:underline">
-            VIEW ALL ASSETS
-          </a>
-        </div>
-      </div>
-
-      {/* Pending applications */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold italic text-on-surface">Pending Applications</h3>
-          <span className="text-[11px] font-bold tracking-wide text-primary bg-primary/10 px-3 py-1 rounded-full">4 NEW REQUESTS</span>
-        </div>
-        <div className="grid pb-2 border-b border-outline-variant/20 text-[10px] font-bold tracking-widest text-on-surface-variant gap-x-6"
-          style={{ gridTemplateColumns: "2fr 1.5fr 1fr 1.2fr 1fr auto" }}>
-          <span>APPLICANT</span>
-          <span>PROPOSED STATION</span>
-          <span>CATEGORY</span>
-          <span>SCORE</span>
-          <span>STATUS</span>
-          <span>ACTIONS</span>
-        </div>
-        {PENDING.map((app) => (
-          <div
-            key={app.name}
-            className="grid items-center gap-x-6 py-3 border-b border-outline-variant/20 last:border-0"
-            style={{ gridTemplateColumns: "2fr 1.5fr 1fr 1.2fr 1fr auto" }}
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                <span className="text-sm font-bold text-white">{app.name[0]}</span>
-              </div>
-              <div>
-                <div className="text-sm font-semibold text-on-surface">{app.name}</div>
-                <div className="text-xs text-on-surface-variant">{app.sub}</div>
-              </div>
-            </div>
-            <span className="text-sm text-on-surface">{app.station}</span>
-            <span className="text-[10px] font-bold tracking-wide text-on-surface-variant border border-outline-variant rounded-full px-2 py-0.5 w-fit">{app.category}</span>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-on-surface w-6 flex-shrink-0">{app.score}</span>
-              <div className="flex-1 h-1.5 bg-outline-variant/20 rounded-full">
-                <div className="h-1.5 bg-primary rounded-full" style={{ width: `${app.score}%` }} />
-              </div>
-            </div>
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full w-fit ${app.status === "Under Review" ? "bg-primary/10 text-primary" : "bg-amber-100 text-amber-700"}`}>
-              {app.status}
-            </span>
-            <div className="flex items-center gap-2 justify-end">
-              <button type="button" className="bg-transparent border-0 cursor-pointer p-0">
-                <span className="material-symbols-outlined text-[22px] text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-              </button>
-              <button type="button" className="bg-transparent border-0 cursor-pointer p-0">
-                <span className="material-symbols-outlined text-[22px] text-error" style={{ fontVariationSettings: "'FILL' 1" }}>cancel</span>
-              </button>
+            <div className="text-right">
+              <div className={`text-sm font-bold ${OCCUPANCY_COLOR[s.status]}`}>{s.occupied} / {s.total} units</div>
+              <div className="text-[10px] text-on-surface-variant">{T.occupied}</div>
             </div>
           </div>
         ))}

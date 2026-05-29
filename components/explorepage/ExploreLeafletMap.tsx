@@ -3,7 +3,19 @@
 import { useEffect } from "react";
 import { markersForLeaflet } from "@/lib/stations";
 
-const markers = markersForLeaflet();
+export type MarkerItem = {
+  id: string;
+  title: string;
+  province: string;
+  traffic_level: string;
+  spaces_count: number;
+  lat: number;
+  lng: number;
+  location: string;
+  traffic_badge: string;
+  match_badge: string;
+  image: string;
+};
 
 declare global {
   interface Window {
@@ -13,14 +25,16 @@ declare global {
   }
 }
 
-export default function ExploreLeafletMap() {
+export default function ExploreLeafletMap({ markers: markersProp }: { markers?: MarkerItem[] }) {
+  const markers: MarkerItem[] = markersProp && markersProp.length > 0 ? markersProp : markersForLeaflet();
+
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
     script.onload = initMap;
     document.head.appendChild(script);
 
-    function stationTooltipHtml(m: (typeof markers)[0]) {
+    function stationTooltipHtml(m: MarkerItem) {
       return `
         <div style="width: 240px;">
           <div style="display:flex; gap:10px; align-items:flex-start;">
@@ -94,7 +108,7 @@ export default function ExploreLeafletMap() {
 
       const icon = destinationIcon("#466800");
       const userIcon = destinationIcon("#ef4444");
-      const stationMarkers: { marker: import("leaflet").Marker; data: (typeof markers)[0] }[] = [];
+      const stationMarkers: { marker: import("leaflet").Marker; data: MarkerItem }[] = [];
 
       markers.forEach((m) => {
         const marker = window.L.marker([m.lat, m.lng], { icon }).addTo(map);
@@ -204,9 +218,14 @@ export default function ExploreLeafletMap() {
     }
 
     return () => {
-      document.head.removeChild(script);
+      if (window.__ptgExploreMap?.remove) {
+        try { window.__ptgExploreMap.remove(); } catch { /* noop */ }
+        window.__ptgExploreMap = null;
+        window.__ptgExploreMapInited = false;
+      }
+      if (document.head.contains(script)) document.head.removeChild(script);
     };
-  }, []);
+  }, [markers]);
 
   return (
     <section className="absolute inset-0 z-0">

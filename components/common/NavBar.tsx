@@ -4,6 +4,10 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useAuth } from "@/lib/authContext";
+import { useLanguage } from "@/lib/languageContext";
+import { useStoreFilter } from "@/lib/storeFilterContext";
+import { useStationFilter } from "@/lib/stationFilterContext";
+import NotificationBell from "@/components/common/NotificationBell";
 
 interface NavBarProps {
   showSearch?: boolean;
@@ -81,6 +85,82 @@ function ProfileMenu() {
   );
 }
 
+function StoreFilterPicker() {
+  const { pathname } = useRouter();
+  const { user } = useAuth();
+  const { storeId, setStoreId, stores } = useStoreFilter();
+
+  if (!user || user.type !== "retailer" || !pathname.startsWith("/retailer_backoffice")) return null;
+
+  return (
+    <div className="relative flex items-center bg-[#F5F2EB] rounded-full px-3 py-1.5 gap-1.5">
+      <span className="material-symbols-outlined text-[16px] text-primary">store</span>
+      <select
+        value={storeId}
+        onChange={(e) => setStoreId(e.target.value as typeof storeId)}
+        className="appearance-none bg-transparent text-xs font-semibold text-on-surface pr-5 border-none outline-none cursor-pointer"
+      >
+        {stores.map((s) => (
+          <option key={s.id} value={s.id}>{s.name}</option>
+        ))}
+      </select>
+      <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-[14px] text-on-surface-variant pointer-events-none">
+        expand_more
+      </span>
+    </div>
+  );
+}
+
+function StationFilterPicker() {
+  const { pathname } = useRouter();
+  const { user } = useAuth();
+  const { stationId, setStationId, stations } = useStationFilter();
+
+  if (!user || user.type !== "landlord" || !pathname.startsWith("/landlord_backoffice")) return null;
+
+  return (
+    <div className="relative flex items-center bg-[#F5F2EB] rounded-full px-3 py-1.5 gap-1.5">
+      <span className="material-symbols-outlined text-[16px] text-primary">location_on</span>
+      <select
+        value={stationId}
+        onChange={(e) => setStationId(e.target.value as typeof stationId)}
+        className="appearance-none bg-transparent text-xs font-semibold text-on-surface pr-5 border-none outline-none cursor-pointer"
+      >
+        {stations.map((s) => (
+          <option key={s.id} value={s.id}>{s.name}</option>
+        ))}
+      </select>
+      <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-[14px] text-on-surface-variant pointer-events-none">
+        expand_more
+      </span>
+    </div>
+  );
+}
+
+function LanguageSwitcher() {
+  const { lang, setLang } = useLanguage();
+  const { user } = useAuth();
+  if (!user || (user.type !== "retailer" && user.type !== "landlord")) return null;
+  return (
+    <div className="flex items-center bg-[#F5F2EB] rounded-full p-0.5 gap-0.5">
+      <button
+        type="button"
+        onClick={() => setLang("en")}
+        className={`text-xs font-bold px-3 py-1.5 rounded-full transition-all cursor-pointer border-0 ${
+          lang === "en" ? "bg-white text-on-surface shadow-sm" : "bg-transparent text-on-surface-variant hover:text-on-surface"
+        }`}
+      >EN</button>
+      <button
+        type="button"
+        onClick={() => setLang("th")}
+        className={`text-xs font-bold px-3 py-1.5 rounded-full transition-all cursor-pointer border-0 ${
+          lang === "th" ? "bg-white text-on-surface shadow-sm" : "bg-transparent text-on-surface-variant hover:text-on-surface"
+        }`}
+      >TH</button>
+    </div>
+  );
+}
+
 export default function NavBar({ showSearch = false }: NavBarProps) {
   const { user } = useAuth();
 
@@ -100,7 +180,9 @@ export default function NavBar({ showSearch = false }: NavBarProps) {
   const links = (
     <div className="hidden md:flex gap-10 items-center">
       <Link href="/explorepage/explorePage" className="nav-link-lime font-sans">Explore Locations</Link>
-      <Link href="/pricingpage/pricingPage" className="nav-link-lime font-sans">Pricing</Link>
+      {user?.type !== "landlord" && (
+        <Link href="/pricingpage/pricingPage" className="nav-link-lime font-sans">Pricing</Link>
+      )}
       {user && (
         <Link href={dashDest} className="nav-link-lime font-sans">Dashboard</Link>
       )}
@@ -108,7 +190,13 @@ export default function NavBar({ showSearch = false }: NavBarProps) {
   );
 
   const rightActions = user ? (
-    <ProfileMenu />
+    <div className="flex items-center gap-3">
+      <StoreFilterPicker />
+      <StationFilterPicker />
+      <LanguageSwitcher />
+      <NotificationBell />
+      <ProfileMenu />
+    </div>
   ) : (
     <div className="flex items-center gap-4">
       <Link

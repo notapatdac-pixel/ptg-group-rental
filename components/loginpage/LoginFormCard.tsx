@@ -9,16 +9,18 @@ const LABEL_CLS = "text-[10px] uppercase font-bold tracking-widest text-on-surfa
 const INPUT_CLS =
   "w-full bg-surface-container-low border-0 border-b-2 border-surface-container-highest px-1 py-3 text-on-surface text-sm focus:ring-0 focus:border-primary transition-all outline-none placeholder:text-surface-dim";
 
-const RETAILER_DEST = "/retailer_backoffice/retailerDashboardPage";
-const LANDLORD_DEST = "/landlord_backoffice/landlordOverviewPage";
+const RETAILER_DEST      = "/retailer_backoffice/retailerDashboardPage";
+const LANDLORD_DEST      = "/landlord_backoffice/landlordOverviewPage";
+const PROFILE_SETUP_DEST = "/retailer_backoffice/retailerProfileSetupPage";
 
 export default function LoginFormCard() {
-  const [tab, setTab] = useState<"retailer" | "landlord">("retailer");
-  const [email, setEmail] = useState("");
+  const [tab, setTab]           = useState<"retailer" | "landlord">("retailer");
+  const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError]       = useState("");
+  const [busy, setBusy]         = useState(false);
 
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
   const router = useRouter();
 
   const activeCls =
@@ -26,14 +28,34 @@ export default function LoginFormCard() {
   const inactiveCls =
     "flex-1 py-2.5 px-6 text-sm font-medium rounded-full text-on-surface-variant transition-all cursor-pointer border-0 bg-transparent";
 
-  function handleLogin() {
+  async function handleLogin() {
     setError("");
-    const result = login(email, password);
+    setBusy(true);
+    const result = await login(email, password);
+    setBusy(false);
     if (!result.ok) {
       setError(result.error ?? "Invalid email or password.");
       return;
     }
-    router.push(tab === "landlord" ? LANDLORD_DEST : RETAILER_DEST);
+    // Block wrong-role login
+    if (result.userType !== tab) {
+      await logout();
+      setError(
+        tab === "retailer"
+          ? "This account is a Landlord account. Please use the Landlord tab."
+          : "This account is a Retailer account. Please use the Retailer tab."
+      );
+      return;
+    }
+    // First-login: retailer with no saved profile → profile setup
+    if (result.userType === "retailer" && result.userId) {
+      const profileDone = localStorage.getItem(`ptg_retailer_profile_done_${result.userId}`);
+      if (!profileDone) {
+        router.push(PROFILE_SETUP_DEST);
+        return;
+      }
+    }
+    router.push(result.userType === "landlord" ? LANDLORD_DEST : RETAILER_DEST);
   }
 
   return (
@@ -67,7 +89,7 @@ export default function LoginFormCard() {
             type="password"
             value={password}
             onChange={(e) => { setPassword(e.target.value); setError(""); }}
-            onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+            onKeyDown={(e) => e.key === "Enter" && !busy && handleLogin()}
             className={INPUT_CLS}
           />
         </div>
@@ -81,9 +103,10 @@ export default function LoginFormCard() {
         <button
           type="button"
           onClick={handleLogin}
-          className="w-full primary-gradient text-on-primary font-bold py-4 rounded-full text-sm tracking-widest uppercase shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95 transition-all cursor-pointer border-0 mt-2"
+          disabled={busy}
+          className="w-full primary-gradient text-on-primary font-bold py-4 rounded-full text-sm tracking-widest uppercase shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95 transition-all cursor-pointer border-0 mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          SIGN IN
+          {busy ? "SIGNING IN…" : "SIGN IN"}
         </button>
 
         {/* Mock hint — matches reference repo style */}

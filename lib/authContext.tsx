@@ -1,69 +1,102 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
 export type UserType = "retailer" | "landlord";
 
 export interface AuthUser {
-  email: string;
-  name: string;
-  type: UserType;
+  id:          string;
+  email:       string;
+  name:        string;
+  type:        UserType;
   avatarColor: string;
-  initials: string;
+  initials:    string;
 }
 
 interface AuthContextValue {
-  user: AuthUser | null;
-  login: (email: string, password: string) => { ok: boolean; error?: string };
-  logout: () => void;
+  user:    AuthUser | null;
+  loading: boolean;
+  login:   (email: string, password: string) => Promise<{ ok: boolean; error?: string; userType?: UserType; userId?: string }>;
+  logout:  () => Promise<void>;
 }
-
-const MOCK_ACCOUNTS: Record<string, { password: string; name: string; type: UserType; avatarColor: string }> = {
-  "retailer@ptg.test": { password: "retailer123", name: "Siriporn K.", type: "retailer", avatarColor: "#2d5a1b" },
-  "landlord@ptg.test": { password: "landlord123", name: "Wanchai P.",  type: "landlord", avatarColor: "#466800" },
-};
-
-const STORAGE_KEY = "ptg_auth_user";
 
 const AuthContext = createContext<AuthContextValue>({
   user: null,
-  login: () => ({ ok: false }),
-  logout: () => {},
+  loading: true,
+  login:  async () => ({ ok: false }),
+  logout: async () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser]       = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  async function fetchProfile(supabaseUserId: string, email: string): Promise<AuthUser | null> {
+    try {
+      const res = await fetch(`/api/auth/me?userId=${supabaseUserId}`);
+      if (!res.ok) return null;
+      const profile = await res.json() as {
+        id: string; email: string; name: string; role: string; avatar_color: string; initials: string;
+      };
+      return {
+        id:          profile.id,
+        email:       profile.email,
+        name:        profile.name,
+        type:        profile.role as UserType,
+        avatarColor: profile.avatar_color,
+        initials:    profile.initials,
+      };
+    } catch {
+      return null;
+    }
+  }
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setUser(JSON.parse(raw));
-    } catch {}
+    // Hydrate from existing session
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        const profile = await fetchProfile(session.user.id, session.user.email ?? "");
+        setUser(profile);
+        if (profile) localStorage.setItem("ptg_user_id", profile.id);
+      }
+      setLoading(false);
+    });
+
+    // Listen for auth state changes (login / logout / token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        const profile = await fetchProfile(session.user.id, session.user.email ?? "");
+        setUser(profile);
+        if (profile) localStorage.setItem("ptg_user_id", profile.id);
+      } else {
+        setUser(null);
+        localStorage.removeItem("ptg_user_id");
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  function login(email: string, password: string) {
-    const account = MOCK_ACCOUNTS[email.trim().toLowerCase()];
-    if (!account || account.password !== password) {
-      return { ok: false, error: "Invalid email or password." };
+  async function login(email: string, password: string): Promise<{ ok: boolean; error?: string; userType?: UserType; userId?: string }> {
+    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    if (error || !data.user) {
+      return { ok: false, error: error?.message ?? "Invalid email or password." };
     }
-    const authUser: AuthUser = {
-      email: email.trim().toLowerCase(),
-      name: account.name,
-      type: account.type,
-      avatarColor: account.avatarColor,
-      initials: account.name.charAt(0).toUpperCase(),
-    };
-    setUser(authUser);
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(authUser)); } catch {}
-    return { ok: true };
+    const profile = await fetchProfile(data.user.id, data.user.email ?? "");
+    if (!profile) return { ok: false, error: "User profile not found. Please run the seed SQL." };
+    setUser(profile);
+    localStorage.setItem("ptg_user_id", profile.id);
+    return { ok: true, userType: profile.type, userId: profile.id };
   }
 
-  function logout() {
+  async function logout(): Promise<void> {
+    await supabase.auth.signOut();
     setUser(null);
-    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+    localStorage.removeItem("ptg_user_id");
   }
 
-  return <AuthContext.Provider value={{ user, login, logout }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, loading, login, logout }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
