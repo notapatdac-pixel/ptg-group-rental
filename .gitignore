@@ -39,3 +39,6 @@ next-env.d.ts
 
 # internal project docs (kept local, not committed)
 /docs/
+
+# database migrations & seeds (kept local, not committed)
+/supabase/

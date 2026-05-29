@@ -43,10 +43,6 @@ const NUM_STORES_OPTIONS = [
   ...Array.from({ length: 20 }, (_, i) => String(i + 1)),
   "20+",
 ];
-const YEARS_EXP_OPTIONS = [
-  ...Array.from({ length: 30 }, (_, i) => String(i + 1)),
-  "30+",
-];
 
 // ── Shared select style ───────────────────────────────────────────────────────
 
@@ -168,6 +164,8 @@ export default function RetailerProfileSetupPage() {
           body: JSON.stringify({
             userId:       user.id,
             businessName: current.businessName,
+            contactName:  current.contactName,
+            phone:        current.phone,
             category:     current.category,
             experience:   current.yearsExperience,
             numStores:    current.numStores,
@@ -331,17 +329,15 @@ export default function RetailerProfileSetupPage() {
             </div>
             <div>
               <label className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant block mb-1.5">Years of retail experience</label>
-              <div className="relative">
-                <select
-                  value={active.yearsExperience}
-                  onChange={e => updateField("yearsExperience", e.target.value)}
-                  className={SELECT_CLS}
-                >
-                  <option value="">Select…</option>
-                  {YEARS_EXP_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
-                </select>
-                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline text-[18px] pointer-events-none">expand_more</span>
-              </div>
+              <input
+                type="number"
+                min={0}
+                inputMode="numeric"
+                value={active.yearsExperience}
+                onChange={e => updateField("yearsExperience", e.target.value.replace(/[^0-9]/g, ""))}
+                placeholder="e.g. 0 for a new business"
+                className="w-full bg-[#F5F2EB] rounded-xl px-4 py-3 text-sm border-none outline-none"
+              />
             </div>
           </div>
         </div>

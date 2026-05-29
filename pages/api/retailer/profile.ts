@@ -15,13 +15,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const { data, error } = await serviceSupabase
       .from("retailer_profiles")
-      .select("id, user_id, business_name, category, experience, num_stores, max_budget, concept")
+      .select("id, user_id, business_name, category, experience, num_stores, max_budget, concept, owner_name, phone")
       .eq("user_id", userId)
-      .single();
+      .limit(1)
+      .maybeSingle();
 
     if (error || !data) {
       return res.status(200).json({
         businessName: "",
+        contactName:  "",
+        phone:        "",
         category:     "",
         experience:   "",
         numStores:    "",
@@ -33,6 +36,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({
       id:           data.id,
       businessName: data.business_name,
+      contactName:  data.owner_name ?? "",
+      phone:        data.phone ?? "",
       category:     data.category,
       experience:   data.experience,
       numStores:    data.num_stores,
@@ -42,9 +47,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === "PATCH") {
-    const { userId, businessName, category, experience, numStores, maxBudget, concept } = req.body as {
+    const { userId, businessName, contactName, phone, category, experience, numStores, maxBudget, concept } = req.body as {
       userId:       string;
       businessName: string;
+      contactName?: string;
+      phone?:       string;
       category:     string;
       experience:   string;
       numStores:    string;
@@ -54,17 +61,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!userId) return res.status(400).json({ error: "userId required" });
 
-    const { error } = await serviceSupabase
+    const fields = {
+      business_name: businessName,
+      owner_name:    contactName ?? null,
+      phone:         phone ?? null,
+      category,
+      experience,
+      num_stores:    numStores,
+      max_budget:    maxBudget,
+      concept,
+    };
+
+    // No unique constraint on user_id (tenant demo profiles share one), so we
+    // can't upsert — find the user's row and update it, or insert if none yet
+    // (new accounts). id has a gen_random_uuid() default.
+    const { data: existing } = await serviceSupabase
       .from("retailer_profiles")
-      .update({
-        business_name: businessName,
-        category,
-        experience,
-        num_stores:    numStores,
-        max_budget:    maxBudget,
-        concept,
-      })
-      .eq("user_id", userId);
+      .select("id")
+      .eq("user_id", userId)
+      .limit(1)
+      .maybeSingle();
+
+    const { error } = existing?.id
+      ? await serviceSupabase.from("retailer_profiles").update(fields).eq("id", existing.id)
+      : await serviceSupabase.from("retailer_profiles").insert({ user_id: userId, ...fields });
 
     if (error) return res.status(500).json({ error: error.message });
 
