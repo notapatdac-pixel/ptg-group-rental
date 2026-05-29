@@ -4,9 +4,8 @@ import NavBar from "@/components/common/NavBar";
 import Footer from "@/components/common/Footer";
 import AiAdvisorChat from "@/components/common/AiAdvisorChat";
 import StationDetailHeader from "@/components/stationdetailpage/StationDetailHeader";
-import StationDetailKpiSection from "@/components/stationdetailpage/StationDetailKpiSection";
-import TrafficTrendChart from "@/components/stationdetailpage/TrafficTrendChart";
-import StationDetailSpacesSection from "@/components/stationdetailpage/StationDetailSpacesSection";
+import StationDetailKpiSection, { type LiveStationMetrics } from "@/components/stationdetailpage/StationDetailKpiSection";
+import TrafficTrendChart, { type TrafficPoint } from "@/components/stationdetailpage/TrafficTrendChart";
 import LocationSpecTable from "@/components/stationdetailpage/LocationSpecTable";
 import { STATIONS_BY_ID, type Station } from "@/lib/stations";
 
@@ -36,12 +35,25 @@ export const getStaticProps: GetStaticProps<{ station: Station }> = ({ params })
 export default function StationDetailPage({ station }: { station: Station }) {
   const [liveUnits, setLiveUnits] = useState<LiveUnit[] | null>(null);
   const [unitLoading, setUnitLoading] = useState(true);
+  const [liveMetrics, setLiveMetrics] = useState<LiveStationMetrics | undefined>(undefined);
+  const [trafficTrend, setTrafficTrend] = useState<TrafficPoint[] | undefined>(undefined);
+  const [trafficYear, setTrafficYear] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     fetch(`/api/retailer/station?stationId=${station.id}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         setLiveUnits(data?.availableUnits ?? []);
+        if (data) {
+          setLiveMetrics({
+            dailyCustomers: data.dailyCustomers,
+            dwellMin:       data.dwellMin,
+            estRevenueK:    data.estRevenueK,
+            aiScore:        data.aiScore,
+          });
+          setTrafficTrend(data.trafficTrend);
+          setTrafficYear(data.trafficYear);
+        }
         setUnitLoading(false);
       })
       .catch(() => setUnitLoading(false));
@@ -80,9 +92,8 @@ export default function StationDetailPage({ station }: { station: Station }) {
           <div className="relative z-10 max-w-[1200px] mx-auto w-full px-6 py-8 pt-28 pb-28">
             <StationDetailHeader station={station} />
             <div className="space-y-12">
-              <StationDetailKpiSection station={station} />
-              <TrafficTrendChart station={station} />
-              <StationDetailSpacesSection station={station} />
+              <StationDetailKpiSection station={station} live={liveMetrics} />
+              <TrafficTrendChart station={station} data={trafficTrend} year={trafficYear} />
 
               {/* ── Apply for a Unit ── */}
               <div className="rounded-xl overflow-hidden border border-[#1C3A1C]/20 shadow-sm">
@@ -145,7 +156,7 @@ export default function StationDetailPage({ station }: { station: Station }) {
                           className="bg-white rounded-lg px-5 py-4 flex items-center justify-between gap-4 shadow-sm border border-transparent hover:border-[#1C3A1C]/15 transition-all"
                         >
                           {/* Unit info */}
-                          <div className="flex items-center gap-4 min-w-0">
+                          <div className="flex items-center gap-4 min-w-0 flex-1">
                             <span className="material-symbols-outlined text-[#1C3A1C]/60 text-[20px] shrink-0">
                               storefront
                             </span>
@@ -159,21 +170,21 @@ export default function StationDetailPage({ station }: { station: Station }) {
                             </div>
                           </div>
 
-                          {/* Stats */}
-                          <div className="hidden sm:flex items-center gap-6 shrink-0">
-                            <div className="text-center">
+                          {/* Stats — fixed-width columns so they align across rows */}
+                          <div className="hidden sm:flex items-center shrink-0">
+                            <div className="w-20 text-center">
                               <p className="text-xs text-on-surface-variant">Area</p>
                               <p className="text-sm font-semibold text-on-surface">
                                 {unit.areaSqm} sqm
                               </p>
                             </div>
-                            <div className="text-center">
+                            <div className="w-32 text-center">
                               <p className="text-xs text-on-surface-variant">Rent</p>
                               <p className="text-sm font-semibold text-primary">
                                 ฿{unit.priceThb.toLocaleString()}/mo
                               </p>
                             </div>
-                            <div className="text-center">
+                            <div className="w-24 text-center">
                               <p className="text-xs text-on-surface-variant">Lease</p>
                               <p className="text-sm font-semibold text-on-surface capitalize">
                                 {unit.leaseType}

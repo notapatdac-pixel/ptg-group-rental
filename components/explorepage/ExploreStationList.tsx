@@ -27,9 +27,6 @@ function StationCard({ station }: { station: typeof STATIONS[0] }) {
               <span className="material-symbols-outlined text-[12px] fill-icon">verified</span>
               PTG Verified
             </span>
-            <span className="bg-primary text-white px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 uppercase tracking-wider">
-              {station.match_badge}
-            </span>
           </div>
           <button
             type="button"

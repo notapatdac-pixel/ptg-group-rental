@@ -41,19 +41,28 @@ function KpiShell({ label, children }: { label: string; children: React.ReactNod
   );
 }
 
-export default function StationDetailKpiSection({ station }: { station: Station }) {
+export type LiveStationMetrics = {
+  dailyCustomers?: number | null;
+  dwellMin?: number | null;
+  estRevenueK?: number | null;
+  aiScore?: number | null;
+};
+
+export default function StationDetailKpiSection({ station, live }: { station: Station; live?: LiveStationMetrics }) {
   const d = station.detail;
-  const customersRef = useCountUp(d.daily_customers_num, "int");
-  const dwellRef = useCountUp(d.dwell_min_num, "int");
-  const revenueRef = useCountUp(d.est_revenue_k, "k");
-  const aiRef = useCountUp(d.ai_score_num, "pct");
+  // Prefer live DB metrics (same source as the landlord back office) so the
+  // public station page and the back office never disagree; fall back to the
+  // static seed values only until the fetch resolves.
+  const customersRef = useCountUp(live?.dailyCustomers ?? d.daily_customers_num, "int");
+  const dwellRef = useCountUp(live?.dwellMin ?? d.dwell_min_num, "int");
+  const revenueRef = useCountUp(live?.estRevenueK ?? d.est_revenue_k, "k");
+  const aiRef = useCountUp(live?.aiScore ?? d.ai_score_num, "pct");
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <KpiShell label="Daily Customers">
         <div className="flex items-baseline gap-2">
           <span ref={customersRef} className="font-headline text-4xl text-on-surface tabular-nums">0</span>
-          <span className="text-secondary text-sm font-medium">{d.daily_delta}</span>
         </div>
       </KpiShell>
       <KpiShell label="Dwell Time">

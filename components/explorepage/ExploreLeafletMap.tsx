@@ -50,9 +50,6 @@ export default function ExploreLeafletMap({ markers: markersProp }: { markers?: 
                 <span style="background: rgba(70,104,0,0.15); color:#466800; padding:2px 8px; border-radius:999px; font-weight:700; font-size:10px;">
                   ${m.traffic_badge}
                 </span>
-                <span style="background:#466800; color:#fff; padding:2px 8px; border-radius:999px; font-weight:800; font-size:10px;">
-                  ${m.match_badge}
-                </span>
               </div>
             </div>
           </div>

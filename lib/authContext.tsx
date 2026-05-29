@@ -55,6 +55,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Hydrate from existing session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      // Authorize the Realtime socket with the user's JWT so postgres_changes
+      // subscriptions pass RLS (policies use auth.uid()). Without this the socket
+      // is anon → RLS blocks every event → live updates only appear after a manual
+      // refetch (page refresh / navigation).
+      supabase.realtime.setAuth(session?.access_token ?? null);
       if (session?.user) {
         const profile = await fetchProfile(session.user.id, session.user.email ?? "");
         setUser(profile);
@@ -65,6 +70,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for auth state changes (login / logout / token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      // Keep the Realtime socket's token in sync on login / logout / refresh.
+      supabase.realtime.setAuth(session?.access_token ?? null);
       if (session?.user) {
         const profile = await fetchProfile(session.user.id, session.user.email ?? "");
         setUser(profile);

@@ -74,8 +74,9 @@ export default function LandlordBackofficeLayout({ children }: { children: React
           </div>
         </aside>
 
-        {/* Main content */}
-        <main className="flex-1 ml-[188px] p-8 min-h-[calc(100vh-5rem)]">
+        {/* Main content — extra bottom padding so the floating AI chat button
+            (fixed bottom-right) never overlaps action buttons on the last card. */}
+        <main className="flex-1 ml-[188px] p-8 pb-28 min-h-[calc(100vh-5rem)]">
           {children}
         </main>
       </div>

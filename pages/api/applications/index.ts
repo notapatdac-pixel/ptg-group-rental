@@ -69,7 +69,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         status
       )
     `)
-    .order("applied_date", { ascending: false });
+    .order("applied_date", { ascending: false })
+    .order("created_at", { ascending: false });
 
   if (role === "retailer" && profileId) {
     query = query.eq("retailer_profile_id", profileId) as typeof query;

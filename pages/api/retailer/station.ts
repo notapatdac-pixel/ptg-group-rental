@@ -18,8 +18,11 @@ export type StationDetail = {
   lat: number;
   lng: number;
   dailyCustomers: number | null;
+  dwellMin: number | null;
   estRevenueK: number | null;
   aiScore: number | null;
+  trafficYear: string;
+  trafficTrend: { month: string; customers: number }[];
   availableUnits: {
     id: string;
     unitCode: string;
@@ -60,11 +63,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { data: metric } = await supabase
     .from("station_monthly_metrics")
-    .select("daily_customers_avg, est_revenue_k_thb, ai_score_pct")
+    .select("daily_customers_avg, dwell_min_avg, est_revenue_k_thb, ai_score_pct")
     .eq("station_id", stn.id)
     .order("year_month", { ascending: false })
     .limit(1)
     .single();
+
+  // Monthly traffic series for the trend chart — the latest year present.
+  const { data: series } = await supabase
+    .from("station_monthly_metrics")
+    .select("year_month, daily_customers_avg")
+    .eq("station_id", stn.id)
+    .order("year_month", { ascending: true });
+
+  const MONTH_ABBR = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const allSeries = (series ?? []) as { year_month: string; daily_customers_avg: number }[];
+  const trafficYear = allSeries.length
+    ? allSeries[allSeries.length - 1].year_month.slice(0, 4)
+    : String(new Date().getFullYear());
+  const trafficTrend = allSeries
+    .filter(r => r.year_month.startsWith(trafficYear))
+    .map(r => ({
+      month: MONTH_ABBR[parseInt(r.year_month.slice(5, 7), 10) - 1] ?? r.year_month,
+      customers: Math.round(r.daily_customers_avg),
+    }));
 
   const result: StationDetail = {
     displayId:      stn.display_id,
@@ -78,8 +100,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     lat:            Number(stn.lat),
     lng:            Number(stn.lng),
     dailyCustomers: metric?.daily_customers_avg ?? null,
+    dwellMin:       metric?.dwell_min_avg ?? null,
     estRevenueK:    metric?.est_revenue_k_thb ?? null,
     aiScore:        metric?.ai_score_pct ?? null,
+    trafficYear,
+    trafficTrend,
     availableUnits: allUnits
       .filter(u => u.available)
       .map(u => ({
