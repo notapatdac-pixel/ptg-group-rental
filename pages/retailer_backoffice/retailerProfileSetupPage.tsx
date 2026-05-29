@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/router";
 import RetailerBackofficeLayout from "@/components/retailer_backoffice/RetailerBackofficeLayout";
 import { useAuth } from "@/lib/authContext";
 
@@ -56,11 +55,11 @@ const SELECT_CLS = "w-full appearance-none bg-[#F5F2EB] rounded-xl px-4 py-3 tex
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function RetailerProfileSetupPage() {
-  const router = useRouter();
   const { user } = useAuth();
 
   const [profiles,  setProfiles]  = useState<RetailerProfile[]>([{ ...EMPTY_PROFILE }]);
   const [activeIdx, setActiveIdx] = useState(0);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   useEffect(() => {
     try {
@@ -133,12 +132,13 @@ export default function RetailerProfileSetupPage() {
   const filledCount = [active.businessName, active.contactName, active.phone, active.category, active.concept, active.numStores, active.yearsExperience, active.maxRentBudget].filter(Boolean).length;
   const pct = Math.round((filledCount / 8) * 100);
 
-  function handleSave() {
+  async function handleSave() {
     const current = profiles[activeIdx];
     if (!current?.businessName?.trim() || !current?.category?.trim()) {
       alert("Please fill in at least Business Name and Category before saving.");
       return;
     }
+    setSaveState("saving");
     try {
       localStorage.setItem("ptg_retailer_profiles", JSON.stringify(profiles));
       localStorage.setItem("ptg_active_store_index", String(activeIdx));
@@ -157,24 +157,32 @@ export default function RetailerProfileSetupPage() {
       });
     } catch {}
 
-    // Sync active profile to DB
+    // Sync active profile to DB and confirm it persisted. Stay on the page —
+    // saving must NOT navigate anywhere; we show inline confirmation instead.
+    let dbOk = true;
     if (user?.id && current) {
-      fetch("/api/retailer/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId:       user.id,
-          businessName: current.businessName,
-          category:     current.category,
-          experience:   current.yearsExperience,
-          numStores:    current.numStores,
-          maxBudget:    current.maxRentBudget,
-          concept:      current.concept,
-        }),
-      }).catch(() => {/* fire-and-forget; localStorage already updated */});
+      try {
+        const res = await fetch("/api/retailer/profile", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId:       user.id,
+            businessName: current.businessName,
+            category:     current.category,
+            experience:   current.yearsExperience,
+            numStores:    current.numStores,
+            maxBudget:    current.maxRentBudget,
+            concept:      current.concept,
+          }),
+        });
+        dbOk = res.ok;
+      } catch {
+        dbOk = false; // localStorage already saved; flag the sync failure only
+      }
     }
 
-    router.push("/retailer_backoffice/retailerDashboardPage");
+    setSaveState(dbOk ? "saved" : "error");
+    if (dbOk) setTimeout(() => setSaveState("idle"), 3000);
   }
 
   function handleAddStore() {
@@ -409,10 +417,33 @@ export default function RetailerProfileSetupPage() {
           <button
             type="button"
             onClick={handleSave}
-            className="w-full bg-[#1C3A1C] text-white font-bold py-3.5 rounded-xl text-sm cursor-pointer border-0 hover:brightness-105 transition-all"
+            disabled={saveState === "saving"}
+            className={`w-full font-bold py-3.5 rounded-xl text-sm cursor-pointer border-0 transition-all flex items-center justify-center gap-2 disabled:cursor-default ${
+              saveState === "saved"
+                ? "bg-primary text-white"
+                : "bg-[#1C3A1C] text-white hover:brightness-105"
+            }`}
           >
-            Save Profile
+            {saveState === "saving" && <>Saving…</>}
+            {saveState === "saved" && (
+              <>
+                <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                Profile Saved
+              </>
+            )}
+            {saveState === "idle" && <>Save Profile</>}
+            {saveState === "error" && <>Save Profile</>}
           </button>
+          {saveState === "saved" && (
+            <p className="text-xs text-primary text-center mt-2 font-medium">
+              Your profile has been saved.
+            </p>
+          )}
+          {saveState === "error" && (
+            <p className="text-xs text-error text-center mt-2 font-medium">
+              Saved on this device, but syncing to the server failed. Check your connection and save again.
+            </p>
+          )}
         </div>
 
       </div>

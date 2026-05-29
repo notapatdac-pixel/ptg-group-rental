@@ -1,46 +1,14 @@
-# Render Blueprint — deploys the PTG platform as two services:
-#   1. web  : the Next.js app (frontend + API routes)
-#   2. ml   : the Python FastAPI inference service (agent/ml/service)
+# Render Blueprint — deploys ONLY the Python ML inference service.
+# (The Next.js frontend is deployed separately on Vercel, which triggers this
+#  service on a schedule via vercel.json cron → /api/cron/ml-run → ML_SERVICE_URL.)
 #
-# Usage: push this file, then in Render → New → Blueprint → pick this repo.
-# Render reads it and creates both services. Secret values (sync: false) are
-# entered once in the Render dashboard; they are NOT committed here.
+# Usage: push this file, then Render → New → Blueprint → pick this repo.
 services:
-  # ── 1. Next.js web app ──────────────────────────────────────────────────────
-  - type: web
-    name: ptg-web
-    runtime: node
-    plan: free
-    buildCommand: npm ci && npm run build
-    startCommand: npm start          # `next start` listens on $PORT automatically
-    autoDeploy: true
-    envVars:
-      - key: NODE_VERSION
-        value: "20"
-      # Supabase (the web app's names). Public ones are safe; service role is secret.
-      - key: NEXT_PUBLIC_SUPABASE_URL
-        sync: false
-      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
-        sync: false
-      - key: SUPABASE_SERVICE_ROLE_KEY
-        sync: false
-      # Google Gemini
-      - key: GEMINI_API_KEY
-        sync: false
-      # Full base URL of the ML service below (needs the https:// scheme, which
-      # fromService can't supply). After first deploy, set this to the ML
-      # service's URL, e.g. https://ptg-ml.onrender.com
-      - key: ML_SERVICE_URL
-        sync: false
-      # Secret guarding /api/cron/ml-run — Render generates a random value.
-      - key: CRON_SECRET
-        generateValue: true
-
-  # ── 2. Python ML inference service ──────────────────────────────────────────
   - type: web
     name: ptg-ml
     runtime: python
-    plan: free
+    plan: free                 # NOTE: 512MB RAM may OOM with xgboost+sklearn+pandas.
+                               # If the build/boot fails, bump to "starter".
     rootDir: agent/ml/service
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
@@ -48,8 +16,11 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.11"
-      # NOTE: the Python service uses DIFFERENT variable names than the web app.
+      # The Python service uses its OWN variable names (not the Next.js ones):
       - key: SUPABASE_URL
-        sync: false               # same value as NEXT_PUBLIC_SUPABASE_URL
+        sync: false            # = same value as the web app's NEXT_PUBLIC_SUPABASE_URL
       - key: SUPABASE_SERVICE_KEY
-        sync: false               # same value as SUPABASE_SERVICE_ROLE_KEY
+        sync: false            # = same value as the web app's SUPABASE_SERVICE_ROLE_KEY
+
+# After this deploys, copy its URL (e.g. https://ptg-ml.onrender.com) and set it
+# as ML_SERVICE_URL in your Vercel project's environment variables.

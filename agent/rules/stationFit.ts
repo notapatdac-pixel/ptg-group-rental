@@ -59,6 +59,25 @@ export function stationLandmark(displayId: string): string {
   return STATION_AREA[displayId]?.landmark ?? "";
 }
 
+// Neighbourhood hint for a station: the localized landmark phrase plus the
+// store types that area favours (ranked best-first, localized). Used to explain
+// on the Tenant Applications card WHY a store suits a station ("near a
+// university → a bakery/dessert shop fits"). Returns null for unknown stations.
+export function stationAreaHint(
+  displayId: string, lang: "en" | "th" = "en",
+): { landmark: string; favorsLocalized: string[]; favorsEn: string[] } | null {
+  const area = STATION_AREA[displayId];
+  if (!area) return null;
+  const favorsLocalized = area.favors.map(
+    (cat) => (lang === "th" ? CATALOG.find((c) => c.cat === cat)?.catTh ?? cat : cat),
+  );
+  return {
+    landmark: lang === "th" ? area.landmarkTh : area.landmark,
+    favorsLocalized,
+    favorsEn: area.favors,
+  };
+}
+
 export function recommendStoreTypes(signal: StationSignal): StoreTypeFit[] {
   const tRank = TRAFFIC_RANK[signal.trafficLevel] ?? 2;
   const basket = signal.basketThb ?? 260;

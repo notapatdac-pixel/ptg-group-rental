@@ -5,6 +5,8 @@ import LandlordBackofficeLayout from "@/components/landlord_backoffice/LandlordB
 import { useStationFilter, type StationId, STATION_LIST } from "@/lib/stationFilterContext";
 import { useLanguage } from "@/lib/languageContext";
 import { getStoreImages } from "@/lib/storeImages";
+import AiSuggestionInline from "@/components/shared/AiSuggestionInline";
+import { stationAreaHint } from "@/agent/rules/stationFit";
 
 export type AppBadge = "PENDING REVIEW" | "APPROVED" | "NOT APPROVED";
 
@@ -12,6 +14,7 @@ export interface SharedApp {
   retailerAppId: string;
   landlordAppId: string;
   stationId: string;
+  displayId: string;
   stationName: string;
   unitCode: string;
   unitLabel: string;
@@ -122,7 +125,7 @@ type DbApp = {
     unit_label: string;
     price_thb: number;
     lease_type: string;
-    stations?: { filter_key: string; name: string; location_text: string } | null;
+    stations?: { display_id: string; filter_key: string; name: string; location_text: string } | null;
   } | null;
 };
 
@@ -138,6 +141,7 @@ function dbToSharedApp(row: DbApp): SharedApp {
     retailerAppId: row.retailer_display_id,
     landlordAppId: row.landlord_display_id,
     stationId: row.station_units?.stations?.filter_key ?? "all",
+    displayId: row.station_units?.stations?.display_id ?? "",
     stationName: row.station_units?.stations?.name ?? "",
     unitCode: row.station_units?.unit_code ?? "",
     unitLabel: row.station_units?.unit_label ?? "",
@@ -184,6 +188,31 @@ function loadBookingConfirmations(appList: SharedApp[]): Record<string, boolean>
   return result;
 }
 
+// Builds the live-AI dataContext for one application: the applicant's store
+// type + the station's surroundings, so the Gemini suggestion can explain WHY
+// the store suits (or doesn't) the station — same approach as the My Stations page.
+function buildApplicantContext(app: SharedApp, lang: "en" | "th"): string {
+  const hint = stationAreaHint(app.displayId, lang);
+  if (lang === "th") {
+    const area = hint
+      ? ` ซึ่งตั้งอยู่ติด${hint.landmark} ทำเลแบบนี้เหมาะกับร้านประเภท ${hint.favorsLocalized.slice(0, 3).join(", ")}`
+      : "";
+    return (
+      `ผู้สมัคร: ${app.storeName} (ประเภทร้าน: ${app.category})${app.concept ? `, คอนเซ็ปต์: "${app.concept}"` : ""}. ` +
+      `สมัครพื้นที่ที่สาขา ${app.stationName}${area}. คะแนนความเหมาะสมจาก AI: ${app.aiScore}. ` +
+      `ช่วยแนะนำเจ้าของพื้นที่ว่าร้านประเภทนี้เหมาะกับสาขานี้หรือไม่ เพราะอะไร โดยอ้างอิงจากย่านโดยรอบ`
+    );
+  }
+  const area = hint
+    ? `, which sits right by ${hint.landmark}; this kind of spot does best with ${hint.favorsLocalized.slice(0, 3).join(", ")}`
+    : "";
+  return (
+    `Applicant: ${app.storeName} (store type: ${app.category})${app.concept ? `, concept: "${app.concept}"` : ""}. ` +
+    `Applying for ${app.stationName}${area}. AI tenant–station match score: ${app.aiScore}. ` +
+    `Advise the landlord whether this store type suits this station and WHY, based on the surrounding neighbourhood.`
+  );
+}
+
 // ── AppCard ───────────────────────────────────────────────────────────────────
 
 function AppCard({
@@ -199,7 +228,6 @@ function AppCard({
 }) {
   const router = useRouter();
   const storeImages = getStoreImages(app.storeName);
-  const aiText = lang === "th" ? app.aiTextTh : app.aiText;
 
   function handleCardClick() {
     router.push(`/landlord_backoffice/tenantDetailPage?appId=${app.landlordAppId}`);
@@ -300,14 +328,21 @@ function AppCard({
             </div>
           </div>
 
-          {/* AI Business Summary */}
-          <div className="bg-[#D9EDD9] rounded-xl p-4 mb-4 shadow-sm">
-            <div className="flex items-center gap-1 mb-2">
-              <span className="material-symbols-outlined text-[14px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
-              <span className="text-[9px] font-bold tracking-widest text-primary">{T.aiSummary}</span>
+          {/* AI Business Summary — live Gemini suggestion (same pattern as the
+              My Stations page): explains WHY this store type suits this station
+              based on its surroundings. Only a decision aid, so it's hidden once
+              the application is approved/declined or the booking is confirmed. */}
+          {status === "pending" && !bookingConfirmed && (
+            <div className="mb-4">
+              <AiSuggestionInline
+                role="landlord"
+                pageContext={`Tenant Application — ${app.landlordAppId}`}
+                dataContext={buildApplicantContext(app, lang)}
+                lang={lang}
+                label={T.aiSummary}
+              />
             </div>
-            <p className="text-sm text-on-surface-variant leading-relaxed">{aiText}</p>
-          </div>
+          )}
 
           {/* Action row */}
           <div className="flex items-center justify-end gap-3">
