@@ -80,19 +80,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (prof?.id) retailerProfileId = prof.id;
   }
 
-  // ── 3. Optionally update the retailer's profile with edited form values
-  //       so the next application autofills the latest data.
-  const profileUpdates: Record<string, string> = {};
-  if (typeof businessName === "string" && businessName.trim()) profileUpdates.business_name = businessName.trim();
-  if (typeof contactName  === "string" && contactName.trim())  profileUpdates.owner_name     = contactName.trim();
-  if (typeof category     === "string" && category.trim())     profileUpdates.category      = category.trim();
-  if (typeof concept      === "string" && concept.trim())      profileUpdates.concept       = concept.trim();
-  if (Object.keys(profileUpdates).length > 0) {
-    await serviceSupabase
-      .from("retailer_profiles")
-      .update(profileUpdates)
-      .eq("id", retailerProfileId);
-  }
+  // ── 3. (Removed) Applying no longer mutates the saved business profile.
+  //       The profile is edited only on the Business Profile page; otherwise
+  //       every application would silently overwrite the retailer's saved data.
 
   // ── 4. AI context fetch ──────────────────────────────────────────────
   const { data: unitDetail } = await serviceSupabase

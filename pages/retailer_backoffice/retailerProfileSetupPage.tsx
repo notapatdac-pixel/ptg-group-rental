@@ -58,21 +58,56 @@ export default function RetailerProfileSetupPage() {
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   useEffect(() => {
-    try {
-      const multiRaw = localStorage.getItem("ptg_retailer_profiles");
-      if (multiRaw) {
-        const multi = JSON.parse(multiRaw) as RetailerProfile[];
-        if (multi.length > 0) {
-          setProfiles(multi);
-          const savedIdx = Number(localStorage.getItem("ptg_active_store_index") ?? "0");
-          setActiveIdx(Math.min(savedIdx, multi.length - 1));
-          return;
-        }
+    let cancelled = false;
+    async function load() {
+      // Prefer the DB profile so the form reflects what was actually saved
+      // (localStorage can be cleared / differ per browser).
+      if (user?.id) {
+        try {
+          const res = await fetch(`/api/retailer/profile?userId=${user.id}`);
+          if (res.ok && !cancelled) {
+            const p = await res.json() as {
+              businessName?: string; contactName?: string; phone?: string;
+              category?: string; experience?: string; numStores?: string;
+              maxBudget?: string; concept?: string;
+            };
+            if (p?.businessName) {
+              setProfiles([{
+                businessName:    p.businessName ?? "",
+                contactName:     p.contactName ?? "",
+                phone:           p.phone ?? "",
+                category:        p.category ?? "",
+                concept:         p.concept ?? "",
+                numStores:       p.numStores ?? "",
+                yearsExperience: p.experience ?? "",
+                maxRentBudget:   p.maxBudget ?? "",
+              }]);
+              setActiveIdx(0);
+              return;
+            }
+          }
+        } catch {}
       }
-      const single = loadProfile();
-      if (single) setProfiles([single]);
-    } catch {}
-  }, []);
+      if (cancelled) return;
+      // Fallback to any locally-cached draft.
+      try {
+        const multiRaw = localStorage.getItem("ptg_retailer_profiles");
+        if (multiRaw) {
+          const multi = JSON.parse(multiRaw) as RetailerProfile[];
+          if (multi.length > 0) {
+            setProfiles(multi);
+            const savedIdx = Number(localStorage.getItem("ptg_active_store_index") ?? "0");
+            setActiveIdx(Math.min(savedIdx, multi.length - 1));
+            return;
+          }
+        }
+        const single = loadProfile();
+        if (single) setProfiles([single]);
+      } catch {}
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   const active = profiles[activeIdx] ?? EMPTY_PROFILE;
 

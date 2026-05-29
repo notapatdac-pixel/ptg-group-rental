@@ -205,7 +205,10 @@ export default function ScheduleBookingPage() {
 
   async function handleConfirm() {
     const currentAppId = appData?.retailer_display_id ?? appId;
-    const isoDate      = selectedDayEntry.fullDate.toISOString().split("T")[0];
+    // Build the ISO date from LOCAL components — toISOString() would shift to the
+    // previous day in UTC for Bangkok (UTC+7) times, storing the wrong date.
+    const fd = selectedDayEntry.fullDate;
+    const isoDate = `${fd.getFullYear()}-${String(fd.getMonth() + 1).padStart(2, "0")}-${String(fd.getDate()).padStart(2, "0")}`;
 
     // Persist to the bookings table + landlord notification (server-side)
     try {

@@ -477,7 +477,11 @@ export default function LandlordApplicationsPage() {
   }, []);
 
   useEffect(() => {
-    const checkConfirmations = () => setBookingConfirmed(loadBookingConfirmations(appsRef.current));
+    // MERGE localStorage flags into existing state — never replace, or we'd wipe
+    // the DB-derived booking_confirmed (set in loadFromSupabase / bookings realtime)
+    // every 2s. localStorage only adds same-browser confirmations (all `true`).
+    const checkConfirmations = () =>
+      setBookingConfirmed(prev => ({ ...prev, ...loadBookingConfirmations(appsRef.current) }));
     const timer = setInterval(checkConfirmations, 2000);
     window.addEventListener("storage", checkConfirmations);
     return () => { clearInterval(timer); window.removeEventListener("storage", checkConfirmations); };
