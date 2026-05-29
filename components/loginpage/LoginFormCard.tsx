@@ -9,8 +9,9 @@ const LABEL_CLS = "text-[10px] uppercase font-bold tracking-widest text-on-surfa
 const INPUT_CLS =
   "w-full bg-surface-container-low border-0 border-b-2 border-surface-container-highest px-1 py-3 text-on-surface text-sm focus:ring-0 focus:border-primary transition-all outline-none placeholder:text-surface-dim";
 
-const RETAILER_DEST = "/retailer_backoffice/retailerDashboardPage";
-const LANDLORD_DEST = "/landlord_backoffice/landlordOverviewPage";
+const RETAILER_DEST      = "/retailer_backoffice/retailerDashboardPage";
+const LANDLORD_DEST      = "/landlord_backoffice/landlordOverviewPage";
+const PROFILE_SETUP_DEST = "/retailer_backoffice/retailerProfileSetupPage";
 
 export default function LoginFormCard() {
   const [tab, setTab]           = useState<"retailer" | "landlord">("retailer");
@@ -19,7 +20,7 @@ export default function LoginFormCard() {
   const [error, setError]       = useState("");
   const [busy, setBusy]         = useState(false);
 
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
   const router = useRouter();
 
   const activeCls =
@@ -36,7 +37,25 @@ export default function LoginFormCard() {
       setError(result.error ?? "Invalid email or password.");
       return;
     }
-    router.push(tab === "landlord" ? LANDLORD_DEST : RETAILER_DEST);
+    // Block wrong-role login
+    if (result.userType !== tab) {
+      await logout();
+      setError(
+        tab === "retailer"
+          ? "This account is a Landlord account. Please use the Landlord tab."
+          : "This account is a Retailer account. Please use the Retailer tab."
+      );
+      return;
+    }
+    // First-login: retailer with no saved profile → profile setup
+    if (result.userType === "retailer" && result.userId) {
+      const profileDone = localStorage.getItem(`ptg_retailer_profile_done_${result.userId}`);
+      if (!profileDone) {
+        router.push(PROFILE_SETUP_DEST);
+        return;
+      }
+    }
+    router.push(result.userType === "landlord" ? LANDLORD_DEST : RETAILER_DEST);
   }
 
   return (

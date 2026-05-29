@@ -5,10 +5,10 @@ import NavBar from "@/components/common/NavBar";
 import AiAdvisorChat from "@/components/common/AiAdvisorChat";
 
 const NAV_ITEMS = [
-  { label: "Overview",     icon: "dashboard",   href: "/landlord_backoffice/landlordOverviewPage"      },
-  { label: "Applications", icon: "folder_open", href: "/landlord_backoffice/landlordApplicationsPage"  },
-  { label: "Tenants",      icon: "people",      href: "/landlord_backoffice/landlordTenantsPage"       },
-  { label: "My Stations",  icon: "location_on", href: "/landlord_backoffice/landlordMyStationsPage"    },
+  { label: "Overview",     icon: "dashboard",        href: "/landlord_backoffice/landlordOverviewPage"      },
+  { label: "Applications", icon: "folder_open",      href: "/landlord_backoffice/landlordApplicationsPage"  },
+  { label: "Tenants",      icon: "people",           href: "/landlord_backoffice/landlordTenantsPage"       },
+  { label: "My Stations",  icon: "location_on",      href: "/landlord_backoffice/landlordMyStationsPage"    },
 ];
 
 const BOTTOM_NAV_ITEMS: typeof NAV_ITEMS = [];

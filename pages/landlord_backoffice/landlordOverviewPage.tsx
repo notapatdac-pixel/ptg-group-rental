@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import LandlordBackofficeLayout from "@/components/landlord_backoffice/LandlordBackofficeLayout";
 import { useStationFilter, type StationId } from "@/lib/stationFilterContext";
 import { useLanguage } from "@/lib/languageContext";
@@ -6,6 +7,7 @@ import {
   Tooltip, ResponsiveContainer,
 } from "recharts";
 import AiSuggestionInline from "@/components/shared/AiSuggestionInline";
+import StationFitPanel from "@/components/landlord_backoffice/StationFitPanel";
 
 const STRINGS = {
   en: {
@@ -62,150 +64,14 @@ const STATION_LABEL: Record<StationId, string> = {
   all:       "All Stations (avg)",
   lat_phrao: "PTG Lat Phrao 71",
   sukhumvit: "PTG Sukhumvit 62",
-  rama9:     "PTG Rama 9",
+  rama9:     "PTG Rama IX",
   bang_na:   "PTG Bang Na Complex",
-  main:      "PTG Main Station",
+  main:      "PTG Chatuchak",
 };
 
-// ── Per-station KPI data ─────────────────────────────────────────────────────
+// ── Display types ────────────────────────────────────────────────────────────
 
 type KpiRow = { label: string; value: string; trend: string; trendTh: string; up: boolean };
-
-const STATION_KPIS: Record<StationId, KpiRow[]> = {
-  all: [
-    { label: "MONTHLY REVENUE (THB)", value: "฿337K",  trend: "+4.6% vs last month",  trendTh: "+4.6% เทียบกับเดือนที่แล้ว",  up: true  },
-    { label: "DAILY CUSTOMERS",       value: "9,410",   trend: "+2.1% vs last month",  trendTh: "+2.1% เทียบกับเดือนที่แล้ว",  up: true  },
-    { label: "AVG BASKET SIZE (THB)", value: "฿35.8",   trend: "+1.8% vs last month",  trendTh: "+1.8% เทียบกับเดือนที่แล้ว",  up: true  },
-    { label: "REPEAT VISIT RATE (%)", value: "39.2%",   trend: "+0.7pp vs last month", trendTh: "+0.7pp เทียบกับเดือนที่แล้ว", up: true  },
-  ],
-  lat_phrao: [
-    { label: "MONTHLY REVENUE (THB)", value: "฿498K",  trend: "+5.1% vs last month",  trendTh: "+5.1% เทียบกับเดือนที่แล้ว",  up: true  },
-    { label: "DAILY CUSTOMERS",       value: "12,715",  trend: "+3.2% vs last month",  trendTh: "+3.2% เทียบกับเดือนที่แล้ว",  up: true  },
-    { label: "AVG BASKET SIZE (THB)", value: "฿39.2",   trend: "+2.3% vs last month",  trendTh: "+2.3% เทียบกับเดือนที่แล้ว",  up: true  },
-    { label: "REPEAT VISIT RATE (%)", value: "42.3%",   trend: "+1.2pp vs last month", trendTh: "+1.2pp เทียบกับเดือนที่แล้ว", up: true  },
-  ],
-  sukhumvit: [
-    { label: "MONTHLY REVENUE (THB)", value: "฿318K",  trend: "+2.0% vs last month",  trendTh: "+2.0% เทียบกับเดือนที่แล้ว",  up: true  },
-    { label: "DAILY CUSTOMERS",       value: "10,398",  trend: "+1.4% vs last month",  trendTh: "+1.4% เทียบกับเดือนที่แล้ว",  up: true  },
-    { label: "AVG BASKET SIZE (THB)", value: "฿30.6",   trend: "-0.8% vs last month",  trendTh: "-0.8% เทียบกับเดือนที่แล้ว",  up: false },
-    { label: "REPEAT VISIT RATE (%)", value: "38.7%",   trend: "+0.4pp vs last month", trendTh: "+0.4pp เทียบกับเดือนที่แล้ว", up: true  },
-  ],
-  rama9: [
-    { label: "MONTHLY REVENUE (THB)", value: "฿287K",  trend: "-1.2% vs last month",  trendTh: "-1.2% เทียบกับเดือนที่แล้ว",  up: false },
-    { label: "DAILY CUSTOMERS",       value: "8,326",   trend: "-0.9% vs last month",  trendTh: "-0.9% เทียบกับเดือนที่แล้ว",  up: false },
-    { label: "AVG BASKET SIZE (THB)", value: "฿34.5",   trend: "+0.3% vs last month",  trendTh: "+0.3% เทียบกับเดือนที่แล้ว",  up: true  },
-    { label: "REPEAT VISIT RATE (%)", value: "36.2%",   trend: "-0.5pp vs last month", trendTh: "-0.5pp เทียบกับเดือนที่แล้ว", up: false },
-  ],
-  bang_na: [
-    { label: "MONTHLY REVENUE (THB)", value: "฿244K",  trend: "+1.6% vs last month",  trendTh: "+1.6% เทียบกับเดือนที่แล้ว",  up: true  },
-    { label: "DAILY CUSTOMERS",       value: "6,512",   trend: "+0.5% vs last month",  trendTh: "+0.5% เทียบกับเดือนที่แล้ว",  up: true  },
-    { label: "AVG BASKET SIZE (THB)", value: "฿37.5",   trend: "+2.1% vs last month",  trendTh: "+2.1% เทียบกับเดือนที่แล้ว",  up: true  },
-    { label: "REPEAT VISIT RATE (%)", value: "33.8%",   trend: "-0.4pp vs last month", trendTh: "-0.4pp เทียบกับเดือนที่แล้ว", up: false },
-  ],
-  main: [
-    { label: "MONTHLY REVENUE (THB)", value: "฿337K",  trend: "+0.9% vs last month",  trendTh: "+0.9% เทียบกับเดือนที่แล้ว",  up: true  },
-    { label: "DAILY CUSTOMERS",       value: "9,100",   trend: "+1.3% vs last month",  trendTh: "+1.3% เทียบกับเดือนที่แล้ว",  up: true  },
-    { label: "AVG BASKET SIZE (THB)", value: "฿37.0",   trend: "+1.2% vs last month",  trendTh: "+1.2% เทียบกับเดือนที่แล้ว",  up: true  },
-    { label: "REPEAT VISIT RATE (%)", value: "40.1%",   trend: "+0.3pp vs last month", trendTh: "+0.3pp เทียบกับเดือนที่แล้ว", up: true  },
-  ],
-};
-
-// ── Per-station revenue trend (THB K) ────────────────────────────────────────
-
-type TrendRow = { month: string; station: number };
-
-const STATION_TRENDS: Record<StationId, TrendRow[]> = {
-  all: [
-    { month: "Jun 24", station: 322 },
-    { month: "Jul 24", station: 318 },
-    { month: "Aug 24", station: 329 },
-    { month: "Sep 24", station: 335 },
-    { month: "Oct 24", station: 330 },
-    { month: "Nov 24", station: 337 },
-  ],
-  lat_phrao: [
-    { month: "Jun 24", station: 471 },
-    { month: "Jul 24", station: 460 },
-    { month: "Aug 24", station: 478 },
-    { month: "Sep 24", station: 485 },
-    { month: "Oct 24", station: 488 },
-    { month: "Nov 24", station: 498 },
-  ],
-  sukhumvit: [
-    { month: "Jun 24", station: 302 },
-    { month: "Jul 24", station: 308 },
-    { month: "Aug 24", station: 310 },
-    { month: "Sep 24", station: 312 },
-    { month: "Oct 24", station: 314 },
-    { month: "Nov 24", station: 318 },
-  ],
-  rama9: [
-    { month: "Jun 24", station: 295 },
-    { month: "Jul 24", station: 290 },
-    { month: "Aug 24", station: 285 },
-    { month: "Sep 24", station: 283 },
-    { month: "Oct 24", station: 286 },
-    { month: "Nov 24", station: 287 },
-  ],
-  bang_na: [
-    { month: "Jun 24", station: 238 },
-    { month: "Jul 24", station: 241 },
-    { month: "Aug 24", station: 243 },
-    { month: "Sep 24", station: 242 },
-    { month: "Oct 24", station: 240 },
-    { month: "Nov 24", station: 244 },
-  ],
-  main: [
-    { month: "Jun 24", station: 318 },
-    { month: "Jul 24", station: 322 },
-    { month: "Aug 24", station: 328 },
-    { month: "Sep 24", station: 331 },
-    { month: "Oct 24", station: 334 },
-    { month: "Nov 24", station: 337 },
-  ],
-};
-
-// ── Per-station AI summaries ─────────────────────────────────────────────────
-
-const STATION_AI_SUMMARY: Record<StationId, string> = {
-  all:
-    "Your portfolio averaged ฿337K revenue per station last month — up 4.6% — with 9,410 daily customers and a 39.2% repeat visit rate. PTG Lat Phrao 71 continues to lead across all metrics. PTG Bang Na Complex has the lowest occupancy (2 of 6 units) and is the main drag on portfolio growth — prioritising tenant fill there would add an estimated ฿30–40K per month to total revenue.",
-  lat_phrao:
-    "PTG Lat Phrao 71 is your strongest performer with ฿498K revenue last month (+5.1%) and 12,715 daily customers. A repeat visit rate of 42.3% signals a strong tenant mix and healthy dwell time. Two vacant units represent your biggest near-term upside — filling them at current rack rates would add roughly ฿60–80K per month. Consider targeting an F&B or convenience tenant to complement the existing mix.",
-  sukhumvit:
-    "PTG Sukhumvit 62 is fully occupied and growing steadily at +2.0% month-on-month. Average basket size dipped slightly (-0.8%), which may reflect tenant promotional activity — worth a check-in with your top revenue tenants. With 8 of 8 units filled, your main lever here is rent review at renewal rather than occupancy improvement.",
-  rama9:
-    "PTG Rama 9 is slightly below its recent run rate (-1.2% revenue, -0.9% customers). With only 4 of 6 units occupied, two vacant slots are suppressing income. A repeat visit rate of 36.2% — the lowest in your portfolio — suggests the current mix isn't generating strong return visits. Adding a food or beverage anchor tenant would likely lift both footfall and dwell time.",
-  bang_na:
-    "PTG Bang Na Complex has the most growth potential — only 2 of 6 units are occupied, leaving the station running at a third of its capacity. Revenue grew +1.6% last month but the base remains low at ฿244K. Basket size of ฿37.5 is healthy, indicating strong spend per visit. Filling 2–3 more units with high-footfall tenants is the single biggest revenue opportunity in your portfolio right now.",
-  main:
-    "PTG Main Station is performing consistently at ฿337K revenue (+0.9%) with 9,100 daily customers. A repeat visit rate of 40.1% is the second-highest in your portfolio. With 4 of 6 units occupied, there is room to grow — adding one more F&B or convenience tenant would likely push monthly revenue past ฿400K based on comparable stations.",
-};
-
-const STATION_AI_SUMMARY_TH: Record<StationId, string> = {
-  all:
-    "พอร์ตโฟลิโอของคุณมีรายได้เฉลี่ย ฿337K ต่อสาขาเดือนที่แล้ว — เพิ่มขึ้น 4.6% — โดยมีลูกค้า 9,410 รายต่อวันและอัตราการกลับมาซื้อซ้ำ 39.2% PTG Lat Phrao 71 ยังคงนำอันดับในทุกตัวชี้วัด PTG Bang Na Complex มีอัตราการใช้งานต่ำสุด (2 จาก 6 ยูนิต) และเป็นปัจจัยหลักที่ฉุดรั้งการเติบโต — การเติมผู้เช่าให้เต็มจะเพิ่มรายได้รวมประมาณ ฿30–40K ต่อเดือน",
-  lat_phrao:
-    "PTG Lat Phrao 71 เป็นสาขาที่มีผลงานดีที่สุดด้วยรายได้ ฿498K เดือนที่แล้ว (+5.1%) และลูกค้า 12,715 รายต่อวัน อัตราการกลับมาซื้อซ้ำ 42.3% บ่งชี้ถึงการผสมผสานผู้เช่าที่ดีและเวลาพักอยู่ที่มีคุณภาพ ยูนิตว่างสองแห่งเป็นโอกาสสร้างรายได้ที่ใกล้ที่สุด — การเติมเต็มด้วยอัตราปัจจุบันจะเพิ่มรายได้ประมาณ ฿60–80K ต่อเดือน ควรพิจารณาผู้เช่าประเภท F&B หรือร้านสะดวกซื้อเพื่อเสริมการผสมผสานที่มีอยู่",
-  sukhumvit:
-    "PTG Sukhumvit 62 เช่าเต็มทุกยูนิตและเติบโตอย่างต่อเนื่องที่ +2.0% ต่อเดือน มูลค่าตะกร้าเฉลี่ยลดลงเล็กน้อย (-0.8%) ซึ่งอาจสะท้อนกิจกรรมโปรโมชันของผู้เช่า — ควรติดตามกับผู้เช่าที่สร้างรายได้สูงสุด เนื่องจากยูนิตเต็ม 8 จาก 8 แล้ว กลไกหลักในการเพิ่มรายได้คือการพิจารณาค่าเช่าตอนต่อสัญญา",
-  rama9:
-    "PTG Rama 9 อยู่ต่ำกว่าอัตราเดิมเล็กน้อย (-1.2% รายได้, -0.9% ลูกค้า) โดยมีเพียง 4 จาก 6 ยูนิตที่ใช้งาน ยูนิตว่างสองแห่งกำลังกดดันรายได้ อัตราการกลับมาซื้อซ้ำ 36.2% — ต่ำสุดในพอร์ตโฟลิโอ — บ่งชี้ว่าการผสมผสานปัจจุบันยังไม่สร้างการกลับมาที่แข็งแกร่ง การเพิ่มผู้เช่าประเภทอาหารหรือเครื่องดื่มจะช่วยเพิ่มทั้งการเดินเท้าและเวลาพักอยู่",
-  bang_na:
-    "PTG Bang Na Complex มีศักยภาพการเติบโตสูงสุด — มีเพียง 2 จาก 6 ยูนิตที่ใช้งาน ทำให้สาขาดำเนินการที่หนึ่งในสามของกำลังผลิต รายได้เพิ่มขึ้น +1.6% เดือนที่แล้วแต่ฐานยังต่ำที่ ฿244K มูลค่าตะกร้า ฿37.5 ดีบ่งชี้ถึงการใช้จ่ายต่อครั้งที่แข็งแกร่ง การเติมยูนิต 2–3 แห่งด้วยผู้เช่าที่มีการเดินเท้าสูงเป็นโอกาสรายได้ที่ใหญ่ที่สุดในพอร์ตโฟลิโอขณะนี้",
-  main:
-    "PTG Main Station มีผลงานสม่ำเสมอที่รายได้ ฿337K (+0.9%) และลูกค้า 9,100 รายต่อวัน อัตราการกลับมาซื้อซ้ำ 40.1% สูงเป็นอันดับสองในพอร์ตโฟลิโอ ด้วย 4 จาก 6 ยูนิตที่ใช้งาน ยังมีพื้นที่ให้เติบโต — การเพิ่มผู้เช่า F&B หรือร้านสะดวกซื้ออีกหนึ่งรายน่าจะผลักดันรายได้รายเดือนเกิน ฿400K อ้างอิงจากสาขาที่ใกล้เคียงกัน",
-};
-
-// ── Station performance rows ─────────────────────────────────────────────────
-
-const STATIONS = [
-  { id: "lat_phrao", name: "PTG Lat Phrao 71",    location: "Lat Phrao, Bangkok",   revenue: "฿498K", customers: "12,715", occupied: 6, total: 8, status: "Partial" },
-  { id: "sukhumvit", name: "PTG Sukhumvit 62",    location: "Khlong Toei, Bangkok", revenue: "฿318K", customers: "10,398", occupied: 8, total: 8, status: "Full"    },
-  { id: "rama9",     name: "PTG Rama 9",          location: "Huai Khwang, Bangkok", revenue: "฿287K", customers: "8,326",  occupied: 4, total: 6, status: "Partial" },
-  { id: "bang_na",   name: "PTG Bang Na Complex", location: "Bang Na, Bangkok",     revenue: "฿244K", customers: "6,512",  occupied: 2, total: 6, status: "Low"     },
-  { id: "main",      name: "PTG Main Station",    location: "Din Daeng, Bangkok",   revenue: "฿337K", customers: "9,100",  occupied: 4, total: 6, status: "Partial" },
-];
 
 const OCCUPANCY_COLOR: Record<string, string> = {
   Full:    "text-primary",
@@ -213,20 +79,127 @@ const OCCUPANCY_COLOR: Record<string, string> = {
   Low:     "text-red-500",
 };
 
+// ── API types ────────────────────────────────────────────────────────────────
+
+type ApiKpis = {
+  revenue: number;
+  revenueChange: string;
+  revenueUp: boolean;
+  dailyCustomers: number;
+  customersChange: string;
+  customersUp: boolean;
+  basketSize: number;
+  repeatRate: string;
+  repeatChange: string;
+  repeatUp: boolean;
+};
+
+type ApiTrendRow = { month: string; station: number };
+
+type ApiStation = {
+  filterKey: string;
+  name: string;
+  location: string;
+  revenue: number;
+  dailyCustomers: number;
+  occupied: number;
+  total: number;
+  status: "Full" | "Partial" | "Low";
+};
+
+type OverviewData = {
+  kpis: ApiKpis;
+  trend: ApiTrendRow[];
+  stations: ApiStation[];
+};
+
 // ── Page ─────────────────────────────────────────────────────────────────────
+
+const FMT_MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function fmtYM(ym: string): string {
+  const [y, m] = ym.split("-");
+  return `${FMT_MONTHS[parseInt(m) - 1]} ${y.slice(2)}`;
+}
 
 export default function LandlordOverviewPage() {
   const { stationId } = useStationFilter();
   const { lang } = useLanguage();
   const T = STRINGS[lang];
 
-  const kpis       = STATION_KPIS[stationId];
-  const trend      = STATION_TRENDS[stationId];
-  const label      = STATION_LABEL[stationId];
-  const aiSummary  = lang === "th" ? STATION_AI_SUMMARY_TH[stationId] : STATION_AI_SUMMARY[stationId];
-  const visibleStations = stationId === "all" ? STATIONS : STATIONS.filter((s) => s.id === stationId);
+  const [apiData, setApiData] = useState<OverviewData | null>(null);
 
-  const vals = trend.map((t) => t.station);
+  useEffect(() => {
+    setApiData(null);
+    fetch(`/api/landlord/overview?stationId=${stationId}`)
+      .then(r => r.ok ? r.json() : null)
+      .then((d: OverviewData | null) => { if (d) setApiData(d); })
+      .catch(() => {});
+  }, [stationId]);
+
+  const label = STATION_LABEL[stationId];
+
+  // ── KPI display (from live API only) ─────────────────────────────────────
+  const kpis: KpiRow[] = apiData ? [
+    {
+      label: "MONTHLY REVENUE (THB)",
+      value: `฿${Math.round(apiData.kpis.revenue).toLocaleString()}`,
+      trend: apiData.kpis.revenueChange,
+      trendTh: apiData.kpis.revenueChange,
+      up: apiData.kpis.revenueUp,
+    },
+    {
+      label: "DAILY CUSTOMERS",
+      value: apiData.kpis.dailyCustomers.toLocaleString(),
+      trend: apiData.kpis.customersChange,
+      trendTh: apiData.kpis.customersChange,
+      up: apiData.kpis.customersUp,
+    },
+    {
+      label: "AVG BASKET SIZE (THB)",
+      value: `฿${apiData.kpis.basketSize.toFixed(1)}`,
+      trend: "latest month",
+      trendTh: "เดือนล่าสุด",
+      up: true,
+    },
+    {
+      label: "REPEAT VISIT RATE (%)",
+      value: apiData.kpis.repeatRate,
+      trend: apiData.kpis.repeatChange,
+      trendTh: apiData.kpis.repeatChange,
+      up: apiData.kpis.repeatUp,
+    },
+  ] : [];
+
+  const trend = apiData
+    ? apiData.trend.map(t => ({ ...t, month: fmtYM(t.month) }))
+    : [];
+
+  const visibleStations = apiData
+    ? (stationId === "all" ? apiData.stations : apiData.stations.filter(s => s.filterKey === stationId)).map(s => ({
+        id: s.filterKey,
+        name: s.name,
+        location: s.location,
+        revenue: `฿${Math.round(s.revenue).toLocaleString()}`,
+        customers: s.dailyCustomers.toLocaleString(),
+        occupied: s.occupied,
+        total: s.total,
+        status: s.status,
+      }))
+    : [];
+
+  // AI context = the SELECTED station only, so the summary matches the KPIs on
+  // screen (the filter is per-station; never aggregate all stations here).
+  const aiSummary = apiData
+    ? [
+        `Station: ${label}`,
+        `Monthly Revenue: ฿${Math.round(apiData.kpis.revenue).toLocaleString()} (${apiData.kpis.revenueChange})`,
+        `Daily Customers: ${apiData.kpis.dailyCustomers.toLocaleString()} (${apiData.kpis.customersChange})`,
+        `Avg Basket Size: ฿${apiData.kpis.basketSize.toFixed(1)} | Repeat Rate: ${apiData.kpis.repeatRate} (${apiData.kpis.repeatChange})`,
+        visibleStations.map(s => `${s.name}: ${s.revenue}/mo, ${s.customers} daily customers, ${s.occupied}/${s.total} units occupied (${s.total - s.occupied} vacant)`).join("; "),
+      ].join(" | ")
+    : `Loading data for ${label}...`;
+
+  const vals = trend.length ? trend.map((t) => t.station) : [0, 100];
   const yMin = Math.floor(Math.min(...vals) / 20) * 20 - 20;
   const yMax = Math.ceil(Math.max(...vals) / 20) * 20 + 20;
 
@@ -262,9 +235,14 @@ export default function LandlordOverviewPage() {
         <AiSuggestionInline
           role="landlord"
           pageContext={`Executive Overview — ${label}`}
-          staticText={aiSummary}
+          dataContext={aiSummary}
           label={T.aiSummaryLabel}
         />
+      </div>
+
+      {/* AI — best-fit store types per station (Predictive → Symbolic → Generative) */}
+      <div className="mb-6">
+        <StationFitPanel stationId={stationId} lang={lang} />
       </div>
 
       {/* Line chart */}
@@ -284,8 +262,7 @@ export default function LandlordOverviewPage() {
               width={52}
             />
             <Tooltip
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              formatter={(value: any) => [`฿${value}K`, label]}
+              formatter={(value: unknown) => [`฿${value}K`, "Revenue"]}
               contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e5e7eb" }}
             />
             <Line type="monotone" dataKey="station" stroke="#6ab04c" strokeWidth={2.5}

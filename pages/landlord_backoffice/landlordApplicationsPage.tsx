@@ -4,9 +4,38 @@ import { useRouter } from "next/router";
 import LandlordBackofficeLayout from "@/components/landlord_backoffice/LandlordBackofficeLayout";
 import { useStationFilter, type StationId, STATION_LIST } from "@/lib/stationFilterContext";
 import { useLanguage } from "@/lib/languageContext";
-import { addNotification } from "@/lib/notificationStore";
-import type { SharedApp, AppBadge } from "@/lib/applicationsData";
 import { getStoreImages } from "@/lib/storeImages";
+
+export type AppBadge = "PENDING REVIEW" | "APPROVED" | "NOT APPROVED";
+
+export interface SharedApp {
+  retailerAppId: string;
+  landlordAppId: string;
+  stationId: string;
+  stationName: string;
+  unitCode: string;
+  unitLabel: string;
+  location: string;
+  price: number;
+  leaseType: string;
+  duration: string;
+  appliedDate: string;
+  retailerBadge: AppBadge;
+  storeName: string;
+  applicantName: string;
+  category: string;
+  experience: string;
+  numStores: string;
+  maxBudget: string;
+  concept: string;
+  panelColor: string;
+  aiText: string;
+  aiTextTh: string;
+  aiScore: string;
+  estRevenue: string;
+  specialistName: string;
+  specialistInitials: string;
+}
 import { supabase } from "@/lib/supabaseClient";
 
 type TabId = "all" | "pending" | "approved" | "booking_confirmed";
@@ -108,7 +137,7 @@ function dbToSharedApp(row: DbApp): SharedApp {
   return {
     retailerAppId: row.retailer_display_id,
     landlordAppId: row.landlord_display_id,
-    stationId: (row.station_units?.stations?.filter_key ?? "all") as StationId,
+    stationId: row.station_units?.stations?.filter_key ?? "all",
     stationName: row.station_units?.stations?.name ?? "",
     unitCode: row.station_units?.unit_code ?? "",
     unitLabel: row.station_units?.unit_label ?? "",
@@ -355,32 +384,33 @@ export default function LandlordApplicationsPage() {
     setApps(newApps);
   }
 
+  async function loadFromSupabase() {
+    try {
+      const res = await fetch("/api/applications?role=landlord");
+      if (res.ok) {
+        const rows = await res.json() as DbApp[];
+        const mapped = rows.map(dbToSharedApp);
+        updateApps(mapped);
+        const fromDb: Record<string, LandlordStatus> = {};
+        rows.forEach(a => {
+          if (a.status === "approved")          fromDb[a.landlord_display_id] = "approved";
+          else if (a.status === "not_approved") fromDb[a.landlord_display_id] = "declined";
+          else                                  fromDb[a.landlord_display_id] = "pending";
+        });
+        setStatuses(fromDb);
+        setBookingConfirmed(loadBookingConfirmations(mapped));
+      }
+    } catch {}
+  }
+
   useEffect(() => {
-    async function loadFromSupabase() {
-      try {
-        const res = await fetch("/api/applications?role=landlord");
-        if (res.ok) {
-          const rows = await res.json() as DbApp[];
-          const mapped = rows.map(dbToSharedApp);
-          updateApps(mapped);
-          const fromDb: Record<string, LandlordStatus> = {};
-          rows.forEach(a => {
-            if (a.status === "approved")          fromDb[a.landlord_display_id] = "approved";
-            else if (a.status === "not_approved") fromDb[a.landlord_display_id] = "declined";
-            else                                  fromDb[a.landlord_display_id] = "pending";
-          });
-          setStatuses(fromDb);
-          setBookingConfirmed(loadBookingConfirmations(mapped));
-        }
-      } catch {}
-    }
     loadFromSupabase();
   }, []);
 
-  // Supabase Realtime — updates application status in real time
+  // Supabase Realtime — handle INSERT (new applications) + UPDATE (status changes)
   useEffect(() => {
     const channel = supabase
-      .channel("landlord-applications-status")
+      .channel("landlord-applications-feed")
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "applications" }, (payload) => {
         const updated = payload.new as { landlord_display_id: string; status: string };
         const statusMap: Record<string, LandlordStatus> = {
@@ -390,6 +420,11 @@ export default function LandlordApplicationsPage() {
           ...prev,
           [updated.landlord_display_id]: statusMap[updated.status] ?? "pending",
         }));
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "applications" }, () => {
+        // New application arrived — refetch the full list with all joins,
+        // since the realtime payload doesn't include nested station/profile data.
+        loadFromSupabase();
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -403,46 +438,46 @@ export default function LandlordApplicationsPage() {
   }, []);
 
   async function handleApprove(app: SharedApp) {
-    // Update Supabase
+    // Persist status via API — the API also writes server-side notifications
+    // for BOTH parties (retailer + landlord) with the correct user_id.
+    let ok = false;
     try {
-      await fetch(`/api/applications/${app.landlordAppId}/status`, {
+      const res = await fetch(`/api/applications/${app.landlordAppId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "approved" }),
       });
-    } catch {}
-    // Keep localStorage for retailer-side polling fallback
+      ok = res.ok;
+      if (!ok) {
+        const body = await res.json().catch(() => ({}));
+        console.error("Approve failed:", res.status, body);
+      }
+    } catch (err) {
+      console.error("Approve network error:", err);
+    }
+    // Fallback localStorage caches so the retailer's polling fallback still
+    // surfaces the new status if the DB lag is high.
     try {
       localStorage.setItem(`ptg_landlord_status_${app.landlordAppId}`, "approved");
       localStorage.setItem(`ptg_app_badge_${app.retailerAppId}`, "APPROVED");
     } catch {}
     setStatuses(prev => ({ ...prev, [app.landlordAppId]: "approved" }));
-    addNotification({
-      type: "status_update",
-      userType: "retailer",
-      title: "Application Approved",
-      body: `Your application for ${app.stationName} has been approved. Schedule your site walkthrough now.`,
-      href: "/retailer_backoffice/myApplicationsPage",
-      timestamp: new Date().toISOString(),
-    });
-    addNotification({
-      type: "status_update",
-      userType: "landlord",
-      title: "Tenant Approved",
-      body: `${app.storeName} has been approved for ${app.stationName}. Proceed to schedule a walkthrough.`,
-      href: `/landlord_backoffice/landlordBookingDiscussionPage?appId=${app.landlordAppId}`,
-      timestamp: new Date().toISOString(),
-    });
   }
 
   async function handleDecline(app: SharedApp) {
     try {
-      await fetch(`/api/applications/${app.landlordAppId}/status`, {
+      const res = await fetch(`/api/applications/${app.landlordAppId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "not_approved" }),
       });
-    } catch {}
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        console.error("Decline failed:", res.status, body);
+      }
+    } catch (err) {
+      console.error("Decline network error:", err);
+    }
     try {
       localStorage.setItem(`ptg_landlord_status_${app.landlordAppId}`, "declined");
       localStorage.setItem(`ptg_app_badge_${app.retailerAppId}`, "NOT APPROVED");
@@ -512,8 +547,11 @@ export default function LandlordApplicationsPage() {
       </div>
 
       {visibleApps.length === 0 ? (
-        <div className="bg-white rounded-2xl p-12 text-center text-sm text-on-surface-variant shadow-sm">
-          {T.noApplications}
+        <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
+          <span className="material-symbols-outlined text-outline/30 text-[48px] block mb-3">folder_open</span>
+          <p className="text-sm font-semibold text-on-surface-variant">
+            {apps.length === 0 ? (lang === "th" ? "ยังไม่มีใบสมัครที่ต้องพิจารณา" : "No applications to review yet.") : T.noApplications}
+          </p>
         </div>
       ) : (
         <div className="space-y-5">

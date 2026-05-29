@@ -4,25 +4,42 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/authContext";
 import { useStationFilter } from "@/lib/stationFilterContext";
 import { useStoreFilter } from "@/lib/storeFilterContext";
+import { useLanguage } from "@/lib/languageContext";
+import FormattedAiText from "@/components/shared/FormattedAiText";
 
 interface Props {
   role:        "retailer" | "landlord";
   pageContext: string;
   dataContext: string;  // actual page data fed to AI; used as fallback on error
   label?:      string;
+  lang?:       "en" | "th";  // when set, summary is generated in this language
 }
 
-export default function AiSuggestionInline({ role, pageContext, dataContext, label }: Props) {
+export default function AiSuggestionInline({ role, pageContext, dataContext, label, lang }: Props) {
   const { user }      = useAuth();
   const { stationId } = useStationFilter();
   const { storeId }   = useStoreFilter();
+  const { lang: uiLang } = useLanguage();
   const [summary,  setSummary]  = useState<string | null>(null);
   const [loading,  setLoading]  = useState(true);
+
+  // Friendly safety-net shown when the AI summary can't be generated — never
+  // surface the raw pipe-delimited dataContext to the user.
+  const fallback = uiLang === "th"
+    ? "สรุปจะอัปเดตอีกครั้งในไม่ช้า"
+    : "Summary will refresh shortly.";
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setSummary(null);
+
+    // Don't ask the AI to summarise nothing — wait until the page data has
+    // loaded. Firing with an empty dataContext makes the model say "no data"
+    // and (because the cache key is data-independent) poisons the cached value.
+    if (!dataContext || !dataContext.trim()) {
+      return () => { cancelled = true; };
+    }
 
     async function generate() {
       try {
@@ -36,12 +53,13 @@ export default function AiSuggestionInline({ role, pageContext, dataContext, lab
             userId:           user?.id ?? null,
             role,
             pageContext,
+            lang,
           }),
         });
         const data = await res.json() as { summary?: string; error?: string };
-        if (!cancelled) setSummary(data.summary ?? dataContext);
+        if (!cancelled) setSummary(data.summary ?? fallback);
       } catch {
-        if (!cancelled) setSummary(dataContext);
+        if (!cancelled) setSummary(fallback);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -49,9 +67,9 @@ export default function AiSuggestionInline({ role, pageContext, dataContext, lab
 
     generate();
     return () => { cancelled = true; };
-  // Re-generate whenever the store filter, station filter, or underlying data changes
+  // Re-generate whenever the store filter, station filter, language, or underlying data changes
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storeId, stationId, dataContext]);
+  }, [storeId, stationId, dataContext, lang]);
 
   return (
     <div className="bg-[#D9EDD9] rounded-xl p-4 shadow-sm">
@@ -72,7 +90,7 @@ export default function AiSuggestionInline({ role, pageContext, dataContext, lab
           <span className="w-1.5 h-1.5 rounded-full bg-primary/30 animate-bounce" style={{ animationDelay: "300ms" }} />
         </div>
       ) : (
-        <p className="text-xs text-on-surface-variant leading-relaxed">{summary}</p>
+        <FormattedAiText text={summary ?? ""} className="text-xs text-on-surface-variant leading-relaxed" />
       )}
     </div>
   );

@@ -1,239 +1,241 @@
+import { useEffect, useState } from "react";
 import { useLanguage } from "@/lib/languageContext";
+import { storeBrand } from "@/lib/retailerStores";
 import { useStoreFilter } from "@/lib/storeFilterContext";
 import RetailerBackofficeLayout from "@/components/retailer_backoffice/RetailerBackofficeLayout";
 import AiSuggestionInline from "@/components/shared/AiSuggestionInline";
 
-const BREAKEVEN = [
-  { id: "coffee", name: "Coffee Corner",           rent: 22, utilities: 3, revenue: 142, net: 117 },
-  { id: "quick",  name: "Quick Mart",              rent: 37, utilities: 5, revenue: 143, net: 101 },
-  { id: "lumina", name: "Lumina Artisan Roastery", rent: 49, utilities: 8, revenue: 318, net: 261 },
-];
+// ── API types ────────────────────────────────────────────────────────────────
 
-const BENCHMARK_BASE = [
-  { top: { value: 5200, label: "฿5,200/sqm" }, median: { value: 3100, label: "฿3,100/sqm" }, bottom: { value: 1900, label: "฿1,900/sqm" }, max: 5200 },
-  { top: { value: 420,  label: "420/day"     }, median: { value: 285,  label: "285/day"     }, bottom: { value: 175,  label: "175/day"     }, max: 420  },
-  { top: { value: 68,   label: "68%"          }, median: { value: 47,   label: "47%"          }, bottom: { value: 31,   label: "31%"          }, max: 68   },
-];
-
-const SEGMENTS = [
-  { gen: "Gen Z",      pct: 28, basket: "฿195", share: "+8%"  },
-  { gen: "Millennial", pct: 42, basket: "฿265", share: "+12%" },
-  { gen: "Gen X",      pct: 20, basket: "฿270", share: "+3%"  },
-  { gen: "Boomer",     pct: 10, basket: "฿240", share: "+1%"  },
-];
-
-const PERF_BY_STORE = {
-  all: {
-    kpi1: "฿3.6M",  kpi1Sub_en: "total (3 stores)",   kpi1Sub_th: "รวม 3 ร้าน",
-    kpi2: "฿249",
-    kpi3: "฿108k",  kpi3Sub_en: "3 leases combined",  kpi3Sub_th: "3 สัญญาเช่า",
-    kpi4: "17.9%",  kpi4Ok: true,
-    benchYou: [
-      { value: 3650, label: "฿3,650/sqm" },
-      { value: 340,  label: "340/day"    },
-      { value: 54,   label: "54%"        },
-    ],
-    retention: { n: 847, r: 2253, l: 300, tn: "+12% vs last month", tr: "+5% vs last month", tl: "-3% vs last month" },
-    tip_be:  { pre: "All 3 shops are profitable — great! ", b1: "Quick Mart", mid: " has the highest cost ratio (29%). A small revenue boost or rent negotiation would give a bigger cushion. Overall costs are just ", b2: "19.7%", post: " of total revenue." },
-    tip_bm:  { pre: "You're above average on all three measures. The biggest gap vs. top shops is ", b: "sales per square meter", post: " (฿3,650 vs. ฿5,200 for top shops). Better shelf placement or a higher-margin product line could close this gap without adding foot traffic." },
-    tip_ret: { pre: "Fewer customers are leaving — good news! But ", b: "new customers (+12%) are growing faster than returning ones (+5%)", post: " — your shops attract new people well, but keeping them coming back needs work. A punch card or \"3rd visit free\" deal could turn first-timers into regulars." },
-  },
-  coffee: {
-    kpi1: "฿1.70M", kpi1Sub_en: "this year",          kpi1Sub_th: "ปีนี้",
-    kpi2: "฿248",
-    kpi3: "฿22k",   kpi3Sub_en: "this store",         kpi3Sub_th: "ร้านนี้",
-    kpi4: "15.4%",  kpi4Ok: true,
-    benchYou: [
-      { value: 2580, label: "฿2,580/sqm" },
-      { value: 340,  label: "340/day"    },
-      { value: 54,   label: "54%"        },
-    ],
-    retention: { n: 312, r: 880, l: 92, tn: "+18% vs last month", tr: "+6% vs last month", tl: "-4% vs last month" },
-    tip_be:  { pre: "Coffee Corner covers rent and utilities with ", b1: "฿117k net profit", mid: " every month — a healthy 17.6% cost ratio. This store has a strong safety cushion even if monthly sales dip.", b2: "", post: "" },
-    tip_bm:  { pre: "Coffee Corner is above average on daily visitors and revisit rate. The main growth area is ", b: "sales per square meter (฿2,580 vs. ฿5,200 top)", post: ". Better counter use or a premium seasonal offering could close this gap." },
-    tip_ret: { pre: "Coffee Corner has strong retention — 69% existing customers. ", b: "New customer growth (+18%) is the best across all your stores", post: ". A stamp card here could lock in new customers as regulars." },
-  },
-  quick: {
-    kpi1: "฿1.72M", kpi1Sub_en: "this year",          kpi1Sub_th: "ปีนี้",
-    kpi2: "฿195",
-    kpi3: "฿37k",   kpi3Sub_en: "this store",         kpi3Sub_th: "ร้านนี้",
-    kpi4: "29.0%",  kpi4Ok: false,
-    benchYou: [
-      { value: 2100, label: "฿2,100/sqm" },
-      { value: 280,  label: "280/day"    },
-      { value: 48,   label: "48%"        },
-    ],
-    retention: { n: 224, r: 728, l: 83, tn: "+4% vs last month", tr: "+3% vs last month", tl: "-2% vs last month" },
-    tip_be:  { pre: "Quick Mart stays profitable, but rent and utilities take ", b1: "29% of revenue", mid: " — the highest of your stores. A combo deal or small price increase could add the margin to make this store more resilient.", b2: "", post: "" },
-    tip_bm:  { pre: "Quick Mart scores below average, especially on ", b: "sales per sqm (฿2,100 vs. ฿3,100 median)", post: ". A targeted combo deal and better product placement could move both metrics up without waiting for more customers." },
-    tip_ret: { pre: "Quick Mart's revisit rate (48%) is below your other stores. ", b: "New customers are growing slowly (+4%)", post: " and lapsed customers (8%) are higher than Coffee Corner. A regular Tuesday deal or loyalty stamp card could bring people back more consistently." },
-  },
-  lumina: {
-    kpi1: "฿3.82M", kpi1Sub_en: "this year",          kpi1Sub_th: "ปีนี้",
-    kpi2: "฿310",
-    kpi3: "฿49k",   kpi3Sub_en: "this store",         kpi3Sub_th: "ร้านนี้",
-    kpi4: "17.9%",  kpi4Ok: true,
-    benchYou: [
-      { value: 4850, label: "฿4,850/sqm" },
-      { value: 415,  label: "415/day"    },
-      { value: 62,   label: "62%"        },
-    ],
-    retention: { n: 415, r: 948, l: 95, tn: "+11% vs last month", tr: "+7% vs last month", tl: "-5% vs last month" },
-    tip_be:  { pre: "Lumina is your most profitable store — ", b1: "฿261k net profit per month", mid: " with only 17.9% going to costs. This store has the most room to invest in growth (new products, longer hours, marketing) without risking the bottom line.", b2: "", post: "" },
-    tip_bm:  { pre: "Lumina is close to the top quartile in sales per sqm (฿4,850 vs. ฿5,200). The ", b: "revisit rate (62%) is your best store by far", post: ". A premium seasonal menu or upsell at checkout could push you into the top 10% of the platform." },
-    tip_ret: { pre: "Lumina has the best retention profile — 65% existing customers with ", b: "62% revisit rate", post: ". New customer growth (+11%) is also strong. A loyalty tier system could convert occasional visitors into high-frequency regulars." },
-  },
+type ApiBreakeven = { storeId: string; name: string; revenue: number; rent: number; utilities: number; net: number };
+type ApiBenchTriple = { you: number; top: number; median: number; bottom: number; unit: string };
+type ApiPerformance = {
+  kpis: {
+    annualRevenue: number;
+    avgBasket: number;
+    monthlyRent: number;
+    costToRevenuePct: number;
+    costToRevenueHealthy: boolean;
+  };
+  breakeven: ApiBreakeven[];
+  benchmark: {
+    salesPerSqm:   ApiBenchTriple | null;
+    dailyVisitors: ApiBenchTriple | null;
+    revisitRate:   ApiBenchTriple | null;
+  };
+  retention: {
+    newCustomers: number;
+    returningCustomers: number;
+    lapsedCustomers: number;
+    newMomPct: number | null;
+    returningMomPct: number | null;
+    lapsedMomPct: number | null;
+  };
+  segments: {
+    age:   { label: string; sharePct: number; avgBasket: number | null; growthPct: number | null }[];
+    spend: { label: string; sharePct: number }[];
+  };
 };
+
+// ── Static strings ────────────────────────────────────────────────────────────
 
 const STRINGS = {
   en: {
-    exportReport: "Export Report",
     headerTitle: "Shop Performance Report",
-    headerSub: "Fiscal Year 2024",
+    headerSub: "Live database — updated monthly",
     kpi1Label: "Your shops earned this year",
+    kpi1SubAll: "total across branches",
+    kpi1SubOne: "this year",
     kpi2Label: "Average spent per visit",
     kpi2Sub: "per customer visit",
-    kpi2Trend: "+4% above target",
     kpi3Label: "Monthly rent",
+    kpi3SubAll: "combined leases",
+    kpi3SubOne: "this store",
     kpi3Note: "Fixed each month",
-    kpi4Label: "Rent vs what you earn",
+    kpi4Label: "Rent + utilities vs revenue",
     kpi4Sub: "of monthly revenue",
     kpi4TrendOk: "Healthy — well under 25%",
     kpi4TrendWarn: "Watch this — above 25%",
     breakevenTitle: "Are Your Shops Making Money?",
     breakevenSub: "After rent and utilities, how much does each shop keep?",
-    profitBadge: "Cost-to-revenue ratio: healthy",
+    profitBadge: "Profitable — costs under control",
     leftOverLabel: "net profit / month",
     rentLabel: "Rent",
     utilitiesLabel: "Utilities",
     revenueLabel: "Revenue",
+    netLegend: "Net profit",
     benchmarkTitle: "How Do You Stack Up?",
     benchmarkSub: "Compared to similar café shops on the platform",
-    benchmarkIntroPre: "You rank in the ",
-    benchmarkIntroBold: "top 23%",
-    benchmarkIntroPost: " on the platform among similar café shops. Customers spend well and come back often — your main growth area is earning more from each square meter of store space.",
     benchmarkRowLabels: ["You", "Top 25%", "Typical shop", "Bottom 25%"] as const,
-    benchmarkMetricTitles: ["Sales per sqm of store space", "Daily Visitors", "Revisit Rate"] as const,
+    benchmarkMetricTitles: ["Sales per sqm", "Daily Visitors", "Revisit Rate"] as const,
     retentionTitle: "Are Customers Coming Back?",
     retentionSub: "This month breakdown",
     newLabel: "New Customers",
     returningLabel: "Existing Customers",
     lapsedLabel: "Customers Who Stopped Coming",
     ofTotal: "of total",
+    vsLastMonth: "vs last month",
     segmentsTitle: "Which Customers Spend the Most?",
     segmentsSub: "How much each age group contributes to your sales",
     ofCustomers: "of customers",
     avgSpentPre: "Avg spent per visit",
     revenueGrowth: "revenue growth",
-    segmentsTipBold: "26–35 year olds (Millennials, 42%)",
-    segmentsTipPost: " bring in the most sales today. But your youngest customers (18–25, Gen Z) are the fastest-growing group — up +8% in revenue. A student discount or Instagram-friendly packaging could lock them in before competitors do.",
+    loading: "Loading from database...",
+    noData: "No performance data available for this branch yet.",
   },
   th: {
-    exportReport: "ดาวน์โหลดรายงาน",
     headerTitle: "รายงานผลการดำเนินงาน",
-    headerSub: "ปีงบประมาณ 2024",
+    headerSub: "ข้อมูลสด — อัปเดตรายเดือน",
     kpi1Label: "ร้านคุณได้เงินปีนี้",
+    kpi1SubAll: "รวมทุกสาขา",
+    kpi1SubOne: "ปีนี้",
     kpi2Label: "เฉลี่ยต่อการเข้าร้าน",
     kpi2Sub: "ต่อครั้งที่ลูกค้าเข้าร้าน",
-    kpi2Trend: "+4% เกินเป้า",
     kpi3Label: "ค่าเช่ารายเดือน",
+    kpi3SubAll: "รวมสัญญาเช่าทุกสาขา",
+    kpi3SubOne: "ร้านนี้",
     kpi3Note: "คงที่ทุกเดือน",
-    kpi4Label: "ค่าเช่าเทียบกับรายได้",
+    kpi4Label: "ค่าเช่า + ค่าน้ำไฟ เทียบรายได้",
     kpi4Sub: "ของรายได้รายเดือน",
     kpi4TrendOk: "ดี — ต่ำกว่า 25% มาก",
     kpi4TrendWarn: "เฝ้าระวัง — เกิน 25%",
     breakevenTitle: "ร้านคุณทำกำไรอยู่ไหม?",
     breakevenSub: "หลังหักค่าเช่าและค่าสาธารณูปโภค แต่ละร้านเหลือเงินเท่าไหร่?",
-    profitBadge: "อัตราส่วนค่าใช้จ่าย: ดี",
+    profitBadge: "กำไรดี — ต้นทุนควบคุมได้",
     leftOverLabel: "กำไรสุทธิ / เดือน",
     rentLabel: "ค่าเช่า",
     utilitiesLabel: "ค่าสาธารณูปโภค",
     revenueLabel: "รายได้",
+    netLegend: "กำไรสุทธิ",
     benchmarkTitle: "คุณอยู่ตรงไหนเทียบกับร้านอื่น?",
     benchmarkSub: "เทียบกับร้านคาเฟ่ที่คล้ายกันบน platform",
-    benchmarkIntroPre: "คุณอยู่ใน ",
-    benchmarkIntroBold: "top 23%",
-    benchmarkIntroPost: " บน platform ในกลุ่มร้านคาเฟ่ที่คล้ายกัน ลูกค้าใช้จ่ายดีและกลับมาบ่อย — จุดที่ยังพัฒนาได้คือการทำรายได้ต่อตารางเมตรให้มากขึ้น",
     benchmarkRowLabels: ["คุณ", "Top 25%", "ร้านทั่วไป", "Bottom 25%"] as const,
     benchmarkMetricTitles: ["ยอดขายต่อตารางเมตร", "ผู้เข้าร้านต่อวัน", "Revisit Rate"] as const,
     retentionTitle: "ลูกค้ากลับมาอีกไหม?",
     retentionSub: "สรุปเดือนนี้",
     newLabel: "ลูกค้าใหม่",
-    returningLabel: "Existing Customers",
+    returningLabel: "ลูกค้าที่กลับมา",
     lapsedLabel: "ลูกค้าที่หายไป",
     ofTotal: "ของทั้งหมด",
+    vsLastMonth: "เทียบเดือนที่แล้ว",
     segmentsTitle: "ลูกค้ากลุ่มไหนใช้จ่ายมากที่สุด?",
     segmentsSub: "แต่ละกลุ่มอายุมีส่วนร่วมในยอดขายของคุณแค่ไหน",
     ofCustomers: "ของลูกค้า",
     avgSpentPre: "ใช้จ่ายเฉลี่ยต่อครั้ง",
     revenueGrowth: "การเติบโตของรายได้",
-    segmentsTipBold: "กลุ่มอายุ 26–35 ปี (Millennials, 42%)",
-    segmentsTipPost: " สร้างยอดขายสูงสุดในตอนนี้ แต่ลูกค้าที่อายุน้อยสุด (18–25, Gen Z) เติบโตเร็วที่สุด ส่วนลดนักศึกษาหรือแพ็กเกจถ่ายรูปสวยอาจดึงดูดพวกเขาก่อนคู่แข่ง",
+    loading: "กำลังโหลดจากฐานข้อมูล...",
+    noData: "ยังไม่มีข้อมูลผลการดำเนินงานของสาขานี้",
   },
 } as const;
+
+
+function fmtTHB(n: number): string {
+  if (n >= 1_000_000) return `฿${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000)     return `฿${Math.round(n / 1000)}k`;
+  return `฿${n}`;
+}
+
+function fmtMoM(pct: number | null, isLapsed: boolean = false): string {
+  if (pct == null) return "—";
+  const sign = pct >= 0 ? "+" : "";
+  return `${sign}${pct.toFixed(1)}% ${isLapsed ? "vs last mo" : "vs last mo"}`;
+}
 
 export default function PerformancePage() {
   const { lang } = useLanguage();
   const { storeId } = useStoreFilter();
   const T = STRINGS[lang];
 
-  const pd = PERF_BY_STORE[storeId];
-  const kpi1Sub = lang === "th" ? pd.kpi1Sub_th : pd.kpi1Sub_en;
-  const kpi3Sub = lang === "th" ? pd.kpi3Sub_th : pd.kpi3Sub_en;
-  const kpi4Trend = pd.kpi4Ok ? T.kpi4TrendOk : T.kpi4TrendWarn;
+  const [data, setData] = useState<ApiPerformance | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  const filteredBreakeven = storeId === "all" ? BREAKEVEN : BREAKEVEN.filter((s) => s.id === storeId);
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(false);
+    setData(null);
 
-  const BENCHMARK = BENCHMARK_BASE.map((base, i) => ({
-    you: pd.benchYou[i],
-    top: base.top,
-    median: base.median,
-    bottom: base.bottom,
-    max: base.max,
-  }));
+    fetch(`/api/retailer/performance?storeId=${storeId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: ApiPerformance | null) => {
+        if (cancelled) return;
+        if (!d || !d.kpis) setError(true);
+        else setData(d);
+      })
+      .catch(() => { if (!cancelled) setError(true); })
+      .finally(() => { if (!cancelled) setLoading(false); });
 
-  const ret = pd.retention;
-  const retTotal = ret.n + ret.r + ret.l;
-  const pctNew = `${((ret.n / retTotal) * 100).toFixed(1)}% ${T.ofTotal}`;
-  const pctRet = `${((ret.r / retTotal) * 100).toFixed(1)}% ${T.ofTotal}`;
-  const pctLap = `${((ret.l / retTotal) * 100).toFixed(1)}% ${T.ofTotal}`;
+    return () => { cancelled = true; };
+  }, [storeId]);
 
-  const STORE_NAMES = { all: "All Stores", coffee: "Coffee Corner", quick: "Quick Mart", lumina: "Lumina Artisan Roastery" } as const;
-  const storeName = STORE_NAMES[storeId];
+  if (loading || !data) {
+    return (
+      <RetailerBackofficeLayout>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-on-surface">{T.headerTitle}</h1>
+          <p className="text-sm text-on-surface-variant mt-1">{T.headerSub}</p>
+        </div>
+        <div className="bg-white rounded-2xl p-12 shadow-sm text-center text-on-surface-variant">
+          {error ? T.noData : T.loading}
+        </div>
+      </RetailerBackofficeLayout>
+    );
+  }
 
+  const storeName = storeBrand(storeId, lang);
+  const isAll     = storeId === "all";
+
+  const annualRevenueStr = fmtTHB(data.kpis.annualRevenue);
+  const monthlyRentStr   = fmtTHB(data.kpis.monthlyRent);
+  const avgBasketStr     = `฿${data.kpis.avgBasket}`;
+  const cToRStr          = `${data.kpis.costToRevenuePct.toFixed(1)}%`;
+  const kpi4Trend        = data.kpis.costToRevenueHealthy ? T.kpi4TrendOk : T.kpi4TrendWarn;
+
+  const retention = data.retention;
+  const retTotal  = retention.newCustomers + retention.returningCustomers + retention.lapsedCustomers;
+  const pctNew    = retTotal ? `${((retention.newCustomers       / retTotal) * 100).toFixed(1)}% ${T.ofTotal}` : "—";
+  const pctRet    = retTotal ? `${((retention.returningCustomers / retTotal) * 100).toFixed(1)}% ${T.ofTotal}` : "—";
+  const pctLap    = retTotal ? `${((retention.lapsedCustomers    / retTotal) * 100).toFixed(1)}% ${T.ofTotal}` : "—";
+
+  // ── Build AI dataContext strings from REAL data ─────────────────────────────
   const beDataContext = [
-    `${storeName} — Breakeven Analysis`,
-    `Annual Revenue: ${pd.kpi1}`,
-    `Monthly Rent: ${pd.kpi3}`,
-    `Cost-to-Revenue: ${pd.kpi4}`,
-    filteredBreakeven.map(b => `${b.name}: rent ฿${b.rent}k, utilities ฿${b.utilities}k, revenue ฿${b.revenue}k, net profit ฿${b.net}k`).join("; "),
-    `${pd.tip_be.pre}${pd.tip_be.b1}${pd.tip_be.mid}${pd.tip_be.b2}${pd.tip_be.post}`,
+    `${storeName} — Breakeven Analysis (latest month from DB)`,
+    `Annual Revenue YTD: ${annualRevenueStr}`,
+    `Monthly Rent: ${monthlyRentStr}`,
+    `Cost-to-Revenue: ${cToRStr} (${data.kpis.costToRevenueHealthy ? "healthy under 25%" : "above 25% threshold"})`,
+    data.breakeven.map((b) => `${b.name}: revenue ฿${b.revenue}k, rent ฿${b.rent}k, utilities ฿${b.utilities}k, net profit ฿${b.net}k`).join("; "),
   ].join(" | ");
 
+  const bm = data.benchmark;
   const bmDataContext = [
-    `${storeName} — Benchmark vs Platform`,
-    `Sales/sqm: you=${pd.benchYou[0].label}, top=฿5,200/sqm, median=฿3,100/sqm`,
-    `Daily Visitors: you=${pd.benchYou[1].label}, top=420/day, median=285/day`,
-    `Revisit Rate: you=${pd.benchYou[2].label}, top=68%, median=47%`,
-    `${pd.tip_bm.pre}${pd.tip_bm.b}${pd.tip_bm.post}`,
-  ].join(" | ");
+    `${storeName} — Benchmark vs Platform Cafe Category`,
+    bm.salesPerSqm   ? `Sales/sqm: you=฿${bm.salesPerSqm.you}/sqm, top25=฿${bm.salesPerSqm.top}/sqm, median=฿${bm.salesPerSqm.median}/sqm, bottom25=฿${bm.salesPerSqm.bottom}/sqm`     : "",
+    bm.dailyVisitors ? `Daily Visitors: you=${bm.dailyVisitors.you}/day, top25=${bm.dailyVisitors.top}/day, median=${bm.dailyVisitors.median}/day, bottom25=${bm.dailyVisitors.bottom}/day`   : "",
+    bm.revisitRate   ? `Revisit Rate: you=${bm.revisitRate.you}%, top25=${bm.revisitRate.top}%, median=${bm.revisitRate.median}%, bottom25=${bm.revisitRate.bottom}%`                     : "",
+  ].filter(Boolean).join(" | ");
 
   const retDataContext = [
-    `${storeName} — Customer Retention`,
-    `New customers: ${ret.n} (${ret.tn})`,
-    `Returning customers: ${ret.r} (${ret.tr})`,
-    `Lapsed customers: ${ret.l} (${ret.tl})`,
-    `${pd.tip_ret.pre}${pd.tip_ret.b}${pd.tip_ret.post}`,
+    `${storeName} — Customer Retention (latest month)`,
+    `New customers: ${retention.newCustomers} (${fmtMoM(retention.newMomPct)})`,
+    `Returning customers: ${retention.returningCustomers} (${fmtMoM(retention.returningMomPct)})`,
+    `Lapsed customers: ${retention.lapsedCustomers} (${fmtMoM(retention.lapsedMomPct, true)})`,
   ].join(" | ");
 
   const segDataContext = [
-    `${storeName} — Customer Segments`,
-    `Gen Z 28%: ฿195/visit, +8% revenue growth`,
-    `Millennial 42%: ฿265/visit, +12% growth`,
-    `Gen X 20%: ฿270/visit, +3% growth`,
-    `Boomer 10%: ฿240/visit, +1% growth`,
-    `26-35 year olds are top spenders today; Gen Z (18-25) is the fastest-growing segment`,
+    `${storeName} — Customer Segments (latest month)`,
+    "Age:",
+    ...data.segments.age.map((a) => `${a.label}: ${a.sharePct}% of customers, ${a.avgBasket ? `฿${a.avgBasket}/visit, ` : ""}${a.growthPct != null ? `${a.growthPct >= 0 ? "+" : ""}${a.growthPct}% growth` : "growth n/a"}`),
+    "Spend bands:",
+    ...data.segments.spend.map((s) => `${s.label}: ${s.sharePct}% of customers`),
   ].join(" | ");
+
+  // ── Benchmark normalised rows (for chart rendering) ─────────────────────────
+  const benchmarkRows = [
+    bm.salesPerSqm   ? { titleIdx: 0, max: Math.max(bm.salesPerSqm.top,   bm.salesPerSqm.you,   bm.salesPerSqm.median,   bm.salesPerSqm.bottom),   you: bm.salesPerSqm,   unitPrefix: "฿", unitSuffix: "/sqm" } : null,
+    bm.dailyVisitors ? { titleIdx: 1, max: Math.max(bm.dailyVisitors.top, bm.dailyVisitors.you, bm.dailyVisitors.median, bm.dailyVisitors.bottom), you: bm.dailyVisitors, unitPrefix: "",  unitSuffix: "/day"  } : null,
+    bm.revisitRate   ? { titleIdx: 2, max: Math.max(bm.revisitRate.top,   bm.revisitRate.you,   bm.revisitRate.median,   bm.revisitRate.bottom),   you: bm.revisitRate,   unitPrefix: "",  unitSuffix: "%"     } : null,
+  ].filter((r): r is NonNullable<typeof r> => r !== null);
 
   return (
     <RetailerBackofficeLayout>
@@ -247,26 +249,25 @@ export default function PerformancePage() {
       <div className="grid grid-cols-4 gap-4 mb-8">
         <div className="bg-white rounded-2xl p-5 shadow-sm">
           <div className="text-xs text-on-surface-variant mb-3">{T.kpi1Label}</div>
-          <div className="text-3xl font-bold text-on-surface">{pd.kpi1}</div>
-          <div className="text-sm text-on-surface-variant mb-3">{kpi1Sub}</div>
+          <div className="text-3xl font-bold text-on-surface">{annualRevenueStr}</div>
+          <div className="text-sm text-on-surface-variant mb-3">{isAll ? T.kpi1SubAll : T.kpi1SubOne}</div>
         </div>
         <div className="bg-white rounded-2xl p-5 shadow-sm">
           <div className="text-xs text-on-surface-variant mb-3">{T.kpi2Label}</div>
-          <div className="text-3xl font-bold text-on-surface">{pd.kpi2}</div>
+          <div className="text-3xl font-bold text-on-surface">{avgBasketStr}</div>
           <div className="text-sm text-on-surface-variant mb-3">{T.kpi2Sub}</div>
-          <span className="text-xs font-bold text-primary">{T.kpi2Trend}</span>
         </div>
         <div className="bg-white rounded-2xl p-5 shadow-sm">
           <div className="text-xs text-on-surface-variant mb-3">{T.kpi3Label}</div>
-          <div className="text-3xl font-bold text-on-surface">{pd.kpi3}</div>
-          <div className="text-sm text-on-surface-variant mb-3">{kpi3Sub}</div>
+          <div className="text-3xl font-bold text-on-surface">{monthlyRentStr}</div>
+          <div className="text-sm text-on-surface-variant mb-3">{isAll ? T.kpi3SubAll : T.kpi3SubOne}</div>
           <span className="text-xs text-on-surface-variant">{T.kpi3Note}</span>
         </div>
         <div className="bg-white rounded-2xl p-5 shadow-sm">
           <div className="text-xs text-on-surface-variant mb-3">{T.kpi4Label}</div>
-          <div className="text-3xl font-bold text-on-surface">{pd.kpi4}</div>
+          <div className="text-3xl font-bold text-on-surface">{cToRStr}</div>
           <div className="text-sm text-on-surface-variant mb-3">{T.kpi4Sub}</div>
-          <span className={`text-xs font-bold ${pd.kpi4Ok ? "text-primary" : "text-amber-600"}`}>{kpi4Trend}</span>
+          <span className={`text-xs font-bold ${data.kpis.costToRevenueHealthy ? "text-primary" : "text-amber-600"}`}>{kpi4Trend}</span>
         </div>
       </div>
 
@@ -278,17 +279,17 @@ export default function PerformancePage() {
         <div className="flex items-center gap-5 text-xs text-on-surface-variant mb-4">
           <span className="flex items-center gap-1.5"><span className="w-3 h-2.5 rounded bg-amber-400 inline-block" />{T.rentLabel}</span>
           <span className="flex items-center gap-1.5"><span className="w-3 h-2.5 rounded bg-sky-300 inline-block" />{T.utilitiesLabel}</span>
-          <span className="flex items-center gap-1.5"><span className="w-3 h-2.5 rounded bg-[#6ab04c] inline-block" />Net profit</span>
+          <span className="flex items-center gap-1.5"><span className="w-3 h-2.5 rounded bg-[#6ab04c] inline-block" />{T.netLegend}</span>
         </div>
 
         <div className="space-y-3 mb-5">
-          {filteredBreakeven.map((s) => {
+          {data.breakeven.map((s) => {
             const rentPct      = (s.rent      / s.revenue) * 100;
             const utilitiesPct = (s.utilities / s.revenue) * 100;
             const netPct       = (s.net       / s.revenue) * 100;
             const totalCostPct = Math.round((s.rent + s.utilities) / s.revenue * 100);
             return (
-              <div key={s.name} className="bg-[#F5F2EB] rounded-2xl px-5 py-4">
+              <div key={s.storeId} className="bg-[#F5F2EB] rounded-2xl px-5 py-4">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-semibold text-on-surface">{s.name}</span>
                   <div className="flex items-center gap-1.5">
@@ -323,7 +324,7 @@ export default function PerformancePage() {
         <AiSuggestionInline
           role="retailer"
           pageContext="Performance — Breakeven Analysis"
-          staticText={`${pd.tip_be.pre}${pd.tip_be.b1}${pd.tip_be.mid}${pd.tip_be.b2}${pd.tip_be.post}`}
+          dataContext={beDataContext}
         />
       </div>
 
@@ -332,21 +333,18 @@ export default function PerformancePage() {
         <h3 className="text-base font-bold text-on-surface mb-0.5">{T.benchmarkTitle}</h3>
         <p className="text-xs text-on-surface-variant mb-4">{T.benchmarkSub}</p>
 
-        <div className="bg-[#F5F2EB] rounded-xl px-4 py-3 mb-5 text-xs text-on-surface-variant leading-relaxed">
-          {T.benchmarkIntroPre}<strong className="text-on-surface">{T.benchmarkIntroBold}</strong>{T.benchmarkIntroPost}
-        </div>
-
         <div className="grid grid-cols-3 gap-8 mb-5">
-          {BENCHMARK.map((m, mi) => {
+          {benchmarkRows.map((m, mi) => {
+            const fmt = (v: number) => `${m.unitPrefix}${v.toLocaleString()}${m.unitSuffix}`;
             const rows = [
-              { label: T.benchmarkRowLabels[0], value: m.you,    bold: true,  color: "bg-primary",       h: "h-3" },
-              { label: T.benchmarkRowLabels[1], value: m.top,    bold: false, color: "bg-on-surface/25", h: "h-2" },
-              { label: T.benchmarkRowLabels[2], value: m.median, bold: false, color: "bg-on-surface/15", h: "h-2" },
-              { label: T.benchmarkRowLabels[3], value: m.bottom, bold: false, color: "bg-on-surface/10", h: "h-2" },
+              { label: T.benchmarkRowLabels[0], value: m.you.you,    bold: true,  color: "bg-primary",       h: "h-3" },
+              { label: T.benchmarkRowLabels[1], value: m.you.top,    bold: false, color: "bg-on-surface/25", h: "h-2" },
+              { label: T.benchmarkRowLabels[2], value: m.you.median, bold: false, color: "bg-on-surface/15", h: "h-2" },
+              { label: T.benchmarkRowLabels[3], value: m.you.bottom, bold: false, color: "bg-on-surface/10", h: "h-2" },
             ];
             return (
               <div key={mi}>
-                <div className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4">{T.benchmarkMetricTitles[mi]}</div>
+                <div className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4">{T.benchmarkMetricTitles[m.titleIdx]}</div>
                 <div className="space-y-3">
                   {rows.map((r) => (
                     <div key={r.label}>
@@ -355,10 +353,10 @@ export default function PerformancePage() {
                           <span className={`w-2 h-2 rounded-full inline-block ${r.bold ? "bg-primary" : "bg-on-surface/20"}`} />
                           {r.label}
                         </span>
-                        <span className={r.bold ? "font-bold text-primary" : "text-on-surface-variant"}>{r.value.label}</span>
+                        <span className={r.bold ? "font-bold text-primary" : "text-on-surface-variant"}>{fmt(r.value)}</span>
                       </div>
                       <div className={`${r.h} bg-[#F5F2EB] rounded-full overflow-hidden`}>
-                        <div className={`${r.h} ${r.color} rounded-full`} style={{ width: `${(r.value.value / m.max) * 100}%` }} />
+                        <div className={`${r.h} ${r.color} rounded-full`} style={{ width: `${(r.value / m.max) * 100}%` }} />
                       </div>
                     </div>
                   ))}
@@ -370,7 +368,7 @@ export default function PerformancePage() {
         <AiSuggestionInline
           role="retailer"
           pageContext="Performance — Benchmark Comparison"
-          staticText={`${pd.tip_bm.pre}${pd.tip_bm.b}${pd.tip_bm.post}`}
+          dataContext={bmDataContext}
         />
       </div>
 
@@ -381,27 +379,27 @@ export default function PerformancePage() {
         <div className="grid grid-cols-3 gap-4 mb-4">
           <div className="bg-green-50 rounded-xl p-4">
             <div className="text-xs font-semibold text-green-700 mb-2">{T.newLabel}</div>
-            <div className="text-4xl font-bold text-on-surface mb-1">{ret.n.toLocaleString()}</div>
+            <div className="text-4xl font-bold text-on-surface mb-1">{retention.newCustomers.toLocaleString()}</div>
             <div className="text-xs text-on-surface-variant mb-1">{pctNew}</div>
-            <div className="text-xs font-bold text-green-700">{ret.tn}</div>
+            <div className="text-xs font-bold text-green-700">{fmtMoM(retention.newMomPct)}</div>
           </div>
           <div className="bg-blue-50 rounded-xl p-4">
             <div className="text-xs font-semibold text-blue-700 mb-2">{T.returningLabel}</div>
-            <div className="text-4xl font-bold text-on-surface mb-1">{ret.r.toLocaleString()}</div>
+            <div className="text-4xl font-bold text-on-surface mb-1">{retention.returningCustomers.toLocaleString()}</div>
             <div className="text-xs text-on-surface-variant mb-1">{pctRet}</div>
-            <div className="text-xs font-bold text-blue-700">{ret.tr}</div>
+            <div className="text-xs font-bold text-blue-700">{fmtMoM(retention.returningMomPct)}</div>
           </div>
           <div className="bg-red-50 rounded-xl p-4">
             <div className="text-xs font-semibold text-red-700 mb-2">{T.lapsedLabel}</div>
-            <div className="text-4xl font-bold text-on-surface mb-1">{ret.l.toLocaleString()}</div>
+            <div className="text-4xl font-bold text-on-surface mb-1">{retention.lapsedCustomers.toLocaleString()}</div>
             <div className="text-xs text-on-surface-variant mb-1">{pctLap}</div>
-            <div className="text-xs font-bold text-red-600">{ret.tl}</div>
+            <div className="text-xs font-bold text-red-600">{fmtMoM(retention.lapsedMomPct, true)}</div>
           </div>
         </div>
         <AiSuggestionInline
           role="retailer"
           pageContext="Performance — Customer Retention"
-          staticText={`${pd.tip_ret.pre}${pd.tip_ret.b}${pd.tip_ret.post}`}
+          dataContext={retDataContext}
         />
       </div>
 
@@ -410,16 +408,24 @@ export default function PerformancePage() {
         <h3 className="text-base font-bold text-on-surface mb-0.5">{T.segmentsTitle}</h3>
         <p className="text-xs text-on-surface-variant mb-5">{T.segmentsSub}</p>
         <div className="grid grid-cols-2 gap-4 mb-4">
-          {SEGMENTS.map((s) => (
-            <div key={s.gen} className="flex items-center gap-4 bg-[#F5F2EB] rounded-xl px-5 py-4">
+          {data.segments.age.map((s) => (
+            <div key={s.label} className="flex items-center gap-4 bg-[#F5F2EB] rounded-xl px-5 py-4">
               <div className="flex-shrink-0">
-                <div className="text-xs text-on-surface-variant mb-0.5">{s.gen}</div>
-                <div className="text-3xl font-bold text-on-surface">{s.pct}%</div>
+                <div className="text-xs text-on-surface-variant mb-0.5">{s.label}</div>
+                <div className="text-3xl font-bold text-on-surface">{s.sharePct}%</div>
                 <div className="text-xs text-on-surface-variant">{T.ofCustomers}</div>
               </div>
               <div className="flex-1">
-                <div className="text-xs text-on-surface-variant mb-1">{T.avgSpentPre} <span className="font-semibold text-on-surface">{s.basket}</span></div>
-                <div className="text-xs font-semibold text-primary">{s.share} {T.revenueGrowth}</div>
+                {s.avgBasket != null && (
+                  <div className="text-xs text-on-surface-variant mb-1">
+                    {T.avgSpentPre} <span className="font-semibold text-on-surface">฿{s.avgBasket}</span>
+                  </div>
+                )}
+                {s.growthPct != null && (
+                  <div className={`text-xs font-semibold ${s.growthPct >= 0 ? "text-primary" : "text-red-500"}`}>
+                    {s.growthPct >= 0 ? "+" : ""}{s.growthPct}% {T.revenueGrowth}
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -427,7 +433,7 @@ export default function PerformancePage() {
         <AiSuggestionInline
           role="retailer"
           pageContext="Performance — Customer Segments"
-          staticText={`${T.segmentsTipBold}${T.segmentsTipPost}`}
+          dataContext={segDataContext}
         />
       </div>
     </RetailerBackofficeLayout>

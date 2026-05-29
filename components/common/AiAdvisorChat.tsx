@@ -1,14 +1,38 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/router";
 import { useAuth } from "@/lib/authContext";
+import { useStoreFilter } from "@/lib/storeFilterContext";
+import { useStationFilter } from "@/lib/stationFilterContext";
+import FormattedAiText from "@/components/shared/FormattedAiText";
 
 type Message = { role: "user" | "assistant"; text: string };
 
+const PAGE_MAP: Record<string, string> = {
+  "/explorepage/explorePage":                      "Explore Locations — which station suits me",
+  "/stationdetailpage/[station_id]":               "Station Detail — is this station right for me",
+  "/retailer_backoffice/retailerDashboardPage":    "Retailer Dashboard",
+  "/retailer_backoffice/performancePage":          "Performance Analytics",
+  "/retailer_backoffice/mlPredictionsPage":        "ML Predictions",
+  "/retailer_backoffice/myApplicationsPage":       "My Applications",
+  "/retailer_backoffice/exploreLocationPage":      "Explore Locations",
+  "/retailer_backoffice/slotSelectionPage":        "Slot Selection",
+  "/retailer_backoffice/confirmApplyPage":         "Confirm Application",
+  "/retailer_backoffice/bookingConfirmPage":       "Application Submitted",
+  "/retailer_backoffice/retailerProfileSetupPage": "Business Profile Setup",
+  "/retailer_backoffice/scheduleChatPage":         "Schedule a Chat",
+  "/landlord_backoffice/landlordOverviewPage":     "Executive Overview",
+  "/landlord_backoffice/landlordApplicationsPage": "Tenant Applications",
+  "/landlord_backoffice/landlordTenantsPage":      "Tenant Management",
+  "/landlord_backoffice/landlordRevenuePage":      "Revenue Portfolio",
+  "/landlord_backoffice/landlordMyStationsPage":   "My Stations",
+};
+
 const WELCOME: Record<"retailer" | "landlord", string> = {
   retailer:
-    "Hi! I'm your retail advisor. Ask me anything about your shop performance, customer trends, or expansion opportunities.",
+    "Hi! I'm your retail advisor. I have access to your live revenue, lease, and customer data. Ask me anything about your shop performance, trends, or what to do next.",
   landlord:
-    "Hi! I'm your property advisor. Ask me anything about your stations, tenant applications, or revenue insights.",
+    "Hi! I'm your property advisor. I have access to your live portfolio data — tenants, leases, station metrics. Ask me anything about your stations, revenue, or tenant health.",
 };
 
 const PERSONA: Record<"retailer" | "landlord", string> = {
@@ -18,6 +42,9 @@ const PERSONA: Record<"retailer" | "landlord", string> = {
 
 export default function AiAdvisorChat() {
   const { user } = useAuth();
+  const { storeId } = useStoreFilter();
+  const { stationId } = useStationFilter();
+  const { pathname } = useRouter();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -27,6 +54,10 @@ export default function AiAdvisorChat() {
   const welcomeSent = useRef(false);
 
   const userType = (user?.type === "landlord" ? "landlord" : "retailer") as "retailer" | "landlord";
+  const pageContext = PAGE_MAP[pathname] ?? "Dashboard";
+  // Currently-active branch filter: storeId ("STN-xxx") for retailer,
+  // stationId (filter_key, e.g. "lat_phrao") for landlord.
+  const activeStoreId = userType === "landlord" ? stationId : storeId;
 
   useEffect(() => {
     if (open && !welcomeSent.current) {
@@ -50,10 +81,12 @@ export default function AiAdvisorChat() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: text,
-          role: userType,
+          message:        text,
+          role:           userType,
+          pageContext,
+          activeStoreId,
           conversationId: conversationId ?? undefined,
-          userId: user?.id ?? null,
+          userId:         user?.id ?? null,
         }),
       });
       const data = await res.json() as { reply: string; conversationId?: string; error?: string };
@@ -132,11 +165,11 @@ export default function AiAdvisorChat() {
                 <div
                   className={`max-w-[78%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed ${
                     m.role === "user"
-                      ? "bg-[#1C3A1C] text-white rounded-br-none"
+                      ? "bg-[#1C3A1C] text-white rounded-br-none whitespace-pre-line"
                       : "bg-white text-on-surface rounded-bl-none shadow-sm border border-outline-variant/10"
                   }`}
                 >
-                  {m.text}
+                  {m.role === "assistant" ? <FormattedAiText text={m.text} /> : m.text}
                 </div>
               </div>
             ))}

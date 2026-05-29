@@ -17,7 +17,7 @@ export interface AuthUser {
 interface AuthContextValue {
   user:    AuthUser | null;
   loading: boolean;
-  login:   (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  login:   (email: string, password: string) => Promise<{ ok: boolean; error?: string; userType?: UserType; userId?: string }>;
   logout:  () => Promise<void>;
 }
 
@@ -58,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session?.user) {
         const profile = await fetchProfile(session.user.id, session.user.email ?? "");
         setUser(profile);
+        if (profile) localStorage.setItem("ptg_user_id", profile.id);
       }
       setLoading(false);
     });
@@ -67,15 +68,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session?.user) {
         const profile = await fetchProfile(session.user.id, session.user.email ?? "");
         setUser(profile);
+        if (profile) localStorage.setItem("ptg_user_id", profile.id);
       } else {
         setUser(null);
+        localStorage.removeItem("ptg_user_id");
       }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  async function login(email: string, password: string): Promise<{ ok: boolean; error?: string }> {
+  async function login(email: string, password: string): Promise<{ ok: boolean; error?: string; userType?: UserType; userId?: string }> {
     const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     if (error || !data.user) {
       return { ok: false, error: error?.message ?? "Invalid email or password." };
@@ -83,12 +86,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const profile = await fetchProfile(data.user.id, data.user.email ?? "");
     if (!profile) return { ok: false, error: "User profile not found. Please run the seed SQL." };
     setUser(profile);
-    return { ok: true };
+    localStorage.setItem("ptg_user_id", profile.id);
+    return { ok: true, userType: profile.type, userId: profile.id };
   }
 
   async function logout(): Promise<void> {
     await supabase.auth.signOut();
     setUser(null);
+    localStorage.removeItem("ptg_user_id");
   }
 
   return <AuthContext.Provider value={{ user, loading, login, logout }}>{children}</AuthContext.Provider>;

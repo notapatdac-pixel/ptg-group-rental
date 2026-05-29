@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import LandlordBackofficeLayout from "@/components/landlord_backoffice/LandlordBackofficeLayout";
 import { STATIONS_DATA, type StationUnit } from "@/components/landlord_backoffice/stationsData";
+import AiSuggestionInline from "@/components/shared/AiSuggestionInline";
 import latphrao71Img from "@/components/image/station-ptg-latphrao71.png";
 import ramaIxImg from "@/components/image/station-ptg-ramaix.png";
 import Link from "next/link";
@@ -487,14 +488,22 @@ export default function LandlordEditStationPage() {
             </div>
           </div>
 
-          {/* AI Suggestion */}
-          <div className="bg-[#D9EDD9] rounded-2xl p-5 shadow-sm">
-            <div className="flex items-center gap-1.5 mb-3">
-              <span className="material-symbols-outlined text-[14px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
-              <div className="text-[10px] font-bold uppercase tracking-widest text-primary">AI Suggestion</div>
-            </div>
-            <p className="text-sm text-on-surface-variant leading-relaxed">{station.aiNote}</p>
-          </div>
+          {/* AI Suggestion — real Gemini summary based on the station's live edit form */}
+          <AiSuggestionInline
+            role="landlord"
+            pageContext={`Edit Station — ${station.name}`}
+            dataContext={[
+              `Station: ${station.name}`,
+              `Location: ${station.location}`,
+              `Type: ${form.type}`,
+              `Province: ${form.province}`,
+              `Operating hours: ${form.hours}`,
+              `Total retail area: ${form.area} sqm`,
+              `Units: ${units.length} total, ${occupiedCount} occupied (${occupancyPct}%)`,
+              `Monthly rental revenue from occupied units: ฿${totalRevenue.toLocaleString()}`,
+              `Vacant units: ${units.filter((u) => u.status === "vacant").map((u) => `${u.id} (${u.type}, ${u.sqm} sqm, ฿${u.rent.toLocaleString()}/mo)`).join("; ") || "none"}`,
+            ].join(" | ")}
+          />
 
         </div>
       </div>

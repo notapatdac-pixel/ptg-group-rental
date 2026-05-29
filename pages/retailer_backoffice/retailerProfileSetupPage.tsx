@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import RetailerBackofficeLayout from "@/components/retailer_backoffice/RetailerBackofficeLayout";
+import { useAuth } from "@/lib/authContext";
 
 // ── Exports used by other pages ───────────────────────────────────────────────
 
@@ -56,6 +57,7 @@ const SELECT_CLS = "w-full appearance-none bg-[#F5F2EB] rounded-xl px-4 py-3 tex
 
 export default function RetailerProfileSetupPage() {
   const router = useRouter();
+  const { user } = useAuth();
 
   const [profiles,  setProfiles]  = useState<RetailerProfile[]>([{ ...EMPTY_PROFILE }]);
   const [activeIdx, setActiveIdx] = useState(0);
@@ -132,10 +134,16 @@ export default function RetailerProfileSetupPage() {
   const pct = Math.round((filledCount / 8) * 100);
 
   function handleSave() {
+    const current = profiles[activeIdx];
+    if (!current?.businessName?.trim() || !current?.category?.trim()) {
+      alert("Please fill in at least Business Name and Category before saving.");
+      return;
+    }
     try {
       localStorage.setItem("ptg_retailer_profiles", JSON.stringify(profiles));
       localStorage.setItem("ptg_active_store_index", String(activeIdx));
       localStorage.setItem(PROFILE_KEY, JSON.stringify(profiles[0]));
+      if (user?.id) localStorage.setItem(`ptg_retailer_profile_done_${user.id}`, "1");
       profiles.forEach(p => {
         if (!p.businessName) return;
         try {
@@ -148,6 +156,24 @@ export default function RetailerProfileSetupPage() {
         } catch {}
       });
     } catch {}
+
+    // Sync active profile to DB
+    if (user?.id && current) {
+      fetch("/api/retailer/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId:       user.id,
+          businessName: current.businessName,
+          category:     current.category,
+          experience:   current.yearsExperience,
+          numStores:    current.numStores,
+          maxBudget:    current.maxRentBudget,
+          concept:      current.concept,
+        }),
+      }).catch(() => {/* fire-and-forget; localStorage already updated */});
+    }
+
     router.push("/retailer_backoffice/retailerDashboardPage");
   }
 

@@ -1,3 +1,5 @@
+import { supabase } from "@/lib/supabaseClient";
+
 export type NotifType = "message" | "status_update" | "booking" | "system";
 
 export interface Notification {
@@ -12,115 +14,175 @@ export interface Notification {
 }
 
 const STORAGE_KEY = "ptg_notifications_v2";
+const USER_ID_KEY = "ptg_user_id";
 
-const SEED: Notification[] = [
-  // ── Retailer ──────────────────────────────────────────────────────────────
-  {
-    id: "r-001", type: "status_update", userType: "retailer", read: false,
-    title: "Application Approved",
-    body: "Your application PTG-APP-2025-8821 for PTG Rama IX — Unit A-02 has been approved by the landlord.",
-    href: "/retailer_backoffice/myApplicationsPage",
-    timestamp: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
-  },
-  {
-    id: "r-002", type: "message", userType: "retailer", read: false,
-    title: "New message from Kanya S.",
-    body: "Hi! Your application looks great. I've confirmed a walkthrough slot for you this Thursday at 14:00.",
-    href: "/retailer_backoffice/scheduleBookingPage?appId=PTG-APP-2025-8821",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-  },
-  {
-    id: "r-003", type: "status_update", userType: "retailer", read: true,
-    title: "Application Under Review",
-    body: "PTG-APP-2025-6174 for PTG Sukhumvit 62 is now being reviewed by the landlord team.",
-    href: "/retailer_backoffice/myApplicationsPage",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-  },
-  {
-    id: "r-004", type: "system", userType: "retailer", read: true,
-    title: "Application Not Approved",
-    body: "PTG-APP-2025-3302 for PTG Lat Phrao 71 was not approved at this time. The unit may have been leased.",
-    href: "/retailer_backoffice/myApplicationsPage",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-  },
-  // ── Landlord ──────────────────────────────────────────────────────────────
-  {
-    id: "l-001", type: "status_update", userType: "landlord", read: false,
-    title: "New Application Received",
-    body: "Coffee Corner Co., Ltd. has applied for Unit A-02 at PTG Rama IX. Review required.",
-    href: "/landlord_backoffice/landlordApplicationsPage",
-    timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-  },
-  {
-    id: "l-002", type: "message", userType: "landlord", read: false,
-    title: "New message from retailer",
-    body: "Quick Mart is asking about the lease duration flexibility for Unit B-01 at PTG Bang Na.",
-    href: "/landlord_backoffice/landlordApplicationsPage",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 1).toISOString(),
-  },
-  {
-    id: "l-003", type: "booking", userType: "landlord", read: false,
-    title: "Booking Request",
-    body: "Lumina Artisan Roastery has requested to schedule a site walkthrough for Unit C-01 at PTG Sukhumvit.",
-    href: "/landlord_backoffice/landlordApplicationsPage",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
-  },
-  {
-    id: "l-004", type: "system", userType: "landlord", read: true,
-    title: "New Application Received",
-    body: "A new application for Unit F-02 at PTG Lat Phrao 71 was submitted.",
-    href: "/landlord_backoffice/landlordApplicationsPage",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
-  },
-];
+// ─── Field mapping helpers ────────────────────────────────────────────────────
 
-function seedIfEmpty(): void {
-  if (typeof window === "undefined") return;
-  if (!localStorage.getItem(STORAGE_KEY)) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED));
+interface DbNotification {
+  id: string;
+  user_id: string | null;
+  user_role: "retailer" | "landlord";
+  type: NotifType;
+  title: string;
+  body: string;
+  href: string | null;
+  read: boolean;
+  created_at: string;
+}
+
+function dbToLocal(row: DbNotification): Notification {
+  return {
+    id:        row.id,
+    type:      row.type,
+    title:     row.title,
+    body:      row.body,
+    read:      row.read,
+    timestamp: row.created_at,
+    href:      row.href ?? undefined,
+    userType:  row.user_role,
+  };
+}
+
+// ─── localStorage helpers ─────────────────────────────────────────────────────
+
+function readCache(): Notification[] {
+  if (typeof window === "undefined") return [];
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]") as Notification[];
+  } catch {
+    return [];
   }
 }
 
-export function getNotifications(userType: "retailer" | "landlord"): Notification[] {
-  if (typeof window === "undefined") return [];
-  seedIfEmpty();
+function writeCache(items: Notification[]): void {
+  if (typeof window === "undefined") return;
   try {
-    const all = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]") as Notification[];
-    return all.filter(n => n.userType === userType).sort(
-      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    );
-  } catch { return []; }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  } catch {}
+}
+
+function currentUserId(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(USER_ID_KEY);
+}
+
+// ─── Public sync API ──────────────────────────────────────────────────────────
+
+export function getNotifications(userType: "retailer" | "landlord"): Notification[] {
+  const all = readCache();
+  return all
+    .filter(n => n.userType === userType)
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 }
 
 export function markRead(id: string): void {
   if (typeof window === "undefined") return;
-  seedIfEmpty();
-  try {
-    const all = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]") as Notification[];
-    const updated = all.map(n => n.id === id ? { ...n, read: true } : n);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  } catch {}
+
+  // Sync update to localStorage
+  const all = readCache();
+  writeCache(all.map(n => (n.id === id ? { ...n, read: true } : n)));
+
+  // Fire-and-forget DB update
+  const userId = currentUserId();
+  if (!userId) return;
+  supabase
+    .from("notifications")
+    .update({ read: true })
+    .eq("id", id)
+    .eq("user_id", userId)
+    .then(() => {/* ignore */});
 }
 
 export function markAllRead(userType: "retailer" | "landlord"): void {
   if (typeof window === "undefined") return;
-  seedIfEmpty();
-  try {
-    const all = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]") as Notification[];
-    const updated = all.map(n => n.userType === userType ? { ...n, read: true } : n);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  } catch {}
+
+  // Sync update to localStorage
+  const all = readCache();
+  writeCache(all.map(n => (n.userType === userType ? { ...n, read: true } : n)));
+
+  // Fire-and-forget DB update
+  const userId = currentUserId();
+  if (!userId) return;
+  supabase
+    .from("notifications")
+    .update({ read: true })
+    .eq("user_id", userId)
+    .eq("user_role", userType)
+    .eq("read", false)
+    .then(() => {/* ignore */});
 }
 
 export function addNotification(n: Omit<Notification, "id" | "read">): void {
   if (typeof window === "undefined") return;
-  seedIfEmpty();
-  try {
-    const all = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]") as Notification[];
-    const newN: Notification = { ...n, id: `notif-${Date.now()}`, read: false };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([newN, ...all]));
-  } catch {}
+
+  // Generate a UUID client-side so both localStorage and DB share the same id
+  const id = crypto.randomUUID();
+  const newN: Notification = { ...n, id, read: false };
+
+  // Sync write to localStorage for instant UI update
+  const all = readCache();
+  writeCache([newN, ...all]);
+
+  // Fire-and-forget DB insert
+  const userId = currentUserId();
+  if (!userId) return;
+  supabase
+    .from("notifications")
+    .insert({
+      id,
+      user_id:   userId,
+      user_role: n.userType,
+      type:      n.type,
+      title:     n.title,
+      body:      n.body,
+      href:      n.href ?? null,
+      read:      false,
+      created_at: n.timestamp,
+    })
+    .then(() => {/* ignore */});
 }
+
+// ─── Async fetch from DB (source of truth) ────────────────────────────────────
+
+export async function getNotificationsAsync(
+  userType: "retailer" | "landlord"
+): Promise<Notification[]> {
+  if (typeof window === "undefined") return [];
+
+  const userId = currentUserId();
+  if (!userId) {
+    // No user — fall back to whatever is cached
+    return getNotifications(userType);
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("notifications")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("user_role", userType)
+      .order("created_at", { ascending: false });
+
+    if (error || !data) {
+      return getNotifications(userType);
+    }
+
+    const rows = (data as DbNotification[]).map(dbToLocal);
+
+    // Overwrite cache with authoritative DB data (clears any stale seed data)
+    const otherUserType = userType === "retailer" ? "landlord" : "retailer";
+    const otherItems = readCache().filter(n => n.userType === otherUserType);
+    writeCache([...rows, ...otherItems]);
+
+    return rows.sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+  } catch {
+    return getNotifications(userType);
+  }
+}
+
+// ─── timeAgo — kept exactly as-is ────────────────────────────────────────────
 
 export function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();

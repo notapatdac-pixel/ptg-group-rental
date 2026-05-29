@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import RetailerBackofficeLayout from "@/components/retailer_backoffice/RetailerBackofficeLayout";
-import type { AppBadge } from "@/lib/applicationsData";
 import { supabase } from "@/lib/supabaseClient";
+import { RETAILER_PROFILE_ID } from "@/lib/retailerStores";
+
+type AppBadge = "PENDING REVIEW" | "APPROVED" | "NOT APPROVED";
 
 type AppItem = {
   id: string;
@@ -245,84 +247,27 @@ function AppCard({ app }: { app: AppItem }) {
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
-type NewApp = {
-  refNum: string;
-  stationName: string;
-  unitCode: string;
-  unitLabel: string;
-  price: number;
-  submittedAt: string;
-  status: string;
-};
-
 export default function MyApplicationsPage() {
   const [activeTab, setActiveTab] = useState<TabId>("all");
   const [allApps, setAllApps]     = useState<AppItem[]>([]);
 
+  async function loadApps() {
+    let fromDb: AppItem[] = [];
+    try {
+      const res = await fetch(`/api/applications?role=retailer&profileId=${RETAILER_PROFILE_ID}`);
+      if (res.ok) {
+        const rows = await res.json() as DbApp[];
+        fromDb = rows.map(dbToAppItem);
+      }
+    } catch {}
+    setAllApps(fromDb);
+  }
+
   useEffect(() => {
-    async function loadApps() {
-      let fromDb: AppItem[] = [];
-      try {
-        const res = await fetch("/api/applications");
-        if (res.ok) {
-          const rows = await res.json() as DbApp[];
-          fromDb = rows.map(dbToAppItem);
-        }
-      } catch {}
-
-      // Merge with any locally-submitted (not yet in DB) apps
-      let localApps: AppItem[] = [];
-      try {
-        const stored = JSON.parse(localStorage.getItem("ptg_applications") ?? "[]") as NewApp[];
-        localApps = stored.map(a => ({
-          id:          a.refNum,
-          stationName: a.stationName,
-          unitCode:    a.unitCode,
-          unitLabel:   a.unitLabel,
-          location:    "",
-          price:       a.price,
-          leaseType:   a.unitLabel,
-          duration:    "—",
-          applied:     new Date(a.submittedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
-          progress:    1,
-          badge:       "PENDING REVIEW" as AppBadge,
-        }));
-      } catch {}
-
-      const merged = [...localApps, ...fromDb].reduce<AppItem[]>((acc, cur) => {
-        if (!acc.find(a => a.id === cur.id)) acc.push(cur);
-        return acc;
-      }, []);
-
-      const withOverrides = merged.map(app => {
-        try {
-          const override = localStorage.getItem(`ptg_app_badge_${app.id}`);
-          if (override) return { ...app, badge: override as AppBadge };
-        } catch {}
-        return app;
-      });
-      setAllApps(withOverrides);
-    }
     loadApps();
   }, []);
 
-  // localStorage polling (fallback for when Supabase is not connected)
-  useEffect(() => {
-    const checkOverrides = () => {
-      setAllApps(prev => prev.map(app => {
-        try {
-          const override = localStorage.getItem(`ptg_app_badge_${app.id}`);
-          if (override && override !== app.badge) return { ...app, badge: override as AppBadge };
-        } catch {}
-        return app;
-      }));
-    };
-    const timer = setInterval(checkOverrides, 2000);
-    window.addEventListener("storage", checkOverrides);
-    return () => { clearInterval(timer); window.removeEventListener("storage", checkOverrides); };
-  }, []);
-
-  // Supabase Realtime — updates badge immediately when landlord approves/declines
+  // Supabase Realtime — INSERT (new apps from this retailer) + UPDATE (badge)
   useEffect(() => {
     const dbToBadge: Record<string, AppBadge> = {
       approved:      "APPROVED",
@@ -330,7 +275,7 @@ export default function MyApplicationsPage() {
       not_approved:  "NOT APPROVED",
     };
     const channel = supabase
-      .channel("retailer-applications-status")
+      .channel("retailer-applications-feed")
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "applications" }, (payload) => {
         const updated = payload.new as { retailer_display_id: string; status: string };
         const badge = dbToBadge[updated.status];
@@ -338,6 +283,9 @@ export default function MyApplicationsPage() {
         setAllApps(prev => prev.map(app =>
           app.id === updated.retailer_display_id ? { ...app, badge } : app
         ));
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "applications" }, () => {
+        loadApps();
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -362,11 +310,20 @@ export default function MyApplicationsPage() {
     <RetailerBackofficeLayout>
 
       {/* ── Header ── */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-on-surface">My Applications</h1>
-        <p className="text-sm text-on-surface-variant mt-1">
-          Track and manage your retail space applications across PTG locations.
-        </p>
+      <div className="flex items-start justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-on-surface">My Applications</h1>
+          <p className="text-sm text-on-surface-variant mt-1">
+            Track and manage your retail space applications across PTG locations.
+          </p>
+        </div>
+        <Link
+          href="/explorepage/explorePage"
+          className="flex items-center gap-1.5 bg-primary text-white text-sm font-bold px-5 py-2.5 rounded-full no-underline hover:opacity-90 transition-opacity"
+        >
+          <span className="material-symbols-outlined text-[16px]">map</span>
+          Find New Locations
+        </Link>
       </div>
 
       {/* ── Tab bar ── */}
@@ -400,7 +357,20 @@ export default function MyApplicationsPage() {
       </div>
 
       {/* ── Tab content ── */}
-      {filtered.length === 0 ? (
+      {allApps.length === 0 ? (
+        <div className="py-16 text-center">
+          <span className="material-symbols-outlined text-outline/30 text-[48px] block mb-3">folder_open</span>
+          <p className="text-sm font-semibold text-on-surface-variant mb-1">No applications yet.</p>
+          <p className="text-xs text-on-surface-variant/60 mb-4">Browse stations and apply.</p>
+          <Link
+            href="/retailer_backoffice/applyFlowPage"
+            className="inline-flex items-center gap-1.5 bg-primary text-white text-xs font-semibold px-4 py-2 rounded-full no-underline hover:opacity-90 transition-opacity"
+          >
+            <span className="material-symbols-outlined text-[14px]">explore</span>
+            Browse Stations
+          </Link>
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="py-16 text-center">
           <span className="material-symbols-outlined text-outline/30 text-[48px] block mb-3">folder_open</span>
           <p className="text-sm font-semibold text-on-surface-variant mb-1">No applications here yet</p>

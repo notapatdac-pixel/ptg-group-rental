@@ -1,5 +1,8 @@
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import LandlordBackofficeLayout from "@/components/landlord_backoffice/LandlordBackofficeLayout";
-import { useStationFilter, type StationId } from "@/lib/stationFilterContext";
+import AiSuggestionInline from "@/components/shared/AiSuggestionInline";
+import { useStationFilter } from "@/lib/stationFilterContext";
 import { useLanguage } from "@/lib/languageContext";
 
 const STRINGS = {
@@ -35,13 +38,22 @@ const STRINGS = {
   },
 };
 
-const TENANTS = [
-  { id: 1, stationId: "rama9"     as StationId, brand: "Coffee Corner Co.",  category: "F&B",          unit: "A2", station: "PTG Rama 9",          leaseStart: "Nov 15, 2025", leaseEnd: "May 14, 2026", rent: "25,200",  status: "active",   score: 92, payHistory: "100%" },
-  { id: 2, stationId: "sukhumvit" as StationId, brand: "7-Eleven Express",   category: "Convenience",  unit: "B3", station: "PTG Sukhumvit 62",    leaseStart: "Jan 1, 2025",  leaseEnd: "Dec 31, 2025", rent: "88,000",  status: "active",   score: 97, payHistory: "100%" },
-  { id: 3, stationId: "lat_phrao" as StationId, brand: "FreshMart Ltd.",     category: "Convenience",  unit: "A1", station: "PTG Lat Phrao 71",    leaseStart: "Mar 1, 2025",  leaseEnd: "Aug 31, 2025", rent: "34,000",  status: "expiring", score: 74, payHistory: "95%"  },
-  { id: 4, stationId: "bang_na"   as StationId, brand: "Bloom Beauty",       category: "Beauty",       unit: "A4", station: "PTG Bang Na Complex", leaseStart: "Dec 1, 2025",  leaseEnd: "Nov 30, 2027", rent: "145,000", status: "pending",  score: 91, payHistory: "N/A"  },
-  { id: 5, stationId: "main"      as StationId, brand: "QuickBite Kitchen",  category: "F&B",          unit: "C2", station: "PTG Main Station",    leaseStart: "Jun 1, 2025",  leaseEnd: "May 31, 2026", rent: "42,000",  status: "active",   score: 85, payHistory: "98%"  },
-];
+type ApiTenant = {
+  id: string;
+  retailerId: string;
+  brand: string;
+  category: string;
+  stationId: string;
+  station: string;
+  unit: string;
+  rent: string;
+  leaseStart: string;
+  leaseEnd: string;
+  payHistory: string;
+  aiScore: number;
+  status: string;
+  storePerf: string;
+};
 
 const STATUS_STYLE: Record<string, string> = {
   active:   "bg-primary/10 text-primary",
@@ -54,7 +66,20 @@ export default function LandlordTenantsPage() {
   const { lang } = useLanguage();
   const T = STRINGS[lang];
 
-  const visible = stationId === "all" ? TENANTS : TENANTS.filter((t) => t.stationId === stationId);
+  const [allTenants, setAllTenants] = useState<ApiTenant[]>([]);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    fetch("/api/landlord/tenants")
+      .then(r => r.ok ? r.json() : [])
+      .then((d: ApiTenant[]) => setAllTenants(d))
+      .catch(() => {});
+  }, []);
+
+  const byStation = stationId === "all" ? allTenants : allTenants.filter(t => t.stationId === stationId);
+  const visible = search
+    ? byStation.filter(t => t.brand.toLowerCase().includes(search.toLowerCase()) || t.category.toLowerCase().includes(search.toLowerCase()))
+    : byStation;
 
   return (
     <LandlordBackofficeLayout>
@@ -84,7 +109,12 @@ export default function LandlordTenantsPage() {
         <div className="px-6 py-4 border-b border-outline-variant/20 flex items-center gap-4">
           <div className="relative flex-1 max-w-64">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[16px]">search</span>
-            <input placeholder={T.searchPlaceholder} className="w-full bg-[#F5F2EB] rounded-full py-2 pl-9 pr-4 text-sm border-none outline-none" />
+            <input
+              placeholder={T.searchPlaceholder}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full bg-[#F5F2EB] rounded-full py-2 pl-9 pr-4 text-sm border-none outline-none"
+            />
           </div>
           <span className="text-xs text-on-surface-variant ml-auto">{T.tenantsShown(visible.length)}</span>
         </div>
@@ -117,9 +147,19 @@ export default function LandlordTenantsPage() {
                     <span className={`text-xs font-bold ${t.payHistory === "100%" ? "text-primary" : "text-amber-600"}`}>{t.payHistory}</span>
                   </td>
                   <td className="px-4 py-4">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_STYLE[t.status]}`}>
-                      {T.statusLabels[t.status]}
-                    </span>
+                    <div className="flex flex-col gap-1.5 items-start">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_STYLE[t.status]}`}>
+                        {T.statusLabels[t.status]}
+                      </span>
+                      {t.status === "expiring" && (
+                        <Link
+                          href="/landlord_backoffice/landlordApplicationsPage"
+                          className="text-[10px] font-semibold text-amber-700 underline no-underline hover:opacity-80"
+                        >
+                          {lang === "th" ? "ติดต่อต่อสัญญา" : "Initiate Renewal"}
+                        </Link>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -133,6 +173,16 @@ export default function LandlordTenantsPage() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* AI Suggestion */}
+      <div className="mt-6">
+        <AiSuggestionInline
+          role="landlord"
+          pageContext="Tenant Management"
+          dataContext={`Total tenants: ${visible.length} | Active: ${visible.filter(t => t.status === "active").length} | Expiring (60 days): ${visible.filter(t => t.status === "expiring").length} | Pending: ${visible.filter(t => t.status === "pending").length} | Expiring tenants: ${visible.filter(t => t.status === "expiring").map(t => `${t.brand} at ${t.station} (ends ${t.leaseEnd}, ฿${t.rent}/mo)`).join("; ") || "none"}`}
+          label="AI TENANT INSIGHT"
+        />
       </div>
     </LandlordBackofficeLayout>
   );

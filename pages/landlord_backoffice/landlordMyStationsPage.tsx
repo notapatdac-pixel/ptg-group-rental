@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
 import LandlordBackofficeLayout from "@/components/landlord_backoffice/LandlordBackofficeLayout";
-import { STATIONS_DATA } from "@/components/landlord_backoffice/stationsData";
 import Link from "next/link";
 import latphrao71Img from "@/components/image/station-ptg-latphrao71.png";
 import ramaIxImg from "@/components/image/station-ptg-ramaix.png";
+import bangnaImg from "@/components/image/station-ptg-bangna.png";
 import { useLanguage } from "@/lib/languageContext";
 import AiSuggestionInline from "@/components/shared/AiSuggestionInline";
 
 const STATION_IMAGES: Record<string, string> = {
-  "PTG Lat Phrao 71": latphrao71Img.src,
-  "PTG Sukhumvit 62": ramaIxImg.src,
+  "PTG Lat Phrao 71":    latphrao71Img.src,
+  "PTG Rama 9":          ramaIxImg.src,
+  "PTG Bang Na Complex": bangnaImg.src,
 };
 
 const STRINGS = {
@@ -29,11 +30,26 @@ const STRINGS = {
   },
 } as const;
 
-type DbStation = {
+type ApiStation = {
   id: string;
+  filterKey: string;
   name: string;
-  location_text: string;
-  station_units: { id: string; available: boolean }[];
+  location: string;
+  occupied: number;
+  total: number;
+};
+
+type StoreTypeFit = {
+  category: string;
+  categoryTh: string;
+  fitScore: number;
+  reason: string;
+  reasonTh: string;
+};
+
+type FitStation = {
+  name: string;
+  recommended: StoreTypeFit[];
 };
 
 type StationEntry = {
@@ -49,34 +65,47 @@ export default function LandlordMyStationsPage() {
   const { lang } = useLanguage();
   const T = STRINGS[lang];
 
-  const [stationEntries, setStationEntries] = useState<StationEntry[]>(
-    Object.values(STATIONS_DATA).map(st => ({
-      name: st.name,
-      location: st.location,
-      occupied: st.occupied,
-      total: st.total,
-      aiNote: st.aiNote,
-      aiNoteTh: st.aiNoteTh,
-    }))
-  );
+  const [stationEntries, setStationEntries] = useState<StationEntry[]>([]);
 
   useEffect(() => {
     async function loadStations() {
       try {
-        const res = await fetch("/api/stations");
-        if (res.ok) {
-          const data = await res.json() as DbStation[];
-          setStationEntries(
-            data.map(st => ({
+        // Occupancy from /api/stations; location-aware store-type fit (which
+        // store suits this station and WHY — what's nearby) from station-fit.
+        const [stationsRes, fitRes] = await Promise.all([
+          fetch("/api/stations"),
+          fetch("/api/landlord/station-fit?stationId=all"),
+        ]);
+        if (!stationsRes.ok) return;
+        const data = await stationsRes.json() as ApiStation[];
+        const fit = fitRes.ok ? (await fitRes.json() as { all?: FitStation[] }) : { all: [] };
+        const fitByName: Record<string, StoreTypeFit[]> = {};
+        for (const f of fit.all ?? []) fitByName[f.name] = f.recommended;
+
+        setStationEntries(
+          data.map(st => {
+            const recs = (fitByName[st.name] ?? []).slice(0, 2);
+            // Each reason already leads with the neighbourhood (e.g. "right by a
+            // university…"), so the AI suggestion explains which store to find
+            // for this station and WHY based on what's nearby.
+            const fitEn = recs.length
+              ? " Best-fit store types for this location: " +
+                recs.map(r => `${r.category} (${r.fitScore}% fit) — ${r.reason}`).join(" ")
+              : "";
+            const fitTh = recs.length
+              ? " ประเภทร้านที่เหมาะกับทำเลนี้: " +
+                recs.map(r => `${r.categoryTh} (เหมาะ ${r.fitScore}%) — ${r.reasonTh}`).join(" ")
+              : "";
+            return {
               name: st.name,
-              location: st.location_text,
-              occupied: st.station_units.filter(u => !u.available).length,
-              total: st.station_units.length,
-              aiNote: STATIONS_DATA[st.name]?.aiNote ?? "",
-              aiNoteTh: STATIONS_DATA[st.name]?.aiNoteTh ?? "",
-            }))
-          );
-        }
+              location: st.location,
+              occupied: st.occupied,
+              total: st.total,
+              aiNote: `${st.name}: ${st.occupied}/${st.total} units occupied at ${st.location}.${fitEn}`,
+              aiNoteTh: `${st.name}: ${st.occupied}/${st.total} ยูนิตถูกใช้งาน ที่ ${st.location}${fitTh}`,
+            };
+          })
+        );
       } catch {}
     }
     loadStations();
@@ -118,7 +147,7 @@ export default function LandlordMyStationsPage() {
                 <AiSuggestionInline
                   role="landlord"
                   pageContext={`My Stations — ${st.name}`}
-                  staticText={lang === "th" ? st.aiNoteTh : st.aiNote}
+                  dataContext={lang === "th" ? st.aiNoteTh : st.aiNote}
                   label={T.aiSuggestion}
                 />
               </div>

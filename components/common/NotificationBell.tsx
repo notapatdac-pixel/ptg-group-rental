@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { useAuth } from "@/lib/authContext";
 import {
   getNotifications,
+  getNotificationsAsync,
   markRead,
   markAllRead,
   timeAgo,
@@ -34,10 +35,19 @@ export default function NotificationBell() {
 
   const userType = user?.type === "landlord" ? "landlord" : "retailer";
 
+  // Sync read from localStorage cache (instant, for initial render)
   useEffect(() => {
     if (!user) return;
     setItems(getNotifications(userType));
   }, [user, tick, userType]);
+
+  // Async refresh from Supabase (source of truth)
+  useEffect(() => {
+    if (!user) return;
+    getNotificationsAsync(userType).then(fresh => {
+      setItems(fresh);
+    });
+  }, [user, userType]);
 
   useEffect(() => {
     function handler(e: MouseEvent) {

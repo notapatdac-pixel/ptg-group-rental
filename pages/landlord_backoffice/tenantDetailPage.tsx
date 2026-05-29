@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import LandlordBackofficeLayout from "@/components/landlord_backoffice/LandlordBackofficeLayout";
-import { getAppByLandlordId } from "@/lib/applicationsData";
+import DecisionSupportPanel from "@/components/landlord_backoffice/DecisionSupportPanel";
 import { getStoreImages } from "@/lib/storeImages";
 import { useLanguage } from "@/lib/languageContext";
 
@@ -35,6 +35,8 @@ const STRINGS = {
     notApproved: "Not Approved",
     approved: "Approved",
     pendingReview: "Pending Review",
+    loading: "Loading application from DB...",
+    notFound: "Application not found.",
     thbMo: "฿/mo",
   },
   th: {
@@ -64,11 +66,100 @@ const STRINGS = {
     notApproved: "ไม่ผ่านการอนุมัติ",
     approved: "อนุมัติแล้ว",
     pendingReview: "รอการพิจารณา",
+    loading: "กำลังโหลดใบสมัครจากฐานข้อมูล...",
+    notFound: "ไม่พบใบสมัคร",
     thbMo: "฿/เดือน",
   },
 } as const;
 
 type LandlordStatus = "pending" | "approved" | "declined";
+
+type ApiAppRow = {
+  id: string;
+  retailer_display_id: string;
+  landlord_display_id: string;
+  status: "pending_review" | "approved" | "not_approved";
+  ai_score: string;
+  ai_text: string;
+  ai_text_th: string;
+  est_revenue_thb: string;
+  panel_color: string;
+  applied_date: string;
+  specialist_name: string;
+  specialist_initials: string;
+  retailer_profiles: {
+    business_name: string;
+    category: string;
+    experience: string;
+    num_stores: string;
+    max_budget: string;
+    concept: string;
+    user_id: string;
+    users?: { name: string } | null;
+  } | null;
+  station_units: {
+    unit_code: string;
+    unit_label: string;
+    area_sqm: number;
+    price_thb: number;
+    lease_type: string;
+    stations: {
+      filter_key: string;
+      name: string;
+      location_text: string;
+    } | null;
+  } | null;
+};
+
+type ViewApp = {
+  retailerAppId: string;
+  landlordAppId: string;
+  storeName: string;
+  applicantName: string;
+  category: string;
+  experience: string;
+  numStores: string;
+  maxBudget: string;
+  concept: string;
+  stationName: string;
+  unitCode: string;
+  unitLabel: string;
+  leaseType: string;
+  price: number;
+  appliedDate: string;
+  aiText: string;
+  aiTextTh: string;
+  aiScore: string;
+  estRevenue: string;
+  panelColor: string;
+  status: ApiAppRow["status"];
+};
+
+function toView(row: ApiAppRow): ViewApp {
+  return {
+    retailerAppId:  row.retailer_display_id,
+    landlordAppId:  row.landlord_display_id,
+    storeName:      row.retailer_profiles?.business_name ?? "—",
+    applicantName:  row.retailer_profiles?.users?.name ?? "—",
+    category:       row.retailer_profiles?.category ?? "",
+    experience:     row.retailer_profiles?.experience ?? "—",
+    numStores:      row.retailer_profiles?.num_stores ?? "—",
+    maxBudget:      row.retailer_profiles?.max_budget ?? "—",
+    concept:        row.retailer_profiles?.concept ?? "",
+    stationName:    row.station_units?.stations?.name ?? "—",
+    unitCode:       row.station_units?.unit_code ?? "—",
+    unitLabel:      row.station_units?.unit_label ?? "",
+    leaseType:      row.station_units?.lease_type ?? "—",
+    price:          row.station_units?.price_thb ?? 0,
+    appliedDate:    row.applied_date,
+    aiText:         row.ai_text,
+    aiTextTh:       row.ai_text_th,
+    aiScore:        row.ai_score,
+    estRevenue:     row.est_revenue_thb,
+    panelColor:     row.panel_color || "#4a5568",
+    status:         row.status,
+  };
+}
 
 export default function TenantDetailPage() {
   const router  = useRouter();
@@ -76,32 +167,59 @@ export default function TenantDetailPage() {
   const T = STRINGS[lang];
 
   const appId = typeof router.query.appId === "string" ? router.query.appId : "";
-  const app = getAppByLandlordId(appId);
 
-  const [status, setStatus] = useState<LandlordStatus>("pending");
+  const [app,     setApp]     = useState<ViewApp | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [status,  setStatus]  = useState<LandlordStatus>("pending");
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
 
+  // Fetch the real application row from DB
   useEffect(() => {
-    if (!appId) return;
+    let cancelled = false;
+    if (!appId) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    fetch("/api/applications?role=landlord")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((rows: ApiAppRow[]) => {
+        if (cancelled) return;
+        const found = rows.find((r) => r.landlord_display_id === appId);
+        setApp(found ? toView(found) : null);
+      })
+      .catch(() => { if (!cancelled) setApp(null); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [appId]);
+
+  useEffect(() => {
+    if (!appId || !app) return;
     try {
       const raw = localStorage.getItem(`ptg_landlord_status_${appId}`);
       if (raw === "approved" || raw === "declined" || raw === "pending") setStatus(raw);
-      else if (app) {
-        if (app.retailerBadge === "APPROVED")     setStatus("approved");
-        if (app.retailerBadge === "NOT APPROVED") setStatus("declined");
-      }
+      else if (app.status === "approved")     setStatus("approved");
+      else if (app.status === "not_approved") setStatus("declined");
     } catch {}
     try {
-      if (app && localStorage.getItem(`ptg_booking_confirmed_${app.retailerAppId}`)) {
+      if (localStorage.getItem(`ptg_booking_confirmed_${app.retailerAppId}`)) {
         setBookingConfirmed(true);
       }
     } catch {}
   }, [appId, app]);
 
+  if (loading) {
+    return (
+      <LandlordBackofficeLayout>
+        <div className="py-16 text-center text-sm text-on-surface-variant">{T.loading}</div>
+      </LandlordBackofficeLayout>
+    );
+  }
+
   if (!app) {
     return (
       <LandlordBackofficeLayout>
-        <div className="py-16 text-center text-sm text-on-surface-variant">Application not found.</div>
+        <div className="py-16 text-center text-sm text-on-surface-variant">{T.notFound}</div>
       </LandlordBackofficeLayout>
     );
   }
@@ -135,11 +253,13 @@ export default function TenantDetailPage() {
       {/* Hero banner */}
       <div className="relative w-full h-52 rounded-2xl overflow-hidden mb-6" style={{ backgroundColor: app.panelColor }}>
         {storeImages.cover && (
+          // eslint-disable-next-line @next/next/no-img-element
           <img src={storeImages.cover} alt="cover" className="absolute inset-0 w-full h-full object-cover" />
         )}
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
         {storeImages.logo && (
           <div className="absolute bottom-6 left-6 w-16 h-16 rounded-xl overflow-hidden border-2 border-white/30">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={storeImages.logo} alt="logo" className="w-full h-full object-cover" />
           </div>
         )}
@@ -162,6 +282,12 @@ export default function TenantDetailPage() {
 
         {/* Left 2 cols — Business info */}
         <div className="col-span-2 space-y-5">
+
+          {/* AI Decision Support — only meaningful while a decision is pending
+              (an approved/declined tenant already has its unit leased). */}
+          {appId && status === "pending" && !bookingConfirmed && (
+            <DecisionSupportPanel appId={appId} lang={lang} />
+          )}
 
           {/* Business information */}
           <div className="bg-white rounded-2xl shadow-sm p-6">
@@ -196,6 +322,7 @@ export default function TenantDetailPage() {
               <div className="grid grid-cols-3 gap-3">
                 {storeImages.products!.filter(Boolean).map((src, i) => (
                   <div key={i} className="aspect-square rounded-xl overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={src} alt={`product ${i + 1}`} className="w-full h-full object-cover" />
                   </div>
                 ))}
@@ -213,9 +340,8 @@ export default function TenantDetailPage() {
             <div className="space-y-3">
               {[
                 { label: T.stationName,  value: app.stationName },
-                { label: T.unitCode,     value: `${app.unitCode} — ${app.unitLabel}` },
+                { label: T.unitCode,     value: `${app.unitCode}${app.unitLabel ? ` — ${app.unitLabel}` : ""}` },
                 { label: T.leaseType,    value: app.leaseType },
-                { label: T.duration,     value: app.duration },
                 { label: T.price,        value: `฿${app.price.toLocaleString()} /mo` },
                 { label: T.appliedDate,  value: app.appliedDate },
                 { label: T.aiScore,      value: app.aiScore },
@@ -232,7 +358,7 @@ export default function TenantDetailPage() {
             </div>
           </div>
 
-          {/* AI Business Summary */}
+          {/* AI Business Summary — real Gemini text from applications.ai_text/_th */}
           <div className="bg-[#D9EDD9] rounded-2xl p-5 shadow-sm">
             <div className="flex items-center gap-1.5 mb-3">
               <span className="material-symbols-outlined text-[16px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>

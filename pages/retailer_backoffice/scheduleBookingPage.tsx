@@ -1,15 +1,33 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import RetailerBackofficeLayout from "@/components/retailer_backoffice/RetailerBackofficeLayout";
 import { addNotification } from "@/lib/notificationStore";
-import { getAppByRetailerId, RETAILER_TO_LANDLORD } from "@/lib/applicationsData";
+import { useAuth } from "@/lib/authContext";
+import { supabase } from "@/lib/supabaseClient";
 
-const DAYS = [
-  { day: "Mon", date: "26" }, { day: "Tue", date: "27" }, { day: "Wed", date: "28" },
-  { day: "Thu", date: "29" }, { day: "Fri", date: "30" }, { day: "Sat", date: "31" },
-];
+// ── T5: Dynamic business days ─────────────────────────────────────────────────
+
+function getNextBusinessDays(count: number) {
+  const days: { day: string; date: string; month: string; fullDate: Date }[] = [];
+  const cursor = new Date();
+  cursor.setDate(cursor.getDate() + 1);
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  while (days.length < count) {
+    if (cursor.getDay() !== 0) {
+      days.push({
+        day: dayNames[cursor.getDay()],
+        date: String(cursor.getDate()),
+        month: cursor.toLocaleString("en-GB", { month: "short" }),
+        fullDate: new Date(cursor),
+      });
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return days;
+}
+
 const TIMES = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"];
 
 const DOCS = [
@@ -20,108 +38,240 @@ const DOCS = [
   { id: "d5", label: "Signed Letter of Intent (LOI)",            done: false },
 ];
 
-const SEED_MESSAGES = [
-  {
-    from: "specialist" as const, name: "Kanya S.", time: "09:14",
-    text: "Hi! I've reviewed your application and everything looks great — congratulations on the approval! When would you like to schedule your site walkthrough?",
-  },
-  {
-    from: "user" as const, name: "You", time: "09:28",
-    text: "Hi Kanya, thanks so much! I'm flexible Thursday or Friday this week — afternoon works best for me.",
-  },
-  {
-    from: "specialist" as const, name: "Kanya S.", time: "09:35",
-    text: "Perfect. I have Thursday 29th at 14:00 or 15:00, and Friday 30th at 10:00 available. Would any of those suit you?",
-  },
-];
-
 interface Message {
-  from: "specialist" | "user";
-  name: string;
-  time: string;
-  text: string;
+  id?:   string;
+  from:  "specialist" | "user";       // "user" = the retailer, "specialist" = landlord/PTG
+  name:  string;
+  time:  string;
+  text:  string;
 }
 
-export default function ScheduleBookingPage() {
-  const router   = useRouter();
-  const appId     = typeof router.query.appId === "string" ? router.query.appId : "PTG-APP-2025-8821";
-  const sharedApp = getAppByRetailerId(appId) ?? getAppByRetailerId("PTG-APP-2025-8821")!;
-  const appInfo   = {
-    stationName: sharedApp.stationName,
-    unit:        sharedApp.unitCode,
-    unitLabel:   sharedApp.unitLabel,
-    price:       `฿${sharedApp.price.toLocaleString()}`,
-    duration:    sharedApp.duration,
-    location:    sharedApp.location,
+// Convert a chat_messages row to our local Message view model
+function dbRowToMessage(row: {
+  id:             string;
+  sender_role:    string;
+  sender_name:    string;
+  content:        string;
+  created_at:     string;
+}, currentRole: "retailer" | "landlord"): Message {
+  const isMine = row.sender_role === currentRole;
+  const d = new Date(row.created_at);
+  return {
+    id:   row.id,
+    from: isMine ? "user" : "specialist",
+    name: isMine ? "You" : (row.sender_name || (row.sender_role === "landlord" ? "Landlord" : "PTG Specialist")),
+    time: `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`,
+    text: row.content,
   };
+}
 
-  const [selectedDate, setSelectedDate] = useState("29");
+// ── T2: DB application shape ──────────────────────────────────────────────────
+
+type DbApp = {
+  id: string;
+  retailer_display_id: string;
+  landlord_display_id: string;
+  status: string;
+  specialist_name: string;
+  specialist_initials: string;
+  retailer_profiles?: {
+    business_name: string;
+  } | null;
+  station_units?: {
+    unit_code: string;
+    unit_label: string;
+    price_thb: number;
+    stations?: { name: string; location_text: string } | null;
+  } | null;
+};
+
+export default function ScheduleBookingPage() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const appId  = typeof router.query.appId === "string" ? router.query.appId : "";
+
+  // T2: fetch from DB instead of hardcoded fallback
+  const [appData, setAppData] = useState<DbApp | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    async function load() {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/applications?role=retailer");
+        if (res.ok) {
+          const rows = (await res.json()) as DbApp[];
+          const match = appId ? rows.find(r => r.retailer_display_id === appId) : rows[0];
+          setAppData(match ?? null);
+        }
+      } catch {}
+      setLoading(false);
+    }
+    load();
+  }, [router.isReady, appId]);
+
+  // T5: compute business days at render time so the calendar refreshes daily
+  // (toDateString in deps means re-runs whenever the day changes between renders)
+  const DAYS = useMemo(() => getNextBusinessDays(6), [new Date().toDateString()]);
+  const [selectedDate, setSelectedDate] = useState(DAYS[0].date);
   const [selectedTime, setSelectedTime] = useState("14:00");
   const [confirmed, setConfirmed]       = useState(false);
-  const [messages, setMessages]         = useState<Message[]>(SEED_MESSAGES);
+  const [messages, setMessages]         = useState<Message[]>([]);
   const [draft, setDraft]               = useState("");
   const [docs, setDocs]                 = useState(DOCS);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // ── Chat: load existing messages from DB + subscribe to new ones ─────
+  const retailerAppId = appData?.retailer_display_id ?? "";
+  useEffect(() => {
+    if (!retailerAppId) return;
+    let cancelled = false;
+
+    async function loadChat() {
+      try {
+        const res = await fetch(`/api/chat/${retailerAppId}`);
+        if (!res.ok || cancelled) return;
+        const data = await res.json() as { messages: Array<{ id: string; sender_role: string; sender_name: string; content: string; created_at: string }> };
+        const mapped = data.messages.map(m => dbRowToMessage(m, "retailer"));
+        if (!cancelled) setMessages(mapped);
+      } catch {}
+    }
+    loadChat();
+
+    const channel = supabase
+      .channel(`chat-retailer-${retailerAppId}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages" }, () => {
+        // Refetch — payload doesn't carry the join to know if it belongs to
+        // this application without an extra lookup, and the API already
+        // filters by application_id, so just re-pull.
+        loadChat();
+      })
+      .subscribe();
+
+    return () => { cancelled = true; supabase.removeChannel(channel); };
+  }, [retailerAppId]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  function sendMessage() {
-    if (!draft.trim()) return;
+  // Derive appInfo from DB data
+  const stationName     = appData?.station_units?.stations?.name ?? "";
+  const unit            = appData?.station_units?.unit_code ?? "";
+  const unitLabel       = appData?.station_units?.unit_label ?? "";
+  const price           = appData?.station_units?.price_thb
+    ? `฿${appData.station_units.price_thb.toLocaleString()}`
+    : "";
+  const location        = appData?.station_units?.stations?.location_text ?? "";
+  const specialistName  = appData?.specialist_name ?? "Kanya Srisuk";
+  const specialistInitials = appData?.specialist_initials ?? "KS";
+  const storeName       = appData?.retailer_profiles?.business_name ?? "";
+
+  async function sendMessage() {
+    if (!draft.trim() || !retailerAppId) return;
+    const text = draft.trim();
+    setDraft("");
+    // Optimistic add — realtime will dedupe by re-loading on INSERT, which
+    // returns the canonical row. We push the optimistic one without an id
+    // so it gets replaced on reload.
     const now = new Date();
     setMessages(prev => [...prev, {
       from: "user", name: "You",
       time: `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`,
-      text: draft.trim(),
+      text,
     }]);
-    setDraft("");
-    setTimeout(() => {
-      setMessages(prev => [...prev, {
-        from: "specialist", name: "Kanya S.",
-        time: new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
-        text: "Thanks for confirming! I'll send you the final details and location pin shortly.",
-      }]);
-    }, 1800);
+    try {
+      await fetch(`/api/chat/${retailerAppId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          senderRole: "retailer",
+          senderName: user?.name ?? storeName ?? "You",
+          userId:     user?.id,
+          content:    text,
+        }),
+      });
+    } catch {/* optimistic message remains */}
   }
 
-  function handleConfirm() {
+  // T5: build full date label from DAYS entry
+  const selectedDayEntry = DAYS.find(d => d.date === selectedDate) ?? DAYS[0];
+  const fullDateLabel    = `${selectedDayEntry.date} ${selectedDayEntry.month} ${selectedDayEntry.fullDate.getFullYear()}`;
+  const shortDateLabel   = `${selectedDayEntry.day}, ${selectedDayEntry.date} ${selectedDayEntry.month}`;
+
+  // T5: derive month header from selected day
+  const monthHeader = selectedDayEntry.fullDate.toLocaleString("en-GB", { month: "long", year: "numeric" });
+
+  async function handleConfirm() {
+    const currentAppId = appData?.retailer_display_id ?? appId;
+    const isoDate      = selectedDayEntry.fullDate.toISOString().split("T")[0];
+
+    // Persist to the bookings table + landlord notification (server-side)
+    try {
+      await fetch("/api/bookings/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          appId:     currentAppId,
+          visitDate: isoDate,
+          visitTime: selectedTime,
+        }),
+      });
+    } catch {/* fall through to local-only behaviour */}
+
+    // Local cache so other pages (landlordApplicationsPage, landlordBookingDiscussionPage)
+    // detect the confirmation without re-querying.
     try {
       localStorage.setItem(
-        `ptg_booking_confirmed_${appId}`,
+        `ptg_booking_confirmed_${currentAppId}`,
         JSON.stringify({ date: selectedDate, time: selectedTime })
       );
     } catch {}
 
+    // Retailer's own notification (client-side; uses retailer's user_id)
     addNotification({
       type: "booking", userType: "retailer",
       title: "Walkthrough Scheduled",
-      body: `Your site visit at ${sharedApp.stationName} is confirmed for ${selectedDate} May at ${selectedTime}.`,
-      href: `/retailer_backoffice/bookingConfirmedPage?appId=${appId}&date=${selectedDate}&time=${selectedTime}`,
+      body: `Your site visit at ${stationName} is confirmed for ${fullDateLabel} at ${selectedTime}.`,
+      href: `/retailer_backoffice/bookingConfirmedPage?appId=${currentAppId}&date=${selectedDate}&time=${selectedTime}`,
       timestamp: new Date().toISOString(),
     });
 
-    const landlordAppId = RETAILER_TO_LANDLORD[appId];
-    if (landlordAppId) {
-      addNotification({
-        type: "booking", userType: "landlord",
-        title: "Walkthrough Confirmed by Tenant",
-        body: `${sharedApp.storeName} confirmed the walkthrough for ${selectedDate} May at ${selectedTime} at ${sharedApp.stationName}.`,
-        href: `/landlord_backoffice/landlordUpcomingBookingPage?appId=${landlordAppId}&date=${selectedDate}&time=${selectedTime}`,
-        timestamp: new Date().toISOString(),
-      });
-    }
-
     setConfirmed(true);
-    router.push(`/retailer_backoffice/bookingConfirmedPage?appId=${appId}&date=${selectedDate}&time=${selectedTime}`);
+    router.push(`/retailer_backoffice/bookingConfirmedPage?appId=${currentAppId}&date=${selectedDate}&time=${selectedTime}`);
   }
 
   function toggleDoc(id: string) {
     setDocs(prev => prev.map(d => d.id === id ? { ...d, done: !d.done } : d));
   }
 
-  const doneDocs  = docs.filter(d => d.done).length;
-  const dayLabel  = DAYS.find(d => d.date === selectedDate);
+  const doneDocs = docs.filter(d => d.done).length;
+
+  // Loading / error states
+  if (loading) {
+    return (
+      <RetailerBackofficeLayout>
+        <div className="flex items-center justify-center py-24 text-on-surface-variant text-sm">
+          Loading application…
+        </div>
+      </RetailerBackofficeLayout>
+    );
+  }
+
+  if (!appData) {
+    return (
+      <RetailerBackofficeLayout>
+        <div className="flex flex-col items-center justify-center py-24 gap-3">
+          <span className="material-symbols-outlined text-outline/30 text-[48px]">folder_open</span>
+          <p className="text-sm font-semibold text-on-surface-variant">Application not found.</p>
+          <Link href="/retailer_backoffice/myApplicationsPage" className="text-xs text-primary underline">
+            Back to My Applications
+          </Link>
+        </div>
+      </RetailerBackofficeLayout>
+    );
+  }
 
   return (
     <RetailerBackofficeLayout>
@@ -140,8 +290,8 @@ export default function ScheduleBookingPage() {
             <span className="material-symbols-outlined text-primary text-[20px]">store</span>
           </div>
           <div>
-            <div className="text-sm font-bold text-on-surface">{appInfo.stationName} · {appInfo.unit} — {appInfo.unitLabel}</div>
-            <div className="text-xs text-on-surface-variant">{appInfo.location} · {appInfo.price}/mo · {appInfo.duration}</div>
+            <div className="text-sm font-bold text-on-surface">{stationName} · {unit} — {unitLabel}</div>
+            <div className="text-xs text-on-surface-variant">{location} · {price}/mo</div>
           </div>
         </div>
         <span className="text-[10px] font-bold px-3 py-1.5 rounded-full bg-primary/10 text-primary">APPROVED</span>
@@ -154,24 +304,24 @@ export default function ScheduleBookingPage() {
         <div className="space-y-4">
           <div className="bg-white rounded-2xl p-5 shadow-sm">
             <h3 className="font-semibold text-on-surface mb-0.5">Book Site Walkthrough</h3>
-            <p className="text-xs text-on-surface-variant mb-4">Select a date and time for your visit to {appInfo.stationName}.</p>
+            <p className="text-xs text-on-surface-variant mb-4">Select a date and time for your visit to {stationName}.</p>
 
-            {/* Month */}
+            {/* Month — T5: dynamic */}
             <div className="flex items-center justify-between mb-3">
               <button type="button" className="text-on-surface-variant bg-transparent border-0 cursor-pointer">
                 <span className="material-symbols-outlined text-xl">chevron_left</span>
               </button>
-              <span className="text-sm font-semibold text-on-surface">May 2026</span>
+              <span className="text-sm font-semibold text-on-surface">{monthHeader}</span>
               <button type="button" className="text-on-surface-variant bg-transparent border-0 cursor-pointer">
                 <span className="material-symbols-outlined text-xl">chevron_right</span>
               </button>
             </div>
 
-            {/* Days */}
+            {/* Days — T5: dynamic */}
             <div className="grid grid-cols-6 gap-1 mb-4">
               {DAYS.map(d => (
                 <button
-                  key={d.date}
+                  key={d.date + d.month}
                   type="button"
                   onClick={() => setSelectedDate(d.date)}
                   className={`rounded-xl py-2 flex flex-col items-center gap-0.5 border-0 cursor-pointer transition-colors ${
@@ -201,14 +351,14 @@ export default function ScheduleBookingPage() {
               ))}
             </div>
 
-            {/* Selection summary */}
+            {/* Selection summary — T5: dynamic date */}
             <div className="bg-primary/5 rounded-xl p-3 mb-4 flex items-center gap-2.5">
               <span className="material-symbols-outlined text-primary text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>event</span>
               <div>
                 <div className="text-xs font-bold text-on-surface">
-                  {dayLabel?.day}, {dayLabel?.date} May 2026 · {selectedTime}
+                  {shortDateLabel} · {selectedTime}
                 </div>
-                <div className="text-[10px] text-on-surface-variant">{appInfo.stationName} · 1-hr walkthrough</div>
+                <div className="text-[10px] text-on-surface-variant">{stationName} · 1-hr walkthrough</div>
               </div>
             </div>
 
@@ -256,9 +406,9 @@ export default function ScheduleBookingPage() {
         <div className="col-span-2 bg-white rounded-2xl shadow-sm flex flex-col overflow-hidden" style={{ minHeight: "620px" }}>
           {/* Chat header */}
           <div className="flex items-center gap-3 px-5 py-4 border-b border-outline-variant/10">
-            <div className="w-9 h-9 bg-lime-400 rounded-full flex items-center justify-center text-[#1C3A1C] font-bold text-sm flex-shrink-0">{sharedApp.specialistInitials}</div>
+            <div className="w-9 h-9 bg-lime-400 rounded-full flex items-center justify-center text-[#1C3A1C] font-bold text-sm flex-shrink-0">{specialistInitials}</div>
             <div className="flex-1 min-w-0">
-              <div className="font-semibold text-sm text-on-surface">{sharedApp.specialistName} · PTG Leasing Specialist</div>
+              <div className="font-semibold text-sm text-on-surface">{specialistName} · PTG Leasing Specialist</div>
               <div className="text-xs text-on-surface-variant flex items-center gap-1">
                 <span className="w-1.5 h-1.5 bg-green-500 rounded-full inline-block" />
                 Online · responds within minutes
@@ -277,7 +427,7 @@ export default function ScheduleBookingPage() {
           {/* Info strip */}
           <div className="px-5 py-2.5 bg-primary/[0.04] border-b border-outline-variant/10 flex items-center gap-2">
             <span className="material-symbols-outlined text-primary text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
-            <span className="text-[10px] text-on-surface-variant">Messages are private between you and the PTG leasing team · Ref: {appId}</span>
+            <span className="text-[10px] text-on-surface-variant">Messages are private between you and the PTG leasing team · Ref: {appData.retailer_display_id}</span>
           </div>
 
           {/* Messages */}
@@ -285,7 +435,7 @@ export default function ScheduleBookingPage() {
             {messages.map((msg, i) => (
               <div key={i} className={`flex gap-3 ${msg.from === "user" ? "flex-row-reverse" : ""}`}>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${msg.from === "specialist" ? "bg-lime-400 text-[#1C3A1C]" : "bg-[#1C3A1C] text-white"}`}>
-                  {msg.from === "specialist" ? sharedApp.specialistInitials : "Me"}
+                  {msg.from === "specialist" ? specialistInitials : "Me"}
                 </div>
                 <div className={`max-w-[72%] flex flex-col ${msg.from === "user" ? "items-end" : "items-start"}`}>
                   <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.from === "user" ? "bg-[#1C3A1C] text-white rounded-tr-sm" : "bg-white text-on-surface rounded-tl-sm shadow-sm"}`}>

@@ -36,3 +36,6 @@ next-env.d.ts
 
 # cloned repos / local tools
 .claude/
+
+# internal project docs (kept local, not committed)
+/docs/

@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useAuth } from "@/lib/authContext";
 import { useLanguage } from "@/lib/languageContext";
-import { useStoreFilter, STORE_LIST } from "@/lib/storeFilterContext";
-import { useStationFilter, STATION_LIST } from "@/lib/stationFilterContext";
+import { useStoreFilter } from "@/lib/storeFilterContext";
+import { useStationFilter } from "@/lib/stationFilterContext";
 import NotificationBell from "@/components/common/NotificationBell";
 
 interface NavBarProps {
@@ -88,7 +88,7 @@ function ProfileMenu() {
 function StoreFilterPicker() {
   const { pathname } = useRouter();
   const { user } = useAuth();
-  const { storeId, setStoreId } = useStoreFilter();
+  const { storeId, setStoreId, stores } = useStoreFilter();
 
   if (!user || user.type !== "retailer" || !pathname.startsWith("/retailer_backoffice")) return null;
 
@@ -100,7 +100,7 @@ function StoreFilterPicker() {
         onChange={(e) => setStoreId(e.target.value as typeof storeId)}
         className="appearance-none bg-transparent text-xs font-semibold text-on-surface pr-5 border-none outline-none cursor-pointer"
       >
-        {STORE_LIST.map((s) => (
+        {stores.map((s) => (
           <option key={s.id} value={s.id}>{s.name}</option>
         ))}
       </select>
@@ -114,7 +114,7 @@ function StoreFilterPicker() {
 function StationFilterPicker() {
   const { pathname } = useRouter();
   const { user } = useAuth();
-  const { stationId, setStationId } = useStationFilter();
+  const { stationId, setStationId, stations } = useStationFilter();
 
   if (!user || user.type !== "landlord" || !pathname.startsWith("/landlord_backoffice")) return null;
 
@@ -126,7 +126,7 @@ function StationFilterPicker() {
         onChange={(e) => setStationId(e.target.value as typeof stationId)}
         className="appearance-none bg-transparent text-xs font-semibold text-on-surface pr-5 border-none outline-none cursor-pointer"
       >
-        {STATION_LIST.map((s) => (
+        {stations.map((s) => (
           <option key={s.id} value={s.id}>{s.name}</option>
         ))}
       </select>
