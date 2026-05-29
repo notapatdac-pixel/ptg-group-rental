@@ -84,6 +84,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   //       so the next application autofills the latest data.
   const profileUpdates: Record<string, string> = {};
   if (typeof businessName === "string" && businessName.trim()) profileUpdates.business_name = businessName.trim();
+  if (typeof contactName  === "string" && contactName.trim())  profileUpdates.owner_name     = contactName.trim();
   if (typeof category     === "string" && category.trim())     profileUpdates.category      = category.trim();
   if (typeof concept      === "string" && concept.trim())      profileUpdates.concept       = concept.trim();
   if (Object.keys(profileUpdates).length > 0) {

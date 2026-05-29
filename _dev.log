@@ -1,0 +1,25 @@
+
+> ptg-group-rental@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.5.18
+   - Local:        http://localhost:3000
+   - Network:      http://100.127.180.4:3000
+   - Environments: .env
+
+ ✓ Starting...
+(node:7064) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ Ready in 3.1s
+ ✓ Compiled /api/stations in 206ms (144 modules)
+ GET /api/stations 200 in 589ms
+ ✓ Compiled /api/retailer/apply in 237ms (148 modules)
+[geminiClient] served by gemini-2.5-flash
+[geminiClient] served by gemini-2.5-flash
+ POST /api/retailer/apply 201 in 15932ms
+ ✓ Compiled /api/applications in 120ms (151 modules)
+ GET /api/applications?role=landlord 200 in 219ms
+ GET /api/applications?role=landlord 200 in 131ms
+ ✓ Compiled /api/applications/[id]/status in 60ms (153 modules)
+ PATCH /api/applications/LAND-APP-2026-1393/status 200 in 362ms
+ GET /api/applications?role=landlord 200 in 80ms

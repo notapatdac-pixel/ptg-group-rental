@@ -78,12 +78,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Applicant person = the business's own contact, never the seed/landlord user.
     const contact = rp.owner_name ?? rp.users?.name ?? rp.business_name;
     rp.users = { name: contact ?? "" };
-    // Lumina's apps span several stores; show each store's own brand + category.
+    // Lumina's seeded storefronts span several stores; show each store's own
+    // brand + type — but ONLY for the stations that are actually configured
+    // Lumina stores. For a NEW application the demo account files at any other
+    // station, keep the real profile name (storeType="" → not a Lumina store,
+    // so storeBrand would otherwise return the raw "STN-xxx").
     if (row.retailer_profile_id === RETAILER_PROFILE_ID) {
       const displayId = row.station_units?.stations?.display_id;
-      if (displayId) {
-        rp.business_name = storeBrand(displayId);
-        rp.category = storeType(displayId) || rp.category;
+      const type = displayId ? storeType(displayId) : "";
+      if (type) {
+        rp.business_name = storeBrand(displayId!);
+        rp.category = type;
       }
     }
   }
