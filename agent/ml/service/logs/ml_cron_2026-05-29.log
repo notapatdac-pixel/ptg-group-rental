@@ -1,0 +1,716 @@
+2026-05-29 11:17:20,953 INFO httpx :: HTTP Request: POST https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/ml_run_logs "HTTP/2 201 Created"
+2026-05-29 11:17:20,954 INFO ml_cron :: ===== PTG ML cron run started (log_id=e4c4a295-615b-4d74-852c-5a3fad21409c) =====
+2026-05-29 11:17:29,339 INFO ptg_ml.load_models :: Loaded sales_revenue_xgb from sales_revenue_xgb.joblib
+2026-05-29 11:17:29,345 INFO ptg_ml.load_models :: Loaded sales_spend_xgb from sales_spend_xgb.joblib
+2026-05-29 11:17:29,346 INFO ptg_ml.load_models :: Loaded sales_spend_scaler from sales_spend_scaler.joblib
+2026-05-29 11:17:29,347 INFO ptg_ml.load_models :: Loaded le_store_type from le_store_type.joblib
+2026-05-29 11:17:29,349 INFO ptg_ml.load_models :: Loaded le_zone from le_zone.joblib
+2026-05-29 11:17:30,393 INFO ptg_ml.load_models :: Loaded churn_segment_rf from churn_segment_rf.joblib
+2026-05-29 11:17:30,394 INFO ptg_ml.load_models :: Loaded churn_scaler from churn_scaler.joblib
+2026-05-29 11:17:30,394 INFO ptg_ml.load_models :: Loaded churn_encoders from churn_encoders.joblib
+2026-05-29 11:17:30,395 INFO ptg_ml.load_models :: Loaded matching_lr from matching_lr.joblib
+2026-05-29 11:17:30,396 INFO ptg_ml.load_models :: Loaded matching_scaler from matching_scaler.joblib
+2026-05-29 11:17:30,397 INFO ptg_ml.load_models :: Loaded matching_segment_medians from matching_segment_medians.joblib
+2026-05-29 11:17:30,397 INFO ptg_ml.load_models :: Loaded matching_encoders from matching_encoders.joblib
+2026-05-29 11:17:30,428 INFO ptg_ml.load_models :: Loaded anomaly_isoforest from anomaly_isoforest.joblib
+2026-05-29 11:17:30,429 INFO ptg_ml.load_models :: Loaded anomaly_scaler from anomaly_scaler.joblib
+2026-05-29 11:17:30,429 INFO ml_cron :: Models loaded: 14
+2026-05-29 11:17:30,430 INFO ml_cron :: Running forecast...
+2026-05-29 11:17:30,606 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/store_monthly_pnl?select=%2A "HTTP/2 200 OK"
+2026-05-29 11:17:30,670 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/store_monthly_performance?select=%2A "HTTP/2 200 OK"
+2026-05-29 11:17:30,738 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/stations?select=%2A "HTTP/2 200 OK"
+2026-05-29 11:17:30,805 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/station_units?select=%2A "HTTP/2 200 OK"
+2026-05-29 11:17:30,866 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/station_monthly_metrics?select=%2A "HTTP/2 200 OK"
+2026-05-29 11:17:30,924 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/retailer_profiles?select=%2A "HTTP/2 200 OK"
+2026-05-29 11:17:30,986 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/applications?select=%2A "HTTP/2 200 OK"
+2026-05-29 11:17:30,995 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:30,995 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:30,995 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:30,995 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:30,995 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:30,995 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:30,995 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:30,995 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:30,995 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:30,995 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:30,995 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:30,995 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:30,996 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:30,996 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:30,996 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:30,996 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:30,996 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:30,996 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:30,996 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:30,996 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:30,996 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:30,996 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:30,996 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:30,996 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,021 INFO ml_cron :: forecast OK — rows_written=0 skipped=2
+2026-05-29 11:17:31,021 WARNING ml_cron ::   forecast note: 2 store(s) skipped — no application links them to a retailer profile.
+2026-05-29 11:17:31,021 INFO ml_cron :: Running churn...
+2026-05-29 11:17:31,088 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/store_customer_segments?select=%2A "HTTP/2 200 OK"
+2026-05-29 11:17:31,104 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,104 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,104 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,104 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,104 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,104 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,104 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,104 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,105 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,105 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,105 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,105 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,105 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,105 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,105 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,105 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,106 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,106 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,106 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,106 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,106 WARNING ptg_ml.supabase_io :: Unknown label '<200' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,106 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,107 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,107 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,247 INFO httpx :: HTTP Request: POST https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/ml_churn_segments?on_conflict=store_id%2Cage_group%2Cspend_range&columns=%22revenue_at_risk_annual%22%2C%22recommended_action%22%2C%22n_monthly_customers%22%2C%22avg_risk_prob_pct%22%2C%22spend_range%22%2C%22risk_level%22%2C%22model_version%22%2C%22store_id%22%2C%22age_group%22 "HTTP/2 200 OK"
+2026-05-29 11:17:31,248 INFO ml_cron :: churn OK — rows_written=8 skipped=0
+2026-05-29 11:17:31,248 INFO ml_cron :: Running matching...
+2026-05-29 11:17:31,248 WARNING ptg_ml.supabase_io :: Unknown label 'Cafe & Roastery' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,249 WARNING ptg_ml.supabase_io :: Unknown label 'high' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,249 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,249 WARNING ptg_ml.supabase_io :: Unknown label 'high' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,249 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,249 WARNING ptg_ml.supabase_io :: Unknown label 'medium' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,249 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,249 WARNING ptg_ml.supabase_io :: Unknown label 'medium' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,249 WARNING ptg_ml.supabase_io :: Unknown label 'Samut Prakan' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,249 WARNING ptg_ml.supabase_io :: Unknown label 'high' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,249 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,249 WARNING ptg_ml.supabase_io :: Unknown label 'medium' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,249 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 11:17:31,252 WARNING ptg_ml.matching_score :: Could not apply segment medians: cannot insert store_type_enc, already exists — falling back to column median.
+2026-05-29 11:17:31,328 INFO httpx :: HTTP Request: POST https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/ml_matching_scores?on_conflict=retailer_id%2Cstation_id&columns=%22estimated_earn_low_thb%22%2C%22is_cold_start%22%2C%22match_label%22%2C%22model_version%22%2C%22estimated_earn_high_thb%22%2C%22retailer_id%22%2C%22match_pct%22%2C%22station_id%22%2C%22match_score%22 "HTTP/2 200 OK"
+2026-05-29 11:17:31,329 INFO ml_cron :: matching OK — rows_written=6 skipped=0
+2026-05-29 11:17:31,329 INFO ml_cron :: Running anomaly...
+2026-05-29 11:17:31,431 INFO httpx :: HTTP Request: POST https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/ml_anomaly_alerts?on_conflict=store_id%2Cperiod&columns=%22pct_deviation%22%2C%22severity%22%2C%22period%22%2C%22direction%22%2C%22suggested_action%22%2C%22anomaly_score%22%2C%22is_anomaly%22%2C%22model_version%22%2C%22store_id%22%2C%22anomaly_dimension%22 "HTTP/2 200 OK"
+2026-05-29 11:17:31,432 INFO ml_cron :: anomaly OK — rows_written=8 skipped=0
+2026-05-29 11:17:31,511 INFO httpx :: HTTP Request: PATCH https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/ml_run_logs?id=eq.e4c4a295-615b-4d74-852c-5a3fad21409c "HTTP/2 200 OK"
+2026-05-29 11:17:31,512 INFO ml_cron :: ===== Done — 22 rows written in 10.5s, 0 errors =====
+2026-05-29 23:24:54,458 INFO httpx :: HTTP Request: POST https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/ml_run_logs "HTTP/2 201 Created"
+2026-05-29 23:24:54,460 INFO ml_cron :: ===== PTG ML cron run started (log_id=e6944425-057b-4839-a3ed-8e79d87c4cfb) =====
+2026-05-29 23:25:01,051 INFO ptg_ml.load_models :: Loaded sales_revenue_xgb from sales_revenue_xgb.joblib
+2026-05-29 23:25:01,057 INFO ptg_ml.load_models :: Loaded sales_spend_xgb from sales_spend_xgb.joblib
+2026-05-29 23:25:01,058 INFO ptg_ml.load_models :: Loaded sales_spend_scaler from sales_spend_scaler.joblib
+2026-05-29 23:25:01,059 INFO ptg_ml.load_models :: Loaded le_store_type from le_store_type.joblib
+2026-05-29 23:25:01,060 INFO ptg_ml.load_models :: Loaded le_zone from le_zone.joblib
+2026-05-29 23:25:02,016 INFO ptg_ml.load_models :: Loaded churn_segment_rf from churn_segment_rf.joblib
+2026-05-29 23:25:02,016 INFO ptg_ml.load_models :: Loaded churn_scaler from churn_scaler.joblib
+2026-05-29 23:25:02,017 INFO ptg_ml.load_models :: Loaded churn_encoders from churn_encoders.joblib
+2026-05-29 23:25:02,017 INFO ptg_ml.load_models :: Loaded matching_lr from matching_lr.joblib
+2026-05-29 23:25:02,018 INFO ptg_ml.load_models :: Loaded matching_scaler from matching_scaler.joblib
+2026-05-29 23:25:02,019 INFO ptg_ml.load_models :: Loaded matching_segment_medians from matching_segment_medians.joblib
+2026-05-29 23:25:02,019 INFO ptg_ml.load_models :: Loaded matching_encoders from matching_encoders.joblib
+2026-05-29 23:25:02,055 INFO ptg_ml.load_models :: Loaded anomaly_isoforest from anomaly_isoforest.joblib
+2026-05-29 23:25:02,055 INFO ptg_ml.load_models :: Loaded anomaly_scaler from anomaly_scaler.joblib
+2026-05-29 23:25:02,056 INFO ml_cron :: Models loaded: 14
+2026-05-29 23:25:02,056 INFO ml_cron :: Running forecast...
+2026-05-29 23:25:02,434 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/store_monthly_pnl?select=%2A "HTTP/2 200 OK"
+2026-05-29 23:25:02,528 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/store_monthly_performance?select=%2A "HTTP/2 200 OK"
+2026-05-29 23:25:02,640 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/stations?select=%2A "HTTP/2 200 OK"
+2026-05-29 23:25:02,733 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/station_units?select=%2A "HTTP/2 200 OK"
+2026-05-29 23:25:02,828 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/station_monthly_metrics?select=%2A "HTTP/2 200 OK"
+2026-05-29 23:25:02,923 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/retailer_profiles?select=%2A "HTTP/2 200 OK"
+2026-05-29 23:25:03,009 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/applications?select=%2A "HTTP/2 200 OK"
+2026-05-29 23:25:03,019 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,019 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,019 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,019 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,019 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,019 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,019 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,020 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,020 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,020 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,020 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,020 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,020 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,020 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,020 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,020 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,020 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,020 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,020 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,020 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,020 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,020 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,020 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,020 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,020 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,020 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,020 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,021 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,021 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,021 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,021 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,021 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,021 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,021 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,021 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,021 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,021 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,021 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,021 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,021 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,021 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,021 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,021 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,021 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,021 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,021 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,021 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,021 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,021 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,021 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,022 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,022 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,022 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,022 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,022 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,022 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,052 INFO ml_cron :: forecast OK — rows_written=0 skipped=4
+2026-05-29 23:25:03,052 WARNING ml_cron ::   forecast note: 4 store(s) skipped — no application links them to a retailer profile.
+2026-05-29 23:25:03,053 INFO ml_cron :: Running churn...
+2026-05-29 23:25:03,150 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/store_customer_segments?select=%2A "HTTP/2 200 OK"
+2026-05-29 23:25:03,161 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,161 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,162 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,163 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,164 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,164 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,164 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,164 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,164 WARNING ptg_ml.supabase_io :: Unknown label '<200' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,164 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,164 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,164 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,164 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,164 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,164 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,164 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,164 WARNING ptg_ml.supabase_io :: Unknown label '<200' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,164 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,164 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,164 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,164 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,164 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,164 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,164 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,164 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,164 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,164 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,164 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,164 WARNING ptg_ml.supabase_io :: Unknown label '<200' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,165 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,165 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,165 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,165 WARNING ptg_ml.supabase_io :: Unknown label '<200' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,165 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,165 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,165 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,332 INFO httpx :: HTTP Request: POST https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/ml_churn_segments?on_conflict=store_id%2Cage_group%2Cspend_range&columns=%22avg_risk_prob_pct%22%2C%22store_id%22%2C%22revenue_at_risk_annual%22%2C%22recommended_action%22%2C%22spend_range%22%2C%22age_group%22%2C%22risk_level%22%2C%22model_version%22%2C%22n_monthly_customers%22 "HTTP/2 201 Created"
+2026-05-29 23:25:03,333 INFO ml_cron :: churn OK — rows_written=16 skipped=0
+2026-05-29 23:25:03,333 INFO ml_cron :: Running matching...
+2026-05-29 23:25:03,333 WARNING ptg_ml.supabase_io :: Unknown label 'Coffee & Beverages' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,334 WARNING ptg_ml.supabase_io :: Unknown label 'high' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,334 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,334 WARNING ptg_ml.supabase_io :: Unknown label 'high' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,334 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,334 WARNING ptg_ml.supabase_io :: Unknown label 'medium' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,334 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,334 WARNING ptg_ml.supabase_io :: Unknown label 'medium' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,334 WARNING ptg_ml.supabase_io :: Unknown label 'Samut Prakan' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,334 WARNING ptg_ml.supabase_io :: Unknown label 'high' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,334 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,334 WARNING ptg_ml.supabase_io :: Unknown label 'medium' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,334 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:25:03,338 WARNING ptg_ml.matching_score :: Could not apply segment medians: cannot insert store_type_enc, already exists — falling back to column median.
+2026-05-29 23:25:03,416 INFO httpx :: HTTP Request: POST https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/ml_matching_scores?on_conflict=retailer_id%2Cstation_id&columns=%22station_id%22%2C%22estimated_earn_high_thb%22%2C%22is_cold_start%22%2C%22match_score%22%2C%22match_label%22%2C%22match_pct%22%2C%22model_version%22%2C%22estimated_earn_low_thb%22%2C%22retailer_id%22 "HTTP/2 200 OK"
+2026-05-29 23:25:03,417 INFO ml_cron :: matching OK — rows_written=6 skipped=0
+2026-05-29 23:25:03,417 INFO ml_cron :: Running anomaly...
+2026-05-29 23:25:03,536 INFO httpx :: HTTP Request: POST https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/ml_anomaly_alerts?on_conflict=store_id%2Cperiod&columns=%22direction%22%2C%22period%22%2C%22store_id%22%2C%22is_anomaly%22%2C%22severity%22%2C%22suggested_action%22%2C%22anomaly_dimension%22%2C%22model_version%22%2C%22pct_deviation%22%2C%22anomaly_score%22 "HTTP/2 201 Created"
+2026-05-29 23:25:03,538 INFO ml_cron :: anomaly OK — rows_written=20 skipped=0
+2026-05-29 23:25:03,624 INFO httpx :: HTTP Request: PATCH https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/ml_run_logs?id=eq.e6944425-057b-4839-a3ed-8e79d87c4cfb "HTTP/2 200 OK"
+2026-05-29 23:25:03,625 INFO ml_cron :: ===== Done — 42 rows written in 9.1s, 0 errors =====
+2026-05-29 23:27:09,045 INFO httpx :: HTTP Request: POST https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/ml_run_logs "HTTP/2 201 Created"
+2026-05-29 23:27:09,047 INFO ml_cron :: ===== PTG ML cron run started (log_id=bf15e1d9-83fd-4e86-84ce-bd1d8d9c7755) =====
+2026-05-29 23:27:09,804 INFO ptg_ml.load_models :: Loaded sales_revenue_xgb from sales_revenue_xgb.joblib
+2026-05-29 23:27:09,807 INFO ptg_ml.load_models :: Loaded sales_spend_xgb from sales_spend_xgb.joblib
+2026-05-29 23:27:09,808 INFO ptg_ml.load_models :: Loaded sales_spend_scaler from sales_spend_scaler.joblib
+2026-05-29 23:27:09,809 INFO ptg_ml.load_models :: Loaded le_store_type from le_store_type.joblib
+2026-05-29 23:27:09,810 INFO ptg_ml.load_models :: Loaded le_zone from le_zone.joblib
+2026-05-29 23:27:09,942 INFO ptg_ml.load_models :: Loaded churn_segment_rf from churn_segment_rf.joblib
+2026-05-29 23:27:09,943 INFO ptg_ml.load_models :: Loaded churn_scaler from churn_scaler.joblib
+2026-05-29 23:27:09,944 INFO ptg_ml.load_models :: Loaded churn_encoders from churn_encoders.joblib
+2026-05-29 23:27:09,944 INFO ptg_ml.load_models :: Loaded matching_lr from matching_lr.joblib
+2026-05-29 23:27:09,945 INFO ptg_ml.load_models :: Loaded matching_scaler from matching_scaler.joblib
+2026-05-29 23:27:09,945 INFO ptg_ml.load_models :: Loaded matching_segment_medians from matching_segment_medians.joblib
+2026-05-29 23:27:09,946 INFO ptg_ml.load_models :: Loaded matching_encoders from matching_encoders.joblib
+2026-05-29 23:27:09,976 INFO ptg_ml.load_models :: Loaded anomaly_isoforest from anomaly_isoforest.joblib
+2026-05-29 23:27:09,977 INFO ptg_ml.load_models :: Loaded anomaly_scaler from anomaly_scaler.joblib
+2026-05-29 23:27:09,977 INFO ml_cron :: Models loaded: 14
+2026-05-29 23:27:09,978 INFO ml_cron :: Running forecast...
+2026-05-29 23:27:10,100 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/store_monthly_pnl?select=%2A "HTTP/2 200 OK"
+2026-05-29 23:27:10,178 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/store_monthly_performance?select=%2A "HTTP/2 200 OK"
+2026-05-29 23:27:10,258 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/stations?select=%2A "HTTP/2 200 OK"
+2026-05-29 23:27:10,337 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/station_units?select=%2A "HTTP/2 200 OK"
+2026-05-29 23:27:10,417 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/station_monthly_metrics?select=%2A "HTTP/2 200 OK"
+2026-05-29 23:27:10,546 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/retailer_profiles?select=%2A "HTTP/2 200 OK"
+2026-05-29 23:27:10,628 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/applications?select=%2A "HTTP/2 200 OK"
+2026-05-29 23:27:10,636 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,636 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,637 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,637 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,637 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,637 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,637 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,637 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,637 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,637 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,637 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,638 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,638 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,638 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,638 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,638 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,638 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,638 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,638 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,638 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,638 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,638 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,638 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,638 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,638 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,638 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,638 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,638 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,638 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,638 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,639 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,639 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,639 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,639 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,639 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,639 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,639 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,639 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,639 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,639 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,639 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,639 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,639 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,639 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,639 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,639 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,639 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,639 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,639 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,639 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,639 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,639 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,639 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,639 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,639 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,639 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,648 INFO ml_cron :: forecast OK — rows_written=0 skipped=4
+2026-05-29 23:27:10,649 WARNING ml_cron ::   forecast note: 4 store(s) skipped — no application links them to a retailer profile.
+2026-05-29 23:27:10,649 INFO ml_cron :: Running churn...
+2026-05-29 23:27:10,781 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/store_customer_segments?select=%2A "HTTP/2 200 OK"
+2026-05-29 23:27:10,792 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,792 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,792 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,792 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,792 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,792 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,792 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,792 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,792 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,792 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,792 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,792 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,792 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,792 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,792 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,792 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,792 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,792 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,792 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,792 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,792 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,792 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,792 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,792 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,792 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,792 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,793 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label '<200' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label '<200' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,794 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,795 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,795 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,795 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,795 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,795 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,795 WARNING ptg_ml.supabase_io :: Unknown label '<200' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,795 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,795 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,795 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,795 WARNING ptg_ml.supabase_io :: Unknown label '<200' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,795 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,795 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,795 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,948 INFO httpx :: HTTP Request: POST https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/ml_churn_segments?on_conflict=store_id%2Cage_group%2Cspend_range&columns=%22store_id%22%2C%22avg_risk_prob_pct%22%2C%22spend_range%22%2C%22model_version%22%2C%22age_group%22%2C%22recommended_action%22%2C%22revenue_at_risk_annual%22%2C%22risk_level%22%2C%22n_monthly_customers%22 "HTTP/2 200 OK"
+2026-05-29 23:27:10,949 INFO ml_cron :: churn OK — rows_written=16 skipped=0
+2026-05-29 23:27:10,949 INFO ml_cron :: Running matching...
+2026-05-29 23:27:10,949 WARNING ptg_ml.supabase_io :: Unknown label 'Coffee & Beverages' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,950 WARNING ptg_ml.supabase_io :: Unknown label 'high' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,950 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,950 WARNING ptg_ml.supabase_io :: Unknown label 'high' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,950 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,950 WARNING ptg_ml.supabase_io :: Unknown label 'medium' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,950 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,950 WARNING ptg_ml.supabase_io :: Unknown label 'medium' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,950 WARNING ptg_ml.supabase_io :: Unknown label 'Samut Prakan' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,950 WARNING ptg_ml.supabase_io :: Unknown label 'high' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,950 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,951 WARNING ptg_ml.supabase_io :: Unknown label 'medium' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,951 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 23:27:10,953 WARNING ptg_ml.matching_score :: Could not apply segment medians: cannot insert store_type_enc, already exists — falling back to column median.
+2026-05-29 23:27:11,024 INFO httpx :: HTTP Request: POST https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/ml_matching_scores?on_conflict=retailer_id%2Cstation_id&columns=%22match_pct%22%2C%22match_score%22%2C%22estimated_earn_low_thb%22%2C%22estimated_earn_high_thb%22%2C%22retailer_id%22%2C%22station_id%22%2C%22model_version%22%2C%22is_cold_start%22%2C%22match_label%22 "HTTP/2 200 OK"
+2026-05-29 23:27:11,025 INFO ml_cron :: matching OK — rows_written=6 skipped=0
+2026-05-29 23:27:11,025 INFO ml_cron :: Running anomaly...
+2026-05-29 23:27:11,158 INFO httpx :: HTTP Request: POST https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/ml_anomaly_alerts?on_conflict=store_id%2Cperiod&columns=%22store_id%22%2C%22pct_deviation%22%2C%22anomaly_score%22%2C%22direction%22%2C%22model_version%22%2C%22period%22%2C%22is_anomaly%22%2C%22suggested_action%22%2C%22severity%22%2C%22anomaly_dimension%22 "HTTP/2 200 OK"
+2026-05-29 23:27:11,159 INFO ml_cron :: anomaly OK — rows_written=20 skipped=0
+2026-05-29 23:27:11,235 INFO httpx :: HTTP Request: PATCH https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/ml_run_logs?id=eq.bf15e1d9-83fd-4e86-84ce-bd1d8d9c7755 "HTTP/2 200 OK"
+2026-05-29 23:27:11,235 INFO ml_cron :: ===== Done — 42 rows written in 2.1s, 0 errors =====
+2026-05-30 00:05:04,541 INFO httpx :: HTTP Request: POST https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/ml_run_logs "HTTP/2 201 Created"
+2026-05-30 00:05:04,542 INFO ml_cron :: ===== PTG ML cron run started (log_id=5c6b113e-c668-423a-b71d-9dcdc4840680) =====
+2026-05-30 00:05:07,423 INFO ptg_ml.load_models :: Loaded sales_revenue_xgb from sales_revenue_xgb.joblib
+2026-05-30 00:05:07,428 INFO ptg_ml.load_models :: Loaded sales_spend_xgb from sales_spend_xgb.joblib
+2026-05-30 00:05:07,430 INFO ptg_ml.load_models :: Loaded sales_spend_scaler from sales_spend_scaler.joblib
+2026-05-30 00:05:07,430 INFO ptg_ml.load_models :: Loaded le_store_type from le_store_type.joblib
+2026-05-30 00:05:07,431 INFO ptg_ml.load_models :: Loaded le_zone from le_zone.joblib
+2026-05-30 00:05:07,864 INFO ptg_ml.load_models :: Loaded churn_segment_rf from churn_segment_rf.joblib
+2026-05-30 00:05:07,865 INFO ptg_ml.load_models :: Loaded churn_scaler from churn_scaler.joblib
+2026-05-30 00:05:07,866 INFO ptg_ml.load_models :: Loaded churn_encoders from churn_encoders.joblib
+2026-05-30 00:05:07,866 INFO ptg_ml.load_models :: Loaded matching_lr from matching_lr.joblib
+2026-05-30 00:05:07,867 INFO ptg_ml.load_models :: Loaded matching_scaler from matching_scaler.joblib
+2026-05-30 00:05:07,868 INFO ptg_ml.load_models :: Loaded matching_segment_medians from matching_segment_medians.joblib
+2026-05-30 00:05:07,868 INFO ptg_ml.load_models :: Loaded matching_encoders from matching_encoders.joblib
+2026-05-30 00:05:07,920 INFO ptg_ml.load_models :: Loaded anomaly_isoforest from anomaly_isoforest.joblib
+2026-05-30 00:05:07,921 INFO ptg_ml.load_models :: Loaded anomaly_scaler from anomaly_scaler.joblib
+2026-05-30 00:05:07,921 INFO ml_cron :: Models loaded: 14
+2026-05-30 00:05:07,922 INFO ml_cron :: Running forecast...
+2026-05-30 00:05:07,982 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/store_monthly_pnl?select=%2A "HTTP/2 200 OK"
+2026-05-30 00:05:08,041 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/store_monthly_performance?select=%2A "HTTP/2 200 OK"
+2026-05-30 00:05:08,097 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/stations?select=%2A "HTTP/2 200 OK"
+2026-05-30 00:05:08,156 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/station_units?select=%2A "HTTP/2 200 OK"
+2026-05-30 00:05:08,214 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/station_monthly_metrics?select=%2A "HTTP/2 200 OK"
+2026-05-30 00:05:08,276 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/retailer_profiles?select=%2A "HTTP/2 200 OK"
+2026-05-30 00:05:08,342 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/applications?select=%2A "HTTP/2 200 OK"
+2026-05-30 00:05:08,358 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,358 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,358 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,358 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,359 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,359 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,359 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,359 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,359 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,359 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,359 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,359 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,359 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,360 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,360 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,360 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,360 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,360 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,360 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,360 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,360 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,360 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,360 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,360 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,360 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,360 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,361 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,361 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,361 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,361 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,361 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,361 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,361 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,361 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,362 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,362 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,362 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,362 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,362 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,362 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,362 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,362 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,362 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,362 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,362 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,362 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,362 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,363 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,363 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,363 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,363 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,363 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,363 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,363 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,363 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,363 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,454 INFO httpx :: HTTP Request: POST https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/ml_sales_forecasts?on_conflict=store_id%2Cforecast_period&columns=%22predicted_quarterly_thb%22%2C%22quarterly_lower_thb%22%2C%22predicted_revenue_thb%22%2C%22forecast_upper_thb%22%2C%22pct_change_spend_vs_last%22%2C%22pct_change_vs_last%22%2C%22predicted_avg_spend_thb%22%2C%22retailer_id%22%2C%22store_id%22%2C%22forecast_period%22%2C%22confidence_pct%22%2C%22is_cold_start%22%2C%22trained_on_period%22%2C%22forecast_lower_thb%22%2C%22station_id%22%2C%22model_version%22%2C%22quarterly_upper_thb%22 "HTTP/2 201 Created"
+2026-05-30 00:05:08,456 INFO ml_cron :: forecast OK — rows_written=4 skipped=0
+2026-05-30 00:05:08,456 INFO ml_cron :: Running churn...
+2026-05-30 00:05:08,523 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/store_customer_segments?select=%2A "HTTP/2 200 OK"
+2026-05-30 00:05:08,535 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,535 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,536 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,536 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,536 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,536 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,536 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,536 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,537 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,537 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,537 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,537 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,537 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,537 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,538 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,538 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,538 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,538 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,538 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,538 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,539 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,539 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,539 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,539 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,539 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,539 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,539 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,539 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,540 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,540 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,540 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,540 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,540 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,541 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,541 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,541 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,541 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,541 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,541 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,541 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,541 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,542 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,542 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,542 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,542 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,542 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,542 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,542 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,542 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,543 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,543 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,543 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,543 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,543 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,543 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,543 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,543 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,544 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,544 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,544 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,544 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,544 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,544 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,545 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,545 WARNING ptg_ml.supabase_io :: Unknown label '<200' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,545 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,545 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,545 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,545 WARNING ptg_ml.supabase_io :: Unknown label '<200' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,546 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,546 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,546 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,546 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,546 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,546 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,547 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,547 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,547 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,547 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,547 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,547 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,548 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,548 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,548 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,548 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,548 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,548 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,549 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,549 WARNING ptg_ml.supabase_io :: Unknown label '<200' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,549 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,549 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,549 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,549 WARNING ptg_ml.supabase_io :: Unknown label '<200' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,550 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,550 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,550 WARNING ptg_ml.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,695 INFO httpx :: HTTP Request: POST https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/ml_churn_segments?on_conflict=store_id%2Cage_group%2Cspend_range&columns=%22recommended_action%22%2C%22store_id%22%2C%22n_monthly_customers%22%2C%22age_group%22%2C%22risk_level%22%2C%22spend_range%22%2C%22avg_risk_prob_pct%22%2C%22model_version%22%2C%22revenue_at_risk_annual%22 "HTTP/2 200 OK"
+2026-05-30 00:05:08,696 INFO ml_cron :: churn OK — rows_written=16 skipped=0
+2026-05-30 00:05:08,696 INFO ml_cron :: Running matching...
+2026-05-30 00:05:08,696 WARNING ptg_ml.supabase_io :: Unknown label 'Multi-format F&B & Retail' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,697 WARNING ptg_ml.supabase_io :: Unknown label 'high' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,697 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,697 WARNING ptg_ml.supabase_io :: Unknown label 'high' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,698 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,698 WARNING ptg_ml.supabase_io :: Unknown label 'medium' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,698 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,698 WARNING ptg_ml.supabase_io :: Unknown label 'medium' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,698 WARNING ptg_ml.supabase_io :: Unknown label 'Samut Prakan' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,698 WARNING ptg_ml.supabase_io :: Unknown label 'high' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,699 WARNING ptg_ml.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,699 WARNING ptg_ml.supabase_io :: Unknown label 'medium' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,699 WARNING ptg_ml.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-30 00:05:08,702 WARNING ptg_ml.matching_score :: Could not apply segment medians: cannot insert store_type_enc, already exists — falling back to column median.
+2026-05-30 00:05:08,776 INFO httpx :: HTTP Request: POST https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/ml_matching_scores?on_conflict=retailer_id%2Cstation_id&columns=%22match_score%22%2C%22retailer_id%22%2C%22estimated_earn_low_thb%22%2C%22estimated_earn_high_thb%22%2C%22match_pct%22%2C%22model_version%22%2C%22station_id%22%2C%22match_label%22%2C%22is_cold_start%22 "HTTP/2 200 OK"
+2026-05-30 00:05:08,777 INFO ml_cron :: matching OK — rows_written=6 skipped=0
+2026-05-30 00:05:08,777 INFO ml_cron :: Running anomaly...
+2026-05-30 00:05:08,884 INFO httpx :: HTTP Request: POST https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/ml_anomaly_alerts?on_conflict=store_id%2Cperiod&columns=%22is_anomaly%22%2C%22direction%22%2C%22anomaly_dimension%22%2C%22suggested_action%22%2C%22anomaly_score%22%2C%22store_id%22%2C%22period%22%2C%22model_version%22%2C%22severity%22%2C%22pct_deviation%22 "HTTP/2 201 Created"
+2026-05-30 00:05:08,886 INFO ml_cron :: anomaly OK — rows_written=20 skipped=0
+2026-05-30 00:05:08,953 INFO httpx :: HTTP Request: PATCH https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/ml_run_logs?id=eq.5c6b113e-c668-423a-b71d-9dcdc4840680 "HTTP/2 200 OK"
+2026-05-30 00:05:08,953 INFO ml_cron :: ===== Done — 46 rows written in 4.3s, 0 errors =====

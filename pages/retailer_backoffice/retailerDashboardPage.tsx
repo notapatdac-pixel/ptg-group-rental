@@ -1,18 +1,12 @@
+import { useState, useEffect, useMemo } from "react";
 import { useLanguage } from "@/lib/languageContext";
 import { useStoreFilter } from "@/lib/storeFilterContext";
 import RetailerBackofficeLayout from "@/components/retailer_backoffice/RetailerBackofficeLayout";
+import AiSuggestionInline from "@/components/shared/AiSuggestionInline";
+import type { MlApiResponse } from "@/agent/ml/mlTypes";
+import { STORE_ID_MAP, storeBrand } from "@/lib/retailerStores";
 
 const HOURS = ["06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23"];
-
-const HEATMAP = [
-  [0,0,2,3,1,2,4,3,2,2,2,1,3,4,3,2,1,0],
-  [0,0,2,3,1,2,3,3,2,1,2,1,3,4,2,2,1,0],
-  [0,0,2,4,1,2,4,3,2,2,2,2,3,3,3,2,1,0],
-  [0,0,1,3,1,2,3,3,2,1,2,2,3,4,2,2,1,0],
-  [0,0,2,3,1,2,4,3,2,2,3,2,4,4,3,3,2,1],
-  [0,0,0,1,2,3,4,4,3,3,3,3,4,4,3,3,2,1],
-  [0,0,0,1,2,3,4,4,3,3,3,2,3,3,2,2,1,0],
-];
 
 const HEAT_COLORS = [
   "bg-[#F0EDE4]",
@@ -22,335 +16,160 @@ const HEAT_COLORS = [
   "bg-[#344e00]",
 ];
 
-const WEEKDAY_BARS = [
-  { h: "06", v: 8  }, { h: "07", v: 18 }, { h: "08", v: 72 }, { h: "09", v: 90 },
-  { h: "10", v: 35 }, { h: "11", v: 48 }, { h: "12", v: 100}, { h: "13", v: 85 },
-  { h: "14", v: 38 }, { h: "15", v: 30 }, { h: "16", v: 42 }, { h: "17", v: 28 },
-  { h: "18", v: 82 }, { h: "19", v: 95 }, { h: "20", v: 60 }, { h: "21", v: 32 },
-  { h: "22", v: 15 }, { h: "23", v: 5  },
-];
+const AGE_PALETTE: Record<string, string> = {
+  "18-25": "#344e00",
+  "26-35": "#6ab04c",
+  "36-45": "#a5d6a7",
+  "46+":   "#D4C9B0",
+};
+const SPEND_PALETTE: Record<string, string> = {
+  ">฿400":    "#1C3A1C",
+  "฿200-400": "#6ab04c",
+  "฿100-200": "#a5d6a7",
+  "<฿100":    "#D4C9B0",
+};
 
-const WEEKEND_BARS = [
-  { h: "06", v: 4  }, { h: "07", v: 6  }, { h: "08", v: 12 }, { h: "09", v: 28 },
-  { h: "10", v: 52 }, { h: "11", v: 80 }, { h: "12", v: 100}, { h: "13", v: 98 },
-  { h: "14", v: 70 }, { h: "15", v: 60 }, { h: "16", v: 55 }, { h: "17", v: 65 },
-  { h: "18", v: 88 }, { h: "19", v: 92 }, { h: "20", v: 75 }, { h: "21", v: 45 },
-  { h: "22", v: 22 }, { h: "23", v: 8  },
-];
+// ── ML anomaly → action card helpers ────────────────────────────────────────
 
-const AGE_SEGS = [
-  { label: "18–25",  pct: 28, color: "#344e00" },
-  { label: "26–35",  pct: 42, color: "#6ab04c" },
-  { label: "36–45",  pct: 20, color: "#a5d6a7" },
-  { label: "46+",    pct: 10, color: "#D4C9B0" },
-];
-
-const SPEND_SEGS = [
-  { label: ">฿400",    pct: 22, color: "#1C3A1C" },
-  { label: "฿200–400", pct: 45, color: "#6ab04c" },
-  { label: "฿100–200", pct: 24, color: "#a5d6a7" },
-  { label: "<฿100",    pct:  9, color: "#D4C9B0" },
-];
-
-const CONVERSION = [
-  { id: "lumina", name: "Lumina Artisan Roastery", station: "Lat Phrao 71",  orders: 158, traffic: 415, rate: 38.1 },
-  { id: "coffee", name: "Coffee Corner",           station: "Rama IX",        orders: 130, traffic: 340, rate: 38.2 },
-  { id: "quick",  name: "Quick Mart",              station: "Ari Station",    orders: 97,  traffic: 280, rate: 34.6 },
-];
-
-const HIGHLIGHTS = [
-  {
-    id: "coffee",
-    type: "best" as const,
-    badgeIcon: "star",
-    name: "Coffee Corner",
-    location: "Rama IX · Bangkok",
-    unitsUsed: 3, unitsTotal: 4,
-    tags: [
-      { color: "bg-primary/10 text-primary" },
-      { color: "bg-[#F5F2EB] text-on-surface-variant" },
-      { color: "bg-primary/10 text-primary" },
-    ],
-    revenue: { value: "฿143k", trend: "18%", up: true },
-    customers: { value: "340",  trend: "12%", up: true },
-    basket:    { value: "฿248" },
-    conversion: { value: 38.2, up: true },
-    trend: [60, 72, 68, 85, 90, 143],
-  },
-  {
-    id: "quick",
-    type: "needs" as const,
-    badgeIcon: "warning",
-    name: "Quick Mart",
-    location: "Ari Station · Bangkok",
-    unitsUsed: 2, unitsTotal: 4,
-    tags: [
-      { color: "bg-amber-50 text-amber-700" },
-      { color: "bg-[#F5F2EB] text-on-surface-variant" },
-      { color: "bg-amber-50 text-amber-700" },
-    ],
-    revenue: { value: "฿143k", trend: "4%", up: true },
-    customers: { value: "280",  trend: "2%", up: true },
-    basket:    { value: "฿195" },
-    conversion: { value: 34.6, up: false },
-    trend: [120, 128, 132, 138, 140, 143],
-  },
-  {
-    id: "lumina",
-    type: "best" as const,
-    badgeIcon: "star",
-    name: "Lumina Artisan Roastery",
-    location: "Lat Phrao 71 · Bangkok",
-    unitsUsed: 2, unitsTotal: 3,
-    tags: [
-      { color: "bg-primary/10 text-primary" },
-      { color: "bg-[#F5F2EB] text-on-surface-variant" },
-      { color: "bg-primary/10 text-primary" },
-    ],
-    revenue: { value: "฿318k", trend: "24%", up: true },
-    customers: { value: "415",  trend: "15%", up: true },
-    basket:    { value: "฿310" },
-    conversion: { value: 38.1, up: true },
-    trend: [180, 210, 235, 265, 290, 318],
-  },
-];
-
-const HIGHLIGHTS_LANG = {
-  "Coffee Corner": {
-    en: {
-      badge: "Best Performing Store",
-      storeType: "Artisan Café",
-      tags: ["Top 25% on platform", "Busiest: Sat afternoon", "+18% more sales"],
-      perVisit: "per visit",
-      convChange: "more buyers",
-      suggestion: "Staying open 2 hours longer on Saturdays could bring in about ฿21,000 more every month — customers are already there, you just need more time.",
-    },
-    th: {
-      badge: "ร้านที่มีผลงานดีที่สุด",
-      storeType: "คาเฟ่อาร์ติซัน",
-      tags: ["Top 25% บนแพลตฟอร์ม", "คึกคักสุด: บ่ายวันเสาร์", "+18% ยอดขายเพิ่ม"],
-      perVisit: "ต่อครั้ง",
-      convChange: "ผู้ซื้อเพิ่ม",
-      suggestion: "เปิดนานขึ้น 2 ชั่วโมงในวันเสาร์อาจทำให้ได้เงินเพิ่มอีก ~฿21,000 ต่อเดือน — ลูกค้ามีอยู่แล้ว แค่ต้องการเวลามากขึ้นก็พอ",
-    },
-  },
-  "Quick Mart": {
-    en: {
-      badge: "Needs Your Attention",
-      storeType: "Convenience Store",
-      tags: ["Fewer buyers than avg", "29% cost-to-revenue", "Bundle deal could help"],
-      perVisit: "per visit",
-      convChange: "fewer buyers",
-      suggestion: "Only about 35 out of 100 visitors buy something here — lower than your other stores. A simple combo deal (e.g. coffee + snack) could add about 15 extra sales every day without needing more customers.",
-    },
-    th: {
-      badge: "ต้องการความใส่ใจ",
-      storeType: "ร้านสะดวกซื้อ",
-      tags: ["ผู้ซื้อน้อยกว่าค่าเฉลี่ย", "ต้นทุน 29% ของรายได้", "ดีลรวมอาจช่วยได้"],
-      perVisit: "ต่อครั้ง",
-      convChange: "ผู้ซื้อน้อยกว่า",
-      suggestion: "มีแค่ประมาณ 35 คนจาก 100 คนที่ซื้อสินค้าที่ร้านนี้ ลองทำดีลรวม (เช่น กาแฟ + ขนม) อาจเพิ่มยอดขายได้ ~15 รายการต่อวัน",
-    },
-  },
-  "Lumina Artisan Roastery": {
-    en: {
-      badge: "Top Earning Store",
-      storeType: "Artisan Roastery",
-      tags: ["Top 10% on platform", "Highest revenue", "+24% more sales"],
-      perVisit: "per visit",
-      convChange: "more buyers",
-      suggestion: "Lumina is your top earner at ฿318k/month. A premium seasonal menu or office bulk order program could push revenue even higher — your customers already spend ฿310 per visit, well above average.",
-    },
-    th: {
-      badge: "ร้านที่มีรายได้สูงสุด",
-      storeType: "ร้านคั่วกาแฟ",
-      tags: ["Top 10% บนแพลตฟอร์ม", "รายได้สูงสุด", "+24% ยอดขายเพิ่ม"],
-      perVisit: "ต่อครั้ง",
-      convChange: "ผู้ซื้อเพิ่ม",
-      suggestion: "Lumina คือร้านที่ทำรายได้สูงสุดด้วย ฿318k ต่อเดือน เมนูพรีเมียมตามฤดูกาลหรือโปรแกรมสั่งออฟฟิศอาจเพิ่มรายได้ได้อีก — ลูกค้าใช้จ่าย ฿310 ต่อครั้ง สูงกว่าค่าเฉลี่ยมาก",
-    },
-  },
+const ANOMALY_ACTION_UI = {
+  good_news: { catEn: "Earn More",    catTh: "เพิ่มรายได้",     icon: "trending_up",   bgCard: "bg-green-50", border: "border-green-100", iconColor: "text-green-600", catColor: "text-green-700", tipColor: "text-green-700" },
+  watch:     { catEn: "Watch This",   catTh: "จับตาดู",         icon: "troubleshoot",  bgCard: "bg-amber-50", border: "border-amber-100", iconColor: "text-amber-600", catColor: "text-amber-700", tipColor: "text-amber-700" },
+  critical:  { catEn: "Act Now",      catTh: "ดำเนินการด่วน",   icon: "warning",       bgCard: "bg-red-50",   border: "border-red-100",   iconColor: "text-red-500",   catColor: "text-red-600",   tipColor: "text-red-600"   },
 } as const;
 
-const DASH_BY_STORE = {
-  all: {
-    kpi1: "฿604,000", kpi1Sub_en: "3 stores combined",   kpi1Sub_th: "รวม 3 ร้าน",
-    kpi2: "1,035",    kpi2Sub_en: "across all 3 stores", kpi2Sub_th: "รวมทั้ง 3 ร้าน",
-    kpi3: "37%",
-    kpi4: "88/100",
-    ai_en: { pre: "Your 3 shops earned", money: "฿604,000 this month", mid: "— up +12% vs last month! About", pct: "37% of visitors make a purchase", post: " across your stores. Quick Mart has the most room to improve — only 35% of visitors there buy something. A simple combo deal could make a real difference." },
-    ai_th: { pre: "ร้านทั้ง 3 แห่งได้", money: "฿604,000 เดือนนี้", mid: "— เพิ่มขึ้น +12% จากเดือนที่แล้ว! ประมาณ", pct: "37% ของผู้เข้าร้านซื้อสินค้า", post: " Quick Mart ยังมีพื้นที่พัฒนาได้มาก — แค่ 35% ของผู้เข้าร้านซื้อสินค้า ทำดีลรวมง่ายๆ อาจเปลี่ยนได้เลย" },
-    actions: [
-      { catEn: "Earn More",      catTh: "เพิ่มรายได้",      icon: "trending_up",   bgCard: "bg-green-50",  border: "border-green-100",  iconColor: "text-green-600",  catColor: "text-green-700",  tipColor: "text-green-700",  titleEn: "Tuesdays are busier than usual",              titleTh: "วันอังคารมีคนมากกว่าปกติ",              bodyEn: "Your shops have been getting more customers on Tuesdays. Add 1–2 extra staff next Tuesday so no one has to wait.",       bodyTh: "ร้านของคุณมีลูกค้ามากกว่าปกติวันอังคาร เพิ่มพนักงาน 1–2 คนวันอังคารหน้า",          tipEn: "Could earn +฿8,400 more",         tipTh: "อาจได้เพิ่ม +฿8,400" },
-      { catEn: "Keep Customers", catTh: "รักษาลูกค้า",      icon: "group_off",     bgCard: "bg-red-50",    border: "border-red-100",    iconColor: "text-red-500",    catColor: "text-red-600",    tipColor: "text-red-600",    titleEn: "Some loyal customers haven't visited in a while", titleTh: "ลูกค้าประจำบางส่วนไม่ได้มาสักพักแล้ว",  bodyEn: "A group of your best customers hasn't been back in 18 days. Send them a discount before they forget you.",                 bodyTh: "ลูกค้าขาประจำกลุ่มหนึ่งไม่ได้กลับมา 18 วัน ส่งส่วนลดให้ก่อนลืมร้านคุณ",         tipEn: "฿62,000/year at risk",            tipTh: "เสี่ยงสูญรายได้ ฿62,000/ปี" },
-      { catEn: "Quick Win",      catTh: "ทำได้เดี๋ยวนี้เลย", icon: "shopping_cart", bgCard: "bg-amber-50",  border: "border-amber-100",  iconColor: "text-amber-600",  catColor: "text-amber-700",  tipColor: "text-amber-700",  titleEn: "Try a bundle deal at Quick Mart",             titleTh: "ลองทำดีลรวมที่ Quick Mart",             bodyEn: "Fewer visitors buy at Quick Mart vs your other shops. A simple \"buy 2 get 1\" or combo offer could bring that number up.", bodyTh: "ผู้เข้าร้าน Quick Mart ซื้อน้อยกว่าร้านอื่น ลอง \"ซื้อ 2 แถม 1\" หรือคอมโบง่ายๆ",    tipEn: "Could add +฿4,500/day",           tipTh: "อาจเพิ่ม +฿4,500/วัน" },
-    ],
-  },
-  coffee: {
-    kpi1: "฿142,000", kpi1Sub_en: "this month",          kpi1Sub_th: "เดือนนี้",
-    kpi2: "340",      kpi2Sub_en: "visitors today",      kpi2Sub_th: "ผู้เข้าร้านวันนี้",
-    kpi3: "38.2%",
-    kpi4: "88/100",
-    ai_en: { pre: "Coffee Corner earned", money: "฿142,000 this month", mid: "— up +18%! About", pct: "38% of visitors make a purchase", post: " — well above the platform average. Saturday afternoons are your busiest time. Staying open 2 extra hours on Saturdays could bring in ฿21,000 more per month." },
-    ai_th: { pre: "Coffee Corner ได้", money: "฿142,000 เดือนนี้", mid: "— เพิ่ม +18%! ประมาณ", pct: "38% ของผู้เข้าร้านซื้อสินค้า", post: " — สูงกว่าค่าเฉลี่ย เปิดนานขึ้น 2 ชั่วโมงวันเสาร์อาจทำให้ได้เงินเพิ่มอีก ฿21,000 ต่อเดือน" },
-    actions: [
-      { catEn: "Earn More",      catTh: "เพิ่มรายได้",      icon: "trending_up",   bgCard: "bg-green-50",  border: "border-green-100",  iconColor: "text-green-600",  catColor: "text-green-700",  tipColor: "text-green-700",  titleEn: "Extend Saturday hours",                      titleTh: "เปิดนานขึ้นวันเสาร์",                  bodyEn: "Customers are already there on Saturday afternoons. Staying open 2 extra hours could bring in ฿21,000 more per month.",    bodyTh: "ลูกค้ามีอยู่แล้วบ่ายวันเสาร์ เปิดนานขึ้น 2 ชั่วโมงอาจได้ ฿21,000 เพิ่มต่อเดือน",   tipEn: "Could earn +฿21,000/mo",          tipTh: "อาจได้เพิ่ม ฿21,000/เดือน" },
-      { catEn: "Keep Customers", catTh: "รักษาลูกค้า",      icon: "group_off",     bgCard: "bg-red-50",    border: "border-red-100",    iconColor: "text-red-500",    catColor: "text-red-600",    tipColor: "text-red-600",    titleEn: "Loyal customers need a nudge",               titleTh: "ลูกค้าประจำต้องการการกระตุ้น",          bodyEn: "A group of your best customers hasn't returned in 18 days. Send them a loyalty reward before they drift away.",              bodyTh: "ลูกค้าขาประจำกลุ่มหนึ่งไม่ได้กลับมา 18 วัน ส่งรางวัลสะสมแต้มก่อนที่พวกเขาจะหนี",     tipEn: "฿62,000/year at risk",            tipTh: "เสี่ยงสูญ ฿62,000/ปี" },
-      { catEn: "Quick Win",      catTh: "ทำได้เดี๋ยวนี้เลย", icon: "shopping_cart", bgCard: "bg-amber-50",  border: "border-amber-100",  iconColor: "text-amber-600",  catColor: "text-amber-700",  tipColor: "text-amber-700",  titleEn: "Add a weekend bundle deal",                  titleTh: "เพิ่มดีลวันหยุด",                      bodyEn: "A coffee + pastry combo on weekends could boost the average basket size by 12–15% without adding more customers.",          bodyTh: "คอมโบกาแฟ + เบเกอรี่วันหยุดอาจเพิ่ม basket size ขึ้น 12–15% โดยไม่ต้องรอลูกค้าเพิ่ม", tipEn: "Could add +฿8,400/mo",            tipTh: "อาจเพิ่ม +฿8,400/เดือน" },
-    ],
-  },
-  quick: {
-    kpi1: "฿143,000", kpi1Sub_en: "this month",          kpi1Sub_th: "เดือนนี้",
-    kpi2: "280",      kpi2Sub_en: "visitors today",      kpi2Sub_th: "ผู้เข้าร้านวันนี้",
-    kpi3: "34.6%",
-    kpi4: "76/100",
-    ai_en: { pre: "Quick Mart earned", money: "฿143,000 this month", mid: "— steady, but only", pct: "35% of visitors buy something", post: " — the lowest across your stores. A simple combo deal (coffee + snack for ฿79) could add about 15 extra sales every day without needing more customers." },
-    ai_th: { pre: "Quick Mart ได้", money: "฿143,000 เดือนนี้", mid: "— คงที่ แต่แค่", pct: "35% ของผู้เข้าร้านซื้อสินค้า", post: " — ต่ำสุดในร้านทั้งหมดของคุณ ดีลรวม (กาแฟ + ขนม ฿79) อาจเพิ่มยอดขายได้ ~15 รายการต่อวัน" },
-    actions: [
-      { catEn: "Boost Sales",    catTh: "เพิ่มยอดขาย",     icon: "shopping_cart", bgCard: "bg-amber-50",  border: "border-amber-100",  iconColor: "text-amber-600",  catColor: "text-amber-700",  tipColor: "text-amber-700",  titleEn: "Try a combo deal",                           titleTh: "ลองทำดีลรวม",                           bodyEn: "Only 35% of visitors buy something — lower than your other stores. A coffee + snack combo for ฿79 could add ~15 extra sales per day.", bodyTh: "35% ของผู้เข้าร้านซื้อสินค้า — ต่ำกว่าร้านอื่น คอมโบกาแฟ + ขนม ฿79 อาจเพิ่มยอดขายได้ ~15 รายการต่อวัน",   tipEn: "Could add +฿4,500/day",           tipTh: "อาจเพิ่ม +฿4,500/วัน" },
-      { catEn: "Earn More",      catTh: "เพิ่มรายได้",      icon: "trending_up",   bgCard: "bg-green-50",  border: "border-green-100",  iconColor: "text-green-600",  catColor: "text-green-700",  tipColor: "text-green-700",  titleEn: "Adjust product placement",                   titleTh: "จัดวางสินค้าใหม่",                      bodyEn: "Move high-margin items to eye level near checkout. Small placement changes can increase impulse buys by 10–15%.",             bodyTh: "ย้ายสินค้ากำไรสูงไปอยู่ระดับสายตาใกล้แคชเชียร์ การจัดวางใหม่อาจเพิ่มยอดซื้อโดยไม่ตั้งใจ 10–15%",         tipEn: "Low cost, high impact",           tipTh: "ต้นทุนต่ำ ผลตอบแทนสูง" },
-      { catEn: "Quick Win",      catTh: "ทำได้เดี๋ยวนี้เลย", icon: "bolt",          bgCard: "bg-red-50",    border: "border-red-100",    iconColor: "text-red-500",    catColor: "text-red-600",    tipColor: "text-red-600",    titleEn: "Run a Tuesday deal",                         titleTh: "ลองโปรวันอังคาร",                       bodyEn: "Tuesdays have been quieter at Quick Mart. A small discount or 2-for-1 offer could bring in extra traffic on slow days.",      bodyTh: "วันอังคารเงียบกว่าปกติที่ Quick Mart ลดราคาเล็กน้อยหรือซื้อ 1 แถม 1 อาจช่วยดึงคนเพิ่ม",              tipEn: "Could earn +฿3,200 more",         tipTh: "อาจได้เพิ่ม +฿3,200" },
-    ],
-  },
-  lumina: {
-    kpi1: "฿318,000", kpi1Sub_en: "this month",          kpi1Sub_th: "เดือนนี้",
-    kpi2: "415",      kpi2Sub_en: "visitors today",      kpi2Sub_th: "ผู้เข้าร้านวันนี้",
-    kpi3: "38.1%",
-    kpi4: "91/100",
-    ai_en: { pre: "Lumina Artisan Roastery earned", money: "฿318,000 this month", mid: "— your highest-earning store! About", pct: "38% of visitors make a purchase", post: " — well above platform average. You're in the top 10% of all stores. Focus on maintaining quality and growing the loyal customer base." },
-    ai_th: { pre: "Lumina Artisan Roastery ได้", money: "฿318,000 เดือนนี้", mid: "— ร้านที่ทำรายได้สูงสุดของคุณ! ประมาณ", pct: "38% ของผู้เข้าร้านซื้อสินค้า", post: " — สูงกว่าค่าเฉลี่ย คุณอยู่ใน top 10% ของแพลตฟอร์ม" },
-    actions: [
-      { catEn: "Earn More",      catTh: "เพิ่มรายได้",      icon: "trending_up",   bgCard: "bg-green-50",  border: "border-green-100",  iconColor: "text-green-600",  catColor: "text-green-700",  tipColor: "text-green-700",  titleEn: "Launch a premium seasonal menu",             titleTh: "เปิดตัวเมนูพรีเมียมตามฤดูกาล",          bodyEn: "Your customers spend ฿310/visit. A seasonal premium offering (e.g. single-origin coffee flight) could push the average basket to ฿340+.", bodyTh: "ลูกค้าใช้จ่าย ฿310 ต่อครั้ง เมนูพรีเมียมตามฤดูกาล (เช่น ชุดกาแฟ single-origin) อาจเพิ่ม basket เป็น ฿340+", tipEn: "Could add +฿12,000/mo",           tipTh: "อาจเพิ่ม +฿12,000/เดือน" },
-      { catEn: "Keep Customers", catTh: "รักษาลูกค้า",      icon: "loyalty",       bgCard: "bg-blue-50",   border: "border-blue-100",   iconColor: "text-blue-600",   catColor: "text-blue-700",   tipColor: "text-blue-700",   titleEn: "Start a loyalty tier program",               titleTh: "เริ่มโปรแกรม loyalty tier",             bodyEn: "Your revisit rate (62%) is great. A 3-tier loyalty system (Bronze/Silver/Gold) could push it past 70% and build a strong regular base.", bodyTh: "Revisit rate (62%) ดีมากแล้ว ระบบ loyalty 3 ระดับ (Bronze/Silver/Gold) อาจดันให้เกิน 70% และสร้างฐานขาประจำแข็งแกร่ง",   tipEn: "High long-term value",            tipTh: "มูลค่าระยะยาวสูง" },
-      { catEn: "Quick Win",      catTh: "ทำได้เดี๋ยวนี้เลย", icon: "business",      bgCard: "bg-amber-50",  border: "border-amber-100",  iconColor: "text-amber-600",  catColor: "text-amber-700",  tipColor: "text-amber-700",  titleEn: "Promote to nearby offices",                  titleTh: "โปรโมทไปยังออฟฟิศใกล้เคียง",            bodyEn: "Lumina is near office buildings. A corporate bulk order program could bring consistent weekday orders and boost revenue.",    bodyTh: "Lumina อยู่ใกล้ออฟฟิศ โปรแกรมสั่งซื้อแบบองค์กรอาจนำมาซึ่งออเดอร์สม่ำเสมอในวันธรรมดา",              tipEn: "Could add +฿25,000/mo",           tipTh: "อาจเพิ่ม +฿25,000/เดือน" },
-    ],
-  },
+const ML_DIMENSION_LABEL: Record<string, string> = {
+  conv_rate: "conversion rate",
+  revenue:   "revenue",
+  visitors:  "foot traffic",
+  avg_spend: "average spend",
 };
+
+const ML_DIMENSION_LABEL_TH: Record<string, string> = {
+  conv_rate: "อัตราการซื้อ",
+  revenue:   "รายได้",
+  visitors:  "จำนวนลูกค้า",
+  avg_spend: "ยอดใช้จ่ายเฉลี่ย",
+};
+
+// Forward-looking ("this week") action per dimension+direction. EN falls back to
+// the ML suggested_action text; TH is curated since the ML text is English-only.
+const ACTION_TH: Record<string, string> = {
+  "visitors|above":  "เตรียมสต็อกและจัดพนักงานเพิ่มให้พอกับช่วงที่ลูกค้าเยอะ",
+  "visitors|below":  "จัดโปรหรือกิจกรรมดึงลูกค้าในช่วงที่เงียบ",
+  "avg_spend|above": "หาว่าสินค้าใดทำให้ยอดใช้จ่ายสูงขึ้น แล้วเน้นขายสินค้านั้น",
+  "avg_spend|below": "เสนอชุดสินค้าหรือเมนูแนะนำเพื่อเพิ่มยอดต่อบิล",
+  "revenue|above":   "ขยายเวลาเปิดหรือเพิ่มพนักงานเพื่อรองรับดีมานด์ที่เพิ่มขึ้น",
+  "revenue|below":   "ทบทวนราคาและจัดโปรโมชันเพื่อกระตุ้นยอดขาย",
+  "conv_rate|above": "รักษาวิธีจัดวางสินค้าที่ได้ผลนี้ไว้ และนำไปใช้กับสาขาอื่น",
+  "conv_rate|below": "ปรับการจัดวางสินค้าหรือจัดโปรเพื่อเพิ่มอัตราการซื้อ",
+};
+
+function mlFormatPeriod(p: string) {
+  const [year, mon] = p.split("-");
+  return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(mon, 10) - 1] + " " + year;
+}
+
+// Store ↔ ML mapping from the single source of truth (lib/retailerStores).
+const ML_STORE_IDS = STORE_ID_MAP;
 
 const STRINGS = {
   en: {
-    exportReport: "Export Report",
     headerTitle: "How Are Your Shops Doing?",
-    headerSubtitle: "Here's a summary of your stores this month.",
+    headerSubtitle: "Live data from your store metrics — refreshed monthly.",
     kpi1Label: "Earned This Month",
     kpi2Label: "People who visited today",
-    kpi2Trend_all: "~345 per store",
     kpi3Label: "Visitors who made a purchase",
-    kpi3Sub: "~37 in every 100 visitors",
-    kpi3Trend: "Up from last month",
+    kpi3Sub: "based on your latest orders",
     kpi4Label: "How you rank vs other shops",
     kpi4Sub: "platform score",
-    kpi4Trend: "Top 25% of all shops",
     aiLabel: "Your shop in plain words",
     actionsTitle: "What You Should Do This Week",
-    actionsCount_all: "3 actions",
     heatmapTitle: "When Are Your Shops Busiest?",
     heatmapSubtitle: "Average visitors by hour — darker = more people",
-    heatmapTipBold: "Best time to run a quick promo:",
-    heatmapTip: " 10–11am and 2–5pm are your quietest hours every day. A short discount during these times could turn a slow period into extra sales.",
     quiet: "Quiet",
     busy: "Busy",
     hoursTitle: "Best & Worst Hours",
     hoursSubtitle: "How busy your shops are hour by hour",
     weekdaysLabel: "Weekdays (Mon–Fri)",
     weekendsLabel: "Weekends (Sat–Sun)",
-    hoursTipPre: "On weekdays, most people come at ",
-    hoursTipBold1: "8–9am",
-    hoursTipMid1: " (going to work) and ",
-    hoursTipBold2: "7pm",
-    hoursTipMid2: " (coming home). On weekends, the rush is at ",
-    hoursTipBold3: "noon",
-    hoursTipPost: ". Have enough staff and stock ready at these times.",
     customersTitle: "Who Are Your Customers?",
     customersSubtitle: "Age group & how much they spend",
     ageGroupLabel: "Age Group",
     spendLabel: "How Much They Spend",
-    customersTipPre: "Most of your customers are ",
-    customersTipBold: "26–35 year olds (42%)",
-    customersTip: ". But your youngest customers (18–25) are growing the fastest — up +8% this month. A social-media-friendly offer or student discount could bring in even more of them.",
     conversionTitle: "Are Visitors Buying?",
     conversionSubtitle: "Out of everyone who walked in — how many actually bought something?",
     colStore: "Store",
     colBought: "Bought",
     colVisited: "Visited",
     colPct: "% Bought",
-    conversionTipBold: "Quick Mart has the most room to improve.",
-    conversionTip: " Only about 35 out of 100 visitors buy something there — a bit lower than your other two stores. A simple combo deal could add about 15 more sales every day without needing any more foot traffic.",
-    storeTypeLabel: "Store type",
-    unitsUsedLabel: "Units used",
+    storeTypeLabel: "Branch",
     earnedLabel: "Earned This Month",
     visitorsLabel: "Daily Visitors",
     spentLabel: "Spent Per Visit",
     visitorsWho: "Visitors who bought something",
     outOf: "out of 100",
     lastSixMonths: "Last 6 months earnings",
-    ourSuggestion: "Our suggestion:",
     days: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
+    loading: "Loading from database...",
+    noActions: "No action items right now — your shop is running smoothly.",
+    topQuartileTag: "Top 25% on platform",
+    busiestTag: "Busiest: weekend afternoons",
+    salesGrowthTag: "+sales MoM",
   },
   th: {
-    exportReport: "ดาวน์โหลดรายงาน",
     headerTitle: "ร้านคุณเป็นยังไงบ้าง?",
-    headerSubtitle: "สรุปภาพรวมร้านของคุณเดือนนี้",
+    headerSubtitle: "ข้อมูลสดจากตัวชี้วัดร้าน — อัปเดตรายเดือน",
     kpi1Label: "รายได้เดือนนี้",
     kpi2Label: "คนที่มาร้านวันนี้",
-    kpi2Trend_all: "~345 คนต่อร้าน",
     kpi3Label: "ผู้เข้าร้านที่ซื้อสินค้า",
-    kpi3Sub: "~37 คนจากทุกๆ 100 คน",
-    kpi3Trend: "เพิ่มขึ้นจากเดือนที่แล้ว",
+    kpi3Sub: "จากออเดอร์ล่าสุด",
     kpi4Label: "คุณอยู่ตรงไหนเทียบกับร้านอื่น",
     kpi4Sub: "คะแนนในระบบ",
-    kpi4Trend: "Top 25% ของร้านทั้งหมด",
     aiLabel: "สรุปภาพรวมร้านคุณ",
     actionsTitle: "สิ่งที่คุณควรทำสัปดาห์นี้",
-    actionsCount_all: "3 รายการ",
     heatmapTitle: "ร้านคุณคึกคักเวลาไหนมากที่สุด?",
     heatmapSubtitle: "จำนวนผู้เข้าร้านเฉลี่ยแต่ละชั่วโมง — เข้มกว่า = คนมากกว่า",
-    heatmapTipBold: "ช่วงเวลาเหมาะโปรโมชั่น:",
-    heatmapTip: " 10–11 โมงเช้า และ 14–17 น. เป็นชั่วโมงที่เงียบที่สุดทุกวัน ลดราคาช่วงนี้อาจเปลี่ยนช่วงเงียบให้เป็นยอดขายพิเศษได้",
     quiet: "เงียบ",
     busy: "คึกคัก",
     hoursTitle: "ชั่วโมงดีสุดและแย่สุด",
     hoursSubtitle: "ความคึกคักของร้านแต่ละชั่วโมง",
     weekdaysLabel: "วันธรรมดา (จ–ศ)",
     weekendsLabel: "วันหยุด (ส–อา)",
-    hoursTipPre: "วันธรรมดา คนส่วนใหญ่มาช่วง ",
-    hoursTipBold1: "8–9 โมงเช้า",
-    hoursTipMid1: " (ไปทำงาน) และ ",
-    hoursTipBold2: "19.00 น.",
-    hoursTipMid2: " (กลับบ้าน) วันหยุดช่วงที่คนมากที่สุดคือ ",
-    hoursTipBold3: "เที่ยง",
-    hoursTipPost: " เตรียมพนักงานและสินค้าให้พร้อมช่วงเหล่านี้",
     customersTitle: "ลูกค้าคุณเป็นใคร?",
     customersSubtitle: "กลุ่มอายุและยอดใช้จ่าย",
     ageGroupLabel: "กลุ่มอายุ",
     spendLabel: "ใช้จ่ายเท่าไหร่",
-    customersTipPre: "ลูกค้าส่วนใหญ่ของคุณคือ ",
-    customersTipBold: "กลุ่มอายุ 26–35 ปี (42%)",
-    customersTip: " แต่กลุ่มอายุน้อยสุด (18–25 ปี) เติบโตเร็วที่สุด — เพิ่ม +8% เดือนนี้",
     conversionTitle: "ผู้เข้าร้านซื้อของไหม?",
     conversionSubtitle: "จากทุกคนที่เดินเข้ามา — กี่คนที่ซื้อสินค้าจริงๆ?",
     colStore: "ร้าน",
     colBought: "ซื้อ",
     colVisited: "เข้าร้าน",
     colPct: "% ที่ซื้อ",
-    conversionTipBold: "Quick Mart ยังมีพื้นที่พัฒนาได้มากที่สุด",
-    conversionTip: " ประมาณ 35 จาก 100 คนซื้อสินค้าที่ร้านนี้ ดีลรวมง่ายๆ อาจเพิ่มยอดขายได้ ~15 รายการต่อวัน",
-    storeTypeLabel: "ประเภทร้าน",
-    unitsUsedLabel: "หน่วยที่ใช้",
+    storeTypeLabel: "สาขา",
     earnedLabel: "รายได้เดือนนี้",
     visitorsLabel: "ผู้เข้าร้านต่อวัน",
     spentLabel: "ใช้จ่ายต่อครั้ง",
     visitorsWho: "ผู้เข้าร้านที่ซื้อสินค้า",
     outOf: "จาก 100 คน",
     lastSixMonths: "รายได้ 6 เดือนที่ผ่านมา",
-    ourSuggestion: "คำแนะนำของเรา:",
     days: ["จ","อ","พ","พฤ","ศ","ส","อา"],
+    loading: "กำลังโหลดจากฐานข้อมูล...",
+    noActions: "ยังไม่มีรายการที่ต้องดำเนินการ — ร้านดำเนินไปได้ดี",
+    topQuartileTag: "Top 25% บนแพลตฟอร์ม",
+    busiestTag: "คึกคักสุด: บ่ายวันหยุด",
+    salesGrowthTag: "+ยอดขายเทียบเดือน",
   },
 } as const;
 
 function DonutChart({ segs, size = 80 }: { segs: { label: string; pct: number; color: string }[]; size?: number }) {
   let cum = 0;
-  const gradient = segs.map((s) => { const from = cum; cum += s.pct; return `${s.color} ${from}% ${cum}%`; }).join(", ");
+  const total = segs.reduce((s, x) => s + x.pct, 0) || 1;
+  const gradient = segs.map((s) => {
+    const from = (cum / total) * 100;
+    cum += s.pct;
+    const to = (cum / total) * 100;
+    return `${s.color} ${from}% ${to}%`;
+  }).join(", ");
   const inner = size * 0.38;
   return (
     <div
@@ -365,29 +184,214 @@ function DonutChart({ segs, size = 80 }: { segs: { label: string; pct: number; c
   );
 }
 
+// ── API types ────────────────────────────────────────────────────────────────
+
+type ApiDashData = {
+  kpis: {
+    totalRevenue: number;
+    avgDailyCustomers: number;
+    totalMonthlyRent: number;
+    patronScore: number | null;
+    momAmt: number | null;
+    momPct: number | null;
+    custMomAmt: number | null;
+    custMomPct: number | null;
+  };
+  branches: { stationId: string; name: string; revenue: number; dailyCustomers: number }[];
+};
+
+type ApiDetailsData = {
+  heatmap: number[][];
+  weekdayBars: { h: string; v: number }[];
+  weekendBars: { h: string; v: number }[];
+  ageSegments: { label: string; sharePct: number; avgBasket: number | null; growthPct: number | null }[];
+  spendSegments: { label: string; sharePct: number }[];
+  conversion: { storeId: string; name: string; station: string; orders: number; traffic: number; rate: number }[];
+  highlights: {
+    storeId: string;
+    name: string;
+    location: string;
+    revenueThb: number;
+    revenueMomPct: number;
+    customersDaily: number;
+    customersMomPct: number;
+    basketThb: number;
+    conversionPct: number;
+    revisitPct: number;
+    salesPerSqmThb: number;
+    topQuartile: boolean;
+    trend: number[];
+  }[];
+  events?: {
+    store_display_id: string | null;
+    year_month: string;
+    event_name: string;
+    event_type: string;
+    description: string | null;
+    est_traffic_lift_pct: number | null;
+    est_sales_lift_pct: number | null;
+  }[];
+};
+
 export default function RetailerDashboardPage() {
   const { lang } = useLanguage();
   const { storeId } = useStoreFilter();
   const T = STRINGS[lang];
 
-  const dd = DASH_BY_STORE[storeId];
-  const kpi1Sub = lang === "th" ? dd.kpi1Sub_th : dd.kpi1Sub_en;
-  const kpi2Sub = lang === "th" ? dd.kpi2Sub_th : dd.kpi2Sub_en;
-  const aiText = lang === "th" ? dd.ai_th : dd.ai_en;
+  const [dashData, setDashData] = useState<ApiDashData | null>(null);
+  const [details,  setDetails]  = useState<ApiDetailsData | null>(null);
+  const [mlData,   setMlData]   = useState<MlApiResponse | null>(null);
 
-  const filteredConversion = storeId === "all"
-    ? CONVERSION
-    : CONVERSION.filter((c) => c.id === storeId);
+  useEffect(() => {
+    setDashData(null);
+    setDetails(null);
+    Promise.all([
+      fetch(`/api/retailer/dashboard?storeId=${storeId}`).then((r) => (r.ok ? r.json() : null)),
+      fetch(`/api/retailer/dashboard-details?storeId=${storeId}`).then((r) => (r.ok ? r.json() : null)),
+    ])
+      .then(([d, dd]) => {
+        if (d)  setDashData(d as ApiDashData);
+        if (dd) setDetails(dd as ApiDetailsData);
+      })
+      .catch(() => {});
+  }, [storeId]);
 
-  const filteredHighlights = storeId === "all"
-    ? HIGHLIGHTS.filter((h) => h.id !== "lumina")
-    : HIGHLIGHTS.filter((h) => h.id === storeId);
+  useEffect(() => {
+    fetch("/api/retailer/ml")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: MlApiResponse | null) => { if (d) setMlData(d); })
+      .catch(() => {});
+  }, []);
+
+  // ── "This week" actions — forward-looking, from THIS month's events + churn
+  // risk (not historical anomalies, which are months old and not "this week"). ──
+  const actionCards = useMemo(() => {
+    const ids = ML_STORE_IDS[storeId] ?? ML_STORE_IDS.all;
+    const cards: Array<{
+      catEn: string; catTh: string; icon: string; bgCard: string; border: string;
+      iconColor: string; catColor: string; tipColor: string;
+      titleEn: string; titleTh: string; bodyEn: string; bodyTh: string; actionEn: string; actionTh: string;
+    }> = [];
+
+    // 1. This month's relevant event(s) for this store → prepare / leverage
+    const evs = details?.events ?? [];
+    const latestMonth = evs.reduce((m, e) => (e.year_month > m ? e.year_month : m), "");
+    for (const e of evs.filter((e) => e.year_month === latestMonth).slice(0, 2)) {
+      const up = (e.est_sales_lift_pct ?? 0) >= 0;
+      const ui = up ? ANOMALY_ACTION_UI.good_news : ANOMALY_ACTION_UI.watch;
+      cards.push({
+        catEn: up ? "Earn More" : "Watch This", catTh: up ? "เพิ่มรายได้" : "จับตาดู",
+        icon: ui.icon, bgCard: ui.bgCard, border: ui.border, iconColor: ui.iconColor, catColor: ui.catColor, tipColor: ui.tipColor,
+        titleEn: e.event_name, titleTh: e.event_name,
+        bodyEn: e.description ?? "", bodyTh: e.description ?? "",
+        actionEn: up
+          ? `Stock up and promote your best-sellers for ${e.event_name} this week`
+          : `Expect softer demand from ${e.event_name} — trim fresh stock and run a small promo`,
+        actionTh: up
+          ? `เตรียมสต็อกและจัดโปรสินค้าขายดีรับ ${e.event_name} สัปดาห์นี้`
+          : `คาดว่าดีมานด์จะลดจาก ${e.event_name} — ลดสต็อกของสดและจัดโปรเล็กๆ`,
+      });
+    }
+
+    // 2. Top at-risk customer group → re-engage this week
+    const risky = (mlData?.churnSegments ?? [])
+      .filter((c) => ids.includes(c.store_id) && c.risk_level !== "Low")
+      .sort((a, b) => b.avg_risk_prob_pct - a.avg_risk_prob_pct)[0];
+    if (risky) {
+      const ui = (risky.risk_level === "Critical" || risky.risk_level === "High") ? ANOMALY_ACTION_UI.critical : ANOMALY_ACTION_UI.watch;
+      const pct = Math.round(risky.avg_risk_prob_pct);
+      const rec = risky.recommended_action && !/no action/i.test(risky.recommended_action) ? risky.recommended_action : "";
+      cards.push({
+        catEn: "Retain", catTh: "รักษาลูกค้า",
+        icon: "group", bgCard: ui.bgCard, border: ui.border, iconColor: ui.iconColor, catColor: ui.catColor, tipColor: ui.tipColor,
+        titleEn: `Win back ${risky.age_group} shoppers`, titleTh: `ดึงลูกค้า ${risky.age_group} กลับมา`,
+        bodyEn: `${pct}% of your ${risky.age_group} (${risky.spend_range}) customers are at risk of not returning.`,
+        bodyTh: `ลูกค้ากลุ่ม ${risky.age_group} (${risky.spend_range}) มีโอกาส ${pct}% ที่จะไม่กลับมา`,
+        actionEn: rec || "Send this group a targeted offer this week",
+        actionTh: "ส่งข้อเสนอเฉพาะกลุ่มนี้ภายในสัปดาห์นี้",
+      });
+    }
+    return cards.slice(0, 3);
+  }, [details, mlData, storeId]);
+
+
+  const storeName = storeBrand(storeId, lang);
+
+  // ── KPI values from API (no static fallback) ──
+  const revenue = dashData
+    ? `฿${Math.round(dashData.kpis.totalRevenue).toLocaleString()}`
+    : "—";
+  const dailyCustomers = dashData ? String(dashData.kpis.avgDailyCustomers) : "—";
+  const patronScore    = dashData?.kpis.patronScore != null ? `${dashData.kpis.patronScore}/100` : "—";
+
+  const filteredConversion = details?.conversion ?? [];
+  const overallConversion = filteredConversion.length
+    ? `${(filteredConversion.reduce((s, c) => s + c.rate, 0) / filteredConversion.length).toFixed(1)}%`
+    : "—";
+
+  const highlights = details?.highlights ?? [];
+
+  // Recent events (festivals/holidays/promos) — lets the AI explain WHY metrics moved
+  const eventsLine = (details?.events ?? []).length
+    ? `Recent events: ${(details!.events!).slice(0, 6).map((e) => `${e.year_month} ${e.event_name}${e.est_sales_lift_pct != null ? ` (~+${e.est_sales_lift_pct}% sales)` : ""}`).join("; ")}`
+    : "";
+
+  // ── Build AI dataContext for each section ──
+  const dashDataContext = dashData ? [
+    `Store: ${storeName}`,
+    `Monthly Revenue: ${revenue}`,
+    dashData.kpis.momPct != null ? `Revenue MoM: ${dashData.kpis.momPct >= 0 ? "+" : ""}${dashData.kpis.momPct.toFixed(1)}%` : "",
+    `Avg Daily Customers: ${dailyCustomers}`,
+    dashData.kpis.custMomPct != null ? `Customers MoM: ${dashData.kpis.custMomPct >= 0 ? "+" : ""}${dashData.kpis.custMomPct.toFixed(1)}%` : "",
+    `Monthly Rent: ฿${dashData.kpis.totalMonthlyRent.toLocaleString()}`,
+    `Conversion Rate: ${overallConversion}`,
+    `Patron Score: ${patronScore}`,
+    `Action items detected: ${actionCards.length ? actionCards.map((a) => a.titleEn).join("; ") : "none"}`,
+    storeId === "all" && highlights.length
+      ? `Per-branch: ${highlights.map((h) => `${h.name}: ฿${Math.round(h.revenueThb).toLocaleString()} (${h.revenueMomPct >= 0 ? "+" : ""}${h.revenueMomPct}% MoM), ${h.conversionPct}% conv, ${h.customersDaily} daily customers`).join("; ")}`
+      : "",
+    eventsLine,
+  ].filter(Boolean).join(" | ") : "";
+
+  const heatmapDataContext = details ? [
+    `Heatmap (${storeName}) — intensity 0=quiet, 4=busiest`,
+    `Days: ${T.days.join(",")}; hours: 06-23`,
+    `Peak weekday cells (intensity 4): ${details.heatmap.slice(0, 5).flatMap((row, di) => row.map((v, hi) => v === 4 ? `${T.days[di]} ${hi+6}:00` : "").filter(Boolean)).join(", ") || "none"}`,
+    `Peak weekend cells (intensity 4): ${details.heatmap.slice(5).flatMap((row, di) => row.map((v, hi) => v === 4 ? `${T.days[di+5]} ${hi+6}:00` : "").filter(Boolean)).join(", ") || "none"}`,
+    `Quiet hours (intensity 0-1 across all days): ${[...Array(18)].map((_, hi) => {
+      const allLow = details.heatmap.every((row) => row[hi] <= 1);
+      return allLow ? `${hi+6}:00` : "";
+    }).filter(Boolean).join(", ") || "none"}`,
+  ].join(" | ") : "";
+
+  const hoursDataContext = details ? [
+    `Hourly Bars (${storeName})`,
+    `Weekday peak hours (v>=80): ${details.weekdayBars.filter((b) => b.v >= 80).map((b) => b.h).join(", ") || "none"}`,
+    `Weekend peak hours (v>=80): ${details.weekendBars.filter((b) => b.v >= 80).map((b) => b.h).join(", ") || "none"}`,
+    `Quietest weekday hours (v<=30): ${details.weekdayBars.filter((b) => b.v <= 30).map((b) => b.h).join(", ") || "none"}`,
+  ].join(" | ") : "";
+
+  const segmentsDataContext = details ? [
+    `Segments (${storeName})`,
+    `Age: ${details.ageSegments.map((s) => `${s.label}: ${s.sharePct}%${s.avgBasket ? `, ฿${s.avgBasket}/visit` : ""}${s.growthPct != null ? `, ${s.growthPct >= 0 ? "+" : ""}${s.growthPct}% growth` : ""}`).join("; ")}`,
+    `Spend bands: ${details.spendSegments.map((s) => `${s.label}: ${s.sharePct}%`).join("; ")}`,
+  ].join(" | ") : "";
+
+  const conversionDataContext = details ? [
+    `Conversion (${storeName})`,
+    `Overall: ${overallConversion}`,
+    ...details.conversion.map((c) => `${c.name}: ${c.rate}% (${c.orders} orders / ${c.traffic} visits)`),
+    `Platform cafe avg: ~25%`,
+  ].join(" | ") : "";
+
+  const ageDonutSegs   = (details?.ageSegments   ?? []).map((s) => ({ label: s.label, pct: s.sharePct, color: AGE_PALETTE[s.label]   ?? "#888" }));
+  const spendDonutSegs = (details?.spendSegments ?? []).map((s) => ({ label: s.label, pct: s.sharePct, color: SPEND_PALETTE[s.label] ?? "#888" }));
 
   return (
     <RetailerBackofficeLayout>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold italic text-[#1C3A1C]">{T.headerTitle}</h1>
+        <h1 className="text-3xl font-bold text-on-surface">{T.headerTitle}</h1>
         <p className="text-sm text-on-surface-variant mt-1">{T.headerSubtitle}</p>
       </div>
 
@@ -395,70 +399,100 @@ export default function RetailerDashboardPage() {
       <div className="grid grid-cols-4 gap-4 mb-4">
         <div className="bg-white rounded-2xl p-5 shadow-sm">
           <div className="text-xs text-on-surface-variant mb-3">{T.kpi1Label}</div>
-          <div className="text-3xl font-bold text-on-surface">{dd.kpi1}</div>
-          <div className="text-sm text-on-surface-variant mb-3">{kpi1Sub}</div>
-          <span className="text-xs font-bold text-primary">More than last month</span>
+          <div className="text-3xl font-bold text-on-surface">{revenue}</div>
+          <div className="text-sm text-on-surface-variant mb-3">
+            {storeId === "all" ? (lang === "th" ? "รวมทุกสาขา" : "all branches") : (lang === "th" ? "เดือนนี้" : "this month")}
+          </div>
+          {dashData?.kpis.momPct != null && dashData.kpis.momAmt != null ? (
+            <div className="flex flex-col gap-0.5">
+              <span className={`text-xs font-bold ${dashData.kpis.momPct >= 0 ? "text-primary" : "text-red-500"}`}>
+                {dashData.kpis.momPct >= 0 ? "+" : ""}{dashData.kpis.momPct.toFixed(1)}%
+              </span>
+              <span className={`text-xs ${dashData.kpis.momPct >= 0 ? "text-primary" : "text-red-500"}`}>
+                {dashData.kpis.momAmt >= 0 ? "+" : ""}฿{Math.abs(dashData.kpis.momAmt).toLocaleString()} vs last month
+              </span>
+            </div>
+          ) : null}
         </div>
         <div className="bg-white rounded-2xl p-5 shadow-sm">
           <div className="text-xs text-on-surface-variant mb-3">{T.kpi2Label}</div>
-          <div className="text-3xl font-bold text-on-surface">{dd.kpi2}</div>
-          <div className="text-sm text-on-surface-variant mb-3">{kpi2Sub}</div>
-          {storeId === "all" && <span className="text-xs text-on-surface-variant">{T.kpi2Trend_all}</span>}
+          <div className="text-3xl font-bold text-on-surface">{dailyCustomers}</div>
+          <div className="text-sm text-on-surface-variant mb-3">
+            {storeId === "all" ? (lang === "th" ? "เฉลี่ยทุกสาขา" : "avg across branches") : (lang === "th" ? "ลูกค้าเฉลี่ยต่อวัน" : "avg daily customers")}
+          </div>
+          {dashData?.kpis.custMomPct != null && dashData.kpis.custMomAmt != null ? (
+            <div className="flex flex-col gap-0.5">
+              <span className={`text-xs font-bold ${dashData.kpis.custMomPct >= 0 ? "text-primary" : "text-red-500"}`}>
+                {dashData.kpis.custMomPct >= 0 ? "+" : ""}{dashData.kpis.custMomPct.toFixed(1)}%
+              </span>
+              <span className={`text-xs ${dashData.kpis.custMomPct >= 0 ? "text-primary" : "text-red-500"}`}>
+                {dashData.kpis.custMomAmt >= 0 ? "+" : ""}{dashData.kpis.custMomAmt} visitors/day vs last month
+              </span>
+            </div>
+          ) : null}
         </div>
         <div className="bg-white rounded-2xl p-5 shadow-sm">
           <div className="text-xs text-on-surface-variant mb-3">{T.kpi3Label}</div>
-          <div className="text-3xl font-bold text-on-surface">{dd.kpi3}</div>
+          <div className="text-3xl font-bold text-on-surface">{overallConversion}</div>
           <div className="text-sm text-on-surface-variant mb-3">{T.kpi3Sub}</div>
-          <span className="text-xs font-bold text-primary">{T.kpi3Trend}</span>
         </div>
         <div className="bg-white rounded-2xl p-5 shadow-sm">
           <div className="text-xs text-on-surface-variant mb-3">{T.kpi4Label}</div>
-          <div className="text-3xl font-bold text-on-surface">{dd.kpi4}</div>
+          <div className="text-3xl font-bold text-on-surface">{patronScore}</div>
           <div className="text-sm text-on-surface-variant mb-3">{T.kpi4Sub}</div>
-          <span className="text-xs font-bold text-primary">{T.kpi4Trend}</span>
         </div>
       </div>
 
-      {/* AI Advisor */}
-      <div className="bg-white rounded-2xl shadow-sm px-5 py-4 mb-6 flex items-start gap-3">
-        <span className="material-symbols-outlined text-primary text-[20px] mt-0.5 flex-shrink-0">auto_awesome</span>
-        <div>
-          <div className="text-xs font-bold text-primary mb-1">{T.aiLabel}</div>
-          <p className="text-sm text-on-surface-variant leading-relaxed">
-            {aiText.pre} <strong className="text-on-surface">{aiText.money}</strong> {aiText.mid}{" "}
-            <strong className="text-on-surface">{aiText.pct}</strong>{aiText.post}
-          </p>
-        </div>
+      {/* AI Advisor — section-level summary */}
+      <div className="mb-6">
+        <AiSuggestionInline
+          role="retailer"
+          pageContext="Retailer Dashboard"
+          dataContext={dashDataContext}
+          label={T.aiLabel}
+        />
       </div>
 
-      {/* What You Should Do This Week */}
+      {/* What You Should Do This Week — day-by-day plan + material alerts */}
       <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-1">
           <span className="material-symbols-outlined text-[18px] text-primary">bolt</span>
           <h3 className="text-base font-bold text-on-surface">{T.actionsTitle}</h3>
-          <span className="ml-auto text-[10px] font-bold bg-primary/10 text-primary px-2.5 py-1 rounded-full">{T.actionsCount_all}</span>
         </div>
-        <div className="grid grid-cols-3 gap-4">
-          {dd.actions.map((a, i) => (
-            <div key={i} className={`${a.bgCard} border ${a.border} rounded-xl p-4`}>
-              <div className="flex items-center gap-2 mb-2">
-                <span className={`material-symbols-outlined text-[15px] ${a.iconColor}`}>{a.icon}</span>
-                <span className={`text-[10px] font-bold uppercase tracking-widest ${a.catColor}`}>
-                  {lang === "th" ? a.catTh : a.catEn}
-                </span>
+        <p className="text-xs text-on-surface-variant mb-4">
+          {lang === "th"
+            ? "สิ่งที่ควรทำสัปดาห์นี้ จากเหตุการณ์ปัจจุบันและความเสี่ยงลูกค้าของร้าน"
+            : "What to do this week, based on your store's current events and customer-retention risk"}
+        </p>
+
+        {actionCards.length === 0 ? (
+          <p className="text-sm text-on-surface-variant py-4 text-center">{T.noActions}</p>
+        ) : (
+          <div className="grid grid-cols-3 gap-4">
+            {actionCards.map((a, i) => (
+              <div key={i} className={`${a.bgCard} border ${a.border} rounded-xl p-4`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={`material-symbols-outlined text-[15px] ${a.iconColor}`}>{a.icon}</span>
+                  <span className={`text-[10px] font-bold uppercase tracking-widest ${a.catColor}`}>
+                    {lang === "th" ? a.catTh : a.catEn}
+                  </span>
+                </div>
+                <p className="text-sm font-semibold text-on-surface mb-1">
+                  {lang === "th" ? a.titleTh : a.titleEn}
+                </p>
+                <p className="text-xs text-on-surface-variant leading-relaxed mb-2">
+                  {lang === "th" ? a.bodyTh : a.bodyEn}
+                </p>
+                <div className={`flex items-start gap-1 ${a.tipColor}`}>
+                  <span className="material-symbols-outlined text-[13px] mt-0.5 flex-shrink-0">arrow_forward</span>
+                  <p className="text-xs font-semibold">
+                    {lang === "th" ? `สัปดาห์นี้: ${a.actionTh}` : `This week: ${a.actionEn}`}
+                  </p>
+                </div>
               </div>
-              <p className="text-sm font-semibold text-on-surface mb-1">
-                {lang === "th" ? a.titleTh : a.titleEn}
-              </p>
-              <p className="text-xs text-on-surface-variant mb-3 leading-relaxed">
-                {lang === "th" ? a.bodyTh : a.bodyEn}
-              </p>
-              <div className={`text-xs font-bold ${a.tipColor}`}>
-                {lang === "th" ? a.tipTh : a.tipEn}
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Heatmap + Best & Worst Hours */}
@@ -466,17 +500,18 @@ export default function RetailerDashboardPage() {
         <div className="col-span-2 bg-white rounded-2xl p-6 shadow-sm">
           <h3 className="text-base font-bold text-on-surface mb-0.5">{T.heatmapTitle}</h3>
           <p className="text-xs text-on-surface-variant mb-4">{T.heatmapSubtitle}</p>
-          <div className="overflow-x-auto">
-            <div className="min-w-[480px]">
-              <div className="flex mb-1 ml-10 gap-0.5">
+          <div>
+            <div className="w-full">
+              <div className="flex items-center mb-1 gap-0.5">
+                <div className="w-9 flex-shrink-0" />
                 {HOURS.map((h) => (
                   <div key={h} className="flex-1 text-center text-[9px] text-on-surface-variant">{h}</div>
                 ))}
               </div>
-              {HEATMAP.map((row, di) => (
+              {(details?.heatmap ?? [[],[],[],[],[],[],[]]).map((row, di) => (
                 <div key={T.days[di]} className="flex items-center gap-0.5 mb-0.5">
                   <div className="w-9 text-[10px] text-on-surface-variant text-right pr-2 flex-shrink-0">{T.days[di]}</div>
-                  {row.map((level, hi) => (
+                  {(row.length ? row : Array(18).fill(0)).map((level, hi) => (
                     <div key={hi} className={`flex-1 rounded-sm ${HEAT_COLORS[level]}`} style={{ height: 18 }} />
                   ))}
                 </div>
@@ -488,11 +523,12 @@ export default function RetailerDashboardPage() {
               </div>
             </div>
           </div>
-          <div className="mt-4 bg-[#F5F2EB] rounded-xl px-4 py-3 flex items-start gap-2">
-            <span className="material-symbols-outlined text-primary text-[15px] mt-0.5 flex-shrink-0">auto_awesome</span>
-            <p className="text-xs text-on-surface-variant leading-relaxed">
-              <strong className="text-on-surface">{T.heatmapTipBold}</strong>{T.heatmapTip}
-            </p>
+          <div className="mt-4">
+            <AiSuggestionInline
+              role="retailer"
+              pageContext="Retailer Dashboard — Hourly Heatmap"
+              dataContext={heatmapDataContext}
+            />
           </div>
         </div>
 
@@ -504,15 +540,15 @@ export default function RetailerDashboardPage() {
           <div>
             <div className="text-xs font-semibold text-on-surface mb-2">{T.weekdaysLabel}</div>
             <div className="flex items-end gap-[3px] h-14">
-              {WEEKDAY_BARS.map((b) => (
-                <div key={b.h} className="flex-1">
+              {(details?.weekdayBars ?? Array(18).fill({ h: "", v: 0 })).map((b, i) => (
+                <div key={i} className="flex-1 h-full flex items-end" title={`${b.h}:00 — ${b.v}%`}>
                   <div className="w-full rounded-t-sm bg-[#6ab04c]" style={{ height: `${b.v}%`, minHeight: b.v > 0 ? 3 : 0 }} />
                 </div>
               ))}
             </div>
             <div className="flex items-center gap-[3px] mt-1">
-              {WEEKDAY_BARS.map((b) => (
-                <div key={b.h} className="flex-1 text-center text-[8px] text-on-surface-variant">
+              {(details?.weekdayBars ?? Array(18).fill({ h: "", v: 0 })).map((b, i) => (
+                <div key={i} className="flex-1 text-center text-[8px] text-on-surface-variant">
                   {["06","09","12","15","18","21"].includes(b.h) ? b.h : ""}
                 </div>
               ))}
@@ -521,26 +557,25 @@ export default function RetailerDashboardPage() {
           <div>
             <div className="text-xs font-semibold text-on-surface mb-2">{T.weekendsLabel}</div>
             <div className="flex items-end gap-[3px] h-14">
-              {WEEKEND_BARS.map((b) => (
-                <div key={b.h} className="flex-1">
+              {(details?.weekendBars ?? Array(18).fill({ h: "", v: 0 })).map((b, i) => (
+                <div key={i} className="flex-1 h-full flex items-end" title={`${b.h}:00 — ${b.v}%`}>
                   <div className="w-full rounded-t-sm bg-[#344e00]" style={{ height: `${b.v}%`, minHeight: b.v > 0 ? 3 : 0 }} />
                 </div>
               ))}
             </div>
             <div className="flex items-center gap-[3px] mt-1">
-              {WEEKEND_BARS.map((b) => (
-                <div key={b.h} className="flex-1 text-center text-[8px] text-on-surface-variant">
+              {(details?.weekendBars ?? Array(18).fill({ h: "", v: 0 })).map((b, i) => (
+                <div key={i} className="flex-1 text-center text-[8px] text-on-surface-variant">
                   {["06","09","12","15","18","21"].includes(b.h) ? b.h : ""}
                 </div>
               ))}
             </div>
           </div>
-          <div className="bg-[#F5F2EB] rounded-xl px-3 py-3 flex items-start gap-2">
-            <span className="material-symbols-outlined text-primary text-[15px] mt-0.5 flex-shrink-0">auto_awesome</span>
-            <p className="text-xs text-on-surface-variant leading-relaxed">
-              {T.hoursTipPre}<strong className="text-on-surface">{T.hoursTipBold1}</strong>{T.hoursTipMid1}<strong className="text-on-surface">{T.hoursTipBold2}</strong>{T.hoursTipMid2}<strong className="text-on-surface">{T.hoursTipBold3}</strong>{T.hoursTipPost}
-            </p>
-          </div>
+          <AiSuggestionInline
+            role="retailer"
+            pageContext="Retailer Dashboard — Hourly Bars"
+            dataContext={hoursDataContext}
+          />
         </div>
       </div>
 
@@ -553,9 +588,9 @@ export default function RetailerDashboardPage() {
           <div className="mb-5">
             <div className="text-xs font-semibold text-on-surface mb-3">{T.ageGroupLabel}</div>
             <div className="flex items-center gap-4">
-              <DonutChart segs={AGE_SEGS} size={72} />
+              <DonutChart segs={ageDonutSegs} size={72} />
               <div className="space-y-1.5">
-                {AGE_SEGS.map((s) => (
+                {ageDonutSegs.map((s) => (
                   <div key={s.label} className="flex items-center gap-2 text-xs">
                     <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: s.color }} />
                     <span className="text-on-surface-variant w-12">{s.label}</span>
@@ -569,9 +604,9 @@ export default function RetailerDashboardPage() {
           <div className="mb-5">
             <div className="text-xs font-semibold text-on-surface mb-3">{T.spendLabel}</div>
             <div className="flex items-center gap-4">
-              <DonutChart segs={SPEND_SEGS} size={72} />
+              <DonutChart segs={spendDonutSegs} size={72} />
               <div className="space-y-1.5">
-                {SPEND_SEGS.map((s) => (
+                {spendDonutSegs.map((s) => (
                   <div key={s.label} className="flex items-center gap-2 text-xs">
                     <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: s.color }} />
                     <span className="text-on-surface-variant w-16">{s.label}</span>
@@ -582,11 +617,12 @@ export default function RetailerDashboardPage() {
             </div>
           </div>
 
-          <div className="mt-auto bg-[#F5F2EB] rounded-xl px-3 py-3 flex items-start gap-2">
-            <span className="material-symbols-outlined text-primary text-[15px] mt-0.5 flex-shrink-0">auto_awesome</span>
-            <p className="text-xs text-on-surface-variant leading-relaxed">
-              {T.customersTipPre}<strong className="text-on-surface">{T.customersTipBold}</strong>{T.customersTip}
-            </p>
+          <div className="mt-auto">
+            <AiSuggestionInline
+              role="retailer"
+              pageContext="Retailer Dashboard — Customer Segments"
+              dataContext={segmentsDataContext}
+            />
           </div>
         </div>
 
@@ -604,7 +640,7 @@ export default function RetailerDashboardPage() {
 
           <div className="flex-1 divide-y divide-outline-variant/10">
             {filteredConversion.map((c) => (
-              <div key={c.name} className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] items-center py-3">
+              <div key={c.storeId} className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] items-center py-3">
                 <div>
                   <div className="text-sm font-medium text-on-surface">{c.name}</div>
                   <div className="text-xs text-on-surface-variant">{c.station}</div>
@@ -624,48 +660,54 @@ export default function RetailerDashboardPage() {
             ))}
           </div>
 
-          <div className="mt-4 bg-[#F5F2EB] rounded-xl px-4 py-3 flex items-start gap-2">
-            <span className="material-symbols-outlined text-primary text-[15px] mt-0.5 flex-shrink-0">auto_awesome</span>
-            <p className="text-xs text-on-surface-variant leading-relaxed">
-              {storeId === "all" ? (
-                <><strong className="text-on-surface">{T.conversionTipBold}</strong>{T.conversionTip}</>
-              ) : storeId === "quick" ? (
-                <>Only about <strong className="text-on-surface">35 out of 100 visitors</strong> buy something at Quick Mart — a bit lower than your other stores. A simple combo deal (e.g. coffee + snack for ฿79) could add about 15 more sales every day without any extra foot traffic.</>
-              ) : storeId === "coffee" ? (
-                <>Coffee Corner converts <strong className="text-on-surface">38.2% of visitors into buyers</strong> — well above the platform average. Saturday afternoons bring the most traffic. Extending hours or running a short weekend promo could push this even higher.</>
-              ) : (
-                <>Lumina Artisan Roastery converts <strong className="text-on-surface">38.1% of visitors</strong> — your top conversion rate. Customers who walk in are highly engaged. A loyalty card or upsell prompt at checkout could increase the average basket size further.</>
-              )}
-            </p>
+          <div className="mt-4">
+            <AiSuggestionInline
+              role="retailer"
+              pageContext="Retailer Dashboard — Conversion"
+              dataContext={conversionDataContext}
+            />
           </div>
         </div>
       </div>
 
-      {/* Store Report Cards */}
-      <div className={`grid gap-6 ${filteredHighlights.length === 1 ? "grid-cols-1 max-w-xl" : "grid-cols-2"}`}>
-        {filteredHighlights.map((h) => {
-          const isBest = h.type === "best";
-          const accentColor = isBest ? "text-primary" : "text-red-500";
-          const barColor    = isBest ? "bg-primary"   : "bg-red-400";
-          const hLang = HIGHLIGHTS_LANG[h.name as keyof typeof HIGHLIGHTS_LANG][lang];
-          const trendMax = Math.max(...h.trend);
-          const trendMin = Math.min(...h.trend);
-          const pts = h.trend.map((v, i) => {
-            const x = (i / (h.trend.length - 1)) * 100;
+      {/* Store Report Cards (live from DB) */}
+      <div className={`grid gap-6 ${highlights.length === 1 ? "grid-cols-1 max-w-xl" : "grid-cols-2"}`}>
+        {highlights.map((h) => {
+          const accentColor = "text-primary";
+          const barColor    = "bg-primary";
+          const trendVals = h.trend.length ? h.trend : [0, 0, 0, 0, 0, 0];
+          const trendMax  = Math.max(...trendVals);
+          const trendMin  = Math.min(...trendVals);
+          const pts = trendVals.map((v, i) => {
+            const x = (i / (trendVals.length - 1 || 1)) * 100;
             const y = 32 - ((v - trendMin) / (trendMax - trendMin || 1)) * 28;
             return `${x},${y}`;
           }).join(" ");
 
+          const highlightContext = [
+            `Store: ${h.name} (${h.location})`,
+            `Monthly Revenue: ฿${(h.revenueThb / 1000).toFixed(0)}k (${h.revenueMomPct >= 0 ? "+" : ""}${h.revenueMomPct}% MoM)`,
+            `Daily Customers: ${h.customersDaily} (${h.customersMomPct >= 0 ? "+" : ""}${h.customersMomPct}% MoM)`,
+            `Basket Size: ฿${h.basketThb}/visit`,
+            `Conversion: ${h.conversionPct}%`,
+            `Revisit Rate: ${h.revisitPct}%`,
+            `Sales per sqm: ฿${h.salesPerSqmThb}/sqm`,
+            `6-month revenue trend (฿k): ${trendVals.join(", ")}`,
+            `Platform standing: ${h.topQuartile ? "Top 25%" : "Median range"}`,
+          ].join(" | ");
+
           return (
-            <div key={h.name} className="bg-white rounded-2xl p-6 shadow-sm">
+            <div key={h.storeId} className="bg-white rounded-2xl p-6 shadow-sm">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-1.5">
-                  <span className={`material-symbols-outlined text-[14px] ${accentColor}`}>{h.badgeIcon}</span>
-                  <span className={`text-[10px] font-bold uppercase tracking-widest ${accentColor}`}>{hLang.badge}</span>
+                  <span className={`material-symbols-outlined text-[14px] ${accentColor}`}>star</span>
+                  <span className={`text-[10px] font-bold uppercase tracking-widest ${accentColor}`}>
+                    {h.topQuartile ? T.topQuartileTag : T.salesGrowthTag}
+                  </span>
                 </div>
                 <div className="text-right">
                   <div className="text-[10px] text-on-surface-variant">{T.storeTypeLabel}</div>
-                  <div className="text-xs font-semibold text-on-surface">{hLang.storeType}</div>
+                  <div className="text-xs font-semibold text-on-surface">{h.name}</div>
                 </div>
               </div>
 
@@ -674,78 +716,52 @@ export default function RetailerDashboardPage() {
                   <div className="text-xl font-bold text-on-surface">{h.name}</div>
                   <div className="text-xs text-on-surface-variant">{h.location}</div>
                 </div>
-                <div className="text-right">
-                  <div className="text-[10px] text-on-surface-variant mb-1">{T.unitsUsedLabel}</div>
-                  <div className="flex gap-1">
-                    {Array.from({ length: h.unitsTotal }).map((_, i) => (
-                      <span key={i} className={`w-3 h-3 rounded-full ${i < h.unitsUsed ? "bg-on-surface" : "bg-outline-variant/30"}`} />
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-1.5 mb-4">
-                {h.tags.map((t, i) => (
-                  <span key={i} className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${t.color}`}>{hLang.tags[i]}</span>
-                ))}
               </div>
 
               <div className="grid grid-cols-3 gap-3 mb-4">
                 <div>
                   <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">{T.earnedLabel}</div>
-                  <div className="text-xl font-bold text-on-surface">{h.revenue.value}</div>
-                  <div className={`text-xs font-semibold ${h.revenue.up ? "text-primary" : "text-red-500"}`}>{h.revenue.trend}</div>
+                  <div className="text-xl font-bold text-on-surface">฿{Math.round(h.revenueThb / 1000)}k</div>
+                  <div className={`text-xs font-semibold ${h.revenueMomPct >= 0 ? "text-primary" : "text-red-500"}`}>{h.revenueMomPct >= 0 ? "+" : ""}{h.revenueMomPct}%</div>
                 </div>
                 <div>
                   <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">{T.visitorsLabel}</div>
-                  <div className="text-xl font-bold text-on-surface">{h.customers.value}</div>
-                  <div className={`text-xs font-semibold ${h.customers.up ? "text-primary" : "text-red-500"}`}>{h.customers.trend}</div>
+                  <div className="text-xl font-bold text-on-surface">{h.customersDaily}</div>
+                  <div className={`text-xs font-semibold ${h.customersMomPct >= 0 ? "text-primary" : "text-red-500"}`}>{h.customersMomPct >= 0 ? "+" : ""}{h.customersMomPct}%</div>
                 </div>
                 <div>
                   <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">{T.spentLabel}</div>
-                  <div className="text-xl font-bold text-on-surface">{h.basket.value}</div>
-                  <div className="text-xs text-on-surface-variant">{hLang.perVisit}</div>
+                  <div className="text-xl font-bold text-on-surface">฿{h.basketThb}</div>
                 </div>
               </div>
 
               <div className="mb-1 flex items-center justify-between text-xs">
                 <span className="text-on-surface-variant">{T.visitorsWho}</span>
-                <div className="flex items-center gap-2">
-                  <span className={`font-bold ${accentColor}`}>{h.conversion.value} {T.outOf}</span>
-                  <span className={`text-[10px] ${h.conversion.up ? "text-primary" : "text-red-500"}`}>{hLang.convChange}</span>
-                </div>
+                <span className={`font-bold ${accentColor}`}>{h.conversionPct} {T.outOf}</span>
               </div>
               <div className="h-2 bg-[#F5F2EB] rounded-full overflow-hidden mb-4">
-                <div className={`h-2 ${barColor} rounded-full`} style={{ width: `${h.conversion.value}%` }} />
+                <div className={`h-2 ${barColor} rounded-full`} style={{ width: `${h.conversionPct}%` }} />
               </div>
 
               <div className="mb-3">
                 <div className="text-[10px] text-on-surface-variant mb-1">{T.lastSixMonths}</div>
                 <svg viewBox="0 0 100 36" className="w-full h-8" preserveAspectRatio="none">
-                  <polyline
-                    points={pts}
-                    fill="none"
-                    stroke={isBest ? "#6ab04c" : "#f87171"}
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  {h.trend.map((v, i) => {
-                    const x = (i / (h.trend.length - 1)) * 100;
+                  <polyline points={pts} fill="none" stroke="#6ab04c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  {trendVals.map((v, i) => {
+                    const x = (i / (trendVals.length - 1 || 1)) * 100;
                     const y = 32 - ((v - trendMin) / (trendMax - trendMin || 1)) * 28;
-                    return i === h.trend.length - 1 ? (
-                      <circle key={i} cx={x} cy={y} r="2.5" fill={isBest ? "#6ab04c" : "#f87171"} />
+                    return i === trendVals.length - 1 ? (
+                      <circle key={i} cx={x} cy={y} r="2.5" fill="#6ab04c" />
                     ) : null;
                   })}
                 </svg>
               </div>
 
-              <div className="bg-[#F5F2EB] rounded-xl px-4 py-3 flex items-start gap-2">
-                <span className="material-symbols-outlined text-primary text-[15px] mt-0.5 flex-shrink-0">auto_awesome</span>
-                <p className="text-xs text-on-surface-variant leading-relaxed">
-                  <strong className="text-on-surface">{T.ourSuggestion}</strong> {hLang.suggestion}
-                </p>
-              </div>
+              <AiSuggestionInline
+                role="retailer"
+                pageContext={`Retailer Dashboard — ${h.name} Report Card`}
+                dataContext={highlightContext}
+              />
             </div>
           );
         })}

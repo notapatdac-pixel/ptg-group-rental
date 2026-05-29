@@ -2,15 +2,16 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import type { ReactNode } from "react";
 import NavBar from "@/components/common/NavBar";
+import AiAdvisorChat from "@/components/common/AiAdvisorChat";
 
 const NAV_ITEMS = [
-  { label: "Overview", icon: "dashboard", href: "/landlord_backoffice/landlordOverviewPage" },
-  { label: "My Stations", icon: "location_on", href: "/landlord_backoffice/landlordMyStationsPage" },
-  { label: "Applications", icon: "folder_open", href: "/landlord_backoffice/landlordApplicationsPage" },
-  { label: "Tenants", icon: "people", href: "/landlord_backoffice/landlordTenantsPage" },
-  { label: "Revenue", icon: "payments", href: "/landlord_backoffice/landlordRevenuePage" },
-  { label: "AI Advisor", icon: "smart_toy", href: "/landlord_backoffice/landlordAiAdvisorPage" },
+  { label: "Overview",     icon: "dashboard",        href: "/landlord_backoffice/landlordOverviewPage"      },
+  { label: "Applications", icon: "folder_open",      href: "/landlord_backoffice/landlordApplicationsPage"  },
+  { label: "Tenants",      icon: "people",           href: "/landlord_backoffice/landlordTenantsPage"       },
+  { label: "My Stations",  icon: "location_on",      href: "/landlord_backoffice/landlordMyStationsPage"    },
 ];
+
+const BOTTOM_NAV_ITEMS: typeof NAV_ITEMS = [];
 
 export default function LandlordBackofficeLayout({ children }: { children: ReactNode }) {
   const { pathname } = useRouter();
@@ -44,6 +45,25 @@ export default function LandlordBackofficeLayout({ children }: { children: React
             })}
           </nav>
           <div className="py-4 border-t border-outline-variant/10">
+            {BOTTOM_NAV_ITEMS.map((item) => {
+              const active = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`no-underline flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors ${
+                    active
+                      ? "text-primary border-l-[3px] border-primary bg-primary/5"
+                      : "text-on-surface-variant border-l-[3px] border-transparent hover:bg-[#F5F2EB] hover:text-on-surface"
+                  }`}
+                >
+                  <span className={`material-symbols-outlined text-[20px] ${active ? "text-primary" : "text-on-surface-variant"}`}>
+                    {item.icon}
+                  </span>
+                  {item.label}
+                </Link>
+              );
+            })}
             <Link
               href="/loginpage/loginPage"
               className="no-underline flex items-center gap-3 px-5 py-3 text-sm font-medium text-on-surface-variant hover:text-error hover:bg-red-50 transition-colors border-l-[3px] border-transparent"
@@ -59,6 +79,8 @@ export default function LandlordBackofficeLayout({ children }: { children: React
           {children}
         </main>
       </div>
+
+      <AiAdvisorChat />
     </div>
   );
 }

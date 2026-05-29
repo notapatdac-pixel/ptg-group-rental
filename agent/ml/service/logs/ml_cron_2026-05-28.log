@@ -1,0 +1,119 @@
+2026-05-29 01:09:13,991 INFO httpx :: HTTP Request: POST https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/ml_run_logs "HTTP/2 201 Created"
+2026-05-29 01:09:13,992 INFO ml_cron :: ===== PTG ML cron run started (log_id=34f23322-266a-4ef6-8ff9-1c6e0e1cf577) =====
+2026-05-29 01:09:21,146 INFO ml_service.load_models :: Loaded sales_revenue_xgb from sales_revenue_xgb.joblib
+2026-05-29 01:09:21,151 INFO ml_service.load_models :: Loaded sales_spend_xgb from sales_spend_xgb.joblib
+2026-05-29 01:09:21,152 INFO ml_service.load_models :: Loaded sales_spend_scaler from sales_spend_scaler.joblib
+2026-05-29 01:09:21,153 INFO ml_service.load_models :: Loaded le_store_type from le_store_type.joblib
+2026-05-29 01:09:21,154 INFO ml_service.load_models :: Loaded le_zone from le_zone.joblib
+2026-05-29 01:09:22,271 INFO ml_service.load_models :: Loaded churn_segment_rf from churn_segment_rf.joblib
+2026-05-29 01:09:22,272 INFO ml_service.load_models :: Loaded churn_scaler from churn_scaler.joblib
+2026-05-29 01:09:22,272 INFO ml_service.load_models :: Loaded churn_encoders from churn_encoders.joblib
+2026-05-29 01:09:22,273 INFO ml_service.load_models :: Loaded matching_lr from matching_lr.joblib
+2026-05-29 01:09:22,273 INFO ml_service.load_models :: Loaded matching_scaler from matching_scaler.joblib
+2026-05-29 01:09:22,274 INFO ml_service.load_models :: Loaded matching_segment_medians from matching_segment_medians.joblib
+2026-05-29 01:09:22,275 INFO ml_service.load_models :: Loaded matching_encoders from matching_encoders.joblib
+2026-05-29 01:09:22,318 INFO ml_service.load_models :: Loaded anomaly_isoforest from anomaly_isoforest.joblib
+2026-05-29 01:09:22,318 INFO ml_service.load_models :: Loaded anomaly_scaler from anomaly_scaler.joblib
+2026-05-29 01:09:22,319 INFO ml_cron :: Models loaded: 14
+2026-05-29 01:09:22,319 INFO ml_cron :: Running forecast...
+2026-05-29 01:09:22,764 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/store_monthly_pnl?select=%2A "HTTP/2 200 OK"
+2026-05-29 01:09:22,855 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/store_monthly_performance?select=%2A "HTTP/2 200 OK"
+2026-05-29 01:09:22,924 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/stations?select=%2A "HTTP/2 200 OK"
+2026-05-29 01:09:22,990 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/station_units?select=%2A "HTTP/2 200 OK"
+2026-05-29 01:09:23,058 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/station_monthly_metrics?select=%2A "HTTP/2 200 OK"
+2026-05-29 01:09:23,124 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/retailer_profiles?select=%2A "HTTP/2 200 OK"
+2026-05-29 01:09:23,183 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/applications?select=%2A "HTTP/2 200 OK"
+2026-05-29 01:09:23,244 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/station_units?select=%2A "HTTP/2 200 OK"
+2026-05-29 01:09:23,252 WARNING ml_service.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:23,252 WARNING ml_service.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:23,252 WARNING ml_service.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:23,252 WARNING ml_service.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:23,252 WARNING ml_service.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:23,252 WARNING ml_service.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:23,252 WARNING ml_service.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:23,252 WARNING ml_service.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:23,252 WARNING ml_service.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:23,252 WARNING ml_service.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:23,252 WARNING ml_service.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:23,252 WARNING ml_service.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:23,253 WARNING ml_service.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:23,253 WARNING ml_service.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:23,253 WARNING ml_service.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:23,253 WARNING ml_service.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:23,253 WARNING ml_service.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:23,253 WARNING ml_service.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:23,253 WARNING ml_service.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:23,253 WARNING ml_service.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:23,253 WARNING ml_service.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:23,253 WARNING ml_service.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:23,253 WARNING ml_service.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:23,253 WARNING ml_service.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:23,318 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/applications?select=%2A "HTTP/2 200 OK"
+2026-05-29 01:09:23,381 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/station_units?select=%2A "HTTP/2 200 OK"
+2026-05-29 01:09:23,443 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/stations?select=%2A "HTTP/2 200 OK"
+2026-05-29 01:09:23,444 INFO ml_cron :: forecast OK — rows_written=0 skipped=2
+2026-05-29 01:09:23,444 WARNING ml_cron ::   forecast note: 2 store(s) skipped — no application links them to a retailer profile.
+2026-05-29 01:09:23,445 INFO ml_cron :: Running churn...
+2026-05-29 01:09:23,506 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/store_customer_segments?select=%2A "HTTP/2 200 OK"
+2026-05-29 01:09:23,566 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/stations?select=%2A "HTTP/2 200 OK"
+2026-05-29 01:09:23,626 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/station_units?select=%2A "HTTP/2 200 OK"
+2026-05-29 01:09:23,688 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/station_monthly_metrics?select=%2A "HTTP/2 200 OK"
+2026-05-29 01:09:23,748 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/retailer_profiles?select=%2A "HTTP/2 200 OK"
+2026-05-29 01:09:23,805 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/applications?select=%2A "HTTP/2 200 OK"
+2026-05-29 01:09:23,879 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/station_units?select=%2A "HTTP/2 200 OK"
+2026-05-29 01:09:23,950 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/stations?select=%2A "HTTP/2 200 OK"
+2026-05-29 01:09:24,012 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/store_monthly_performance?select=%2A "HTTP/2 200 OK"
+2026-05-29 01:09:24,020 WARNING ml_service.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,020 WARNING ml_service.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,020 WARNING ml_service.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,020 WARNING ml_service.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,020 WARNING ml_service.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,020 WARNING ml_service.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,020 WARNING ml_service.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,020 WARNING ml_service.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,021 WARNING ml_service.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,021 WARNING ml_service.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,021 WARNING ml_service.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,021 WARNING ml_service.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,021 WARNING ml_service.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,021 WARNING ml_service.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,021 WARNING ml_service.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,021 WARNING ml_service.supabase_io :: Unknown label 'Unknown' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,021 WARNING ml_service.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,021 WARNING ml_service.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,021 WARNING ml_service.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,021 WARNING ml_service.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,021 WARNING ml_service.supabase_io :: Unknown label '<200' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,021 WARNING ml_service.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,021 WARNING ml_service.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,022 WARNING ml_service.supabase_io :: Unknown label '200-500' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,148 INFO httpx :: HTTP Request: POST https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/ml_churn_segments?on_conflict=store_id%2Cage_group%2Cspend_range&columns=%22avg_risk_prob_pct%22%2C%22spend_range%22%2C%22recommended_action%22%2C%22store_id%22%2C%22n_monthly_customers%22%2C%22model_version%22%2C%22risk_level%22%2C%22age_group%22%2C%22revenue_at_risk_annual%22 "HTTP/2 200 OK"
+2026-05-29 01:09:24,149 INFO ml_cron :: churn OK — rows_written=8 skipped=0
+2026-05-29 01:09:24,149 INFO ml_cron :: Running matching...
+2026-05-29 01:09:24,204 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/retailer_profiles?select=%2A "HTTP/2 200 OK"
+2026-05-29 01:09:24,262 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/stations?select=%2A "HTTP/2 200 OK"
+2026-05-29 01:09:24,327 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/station_units?select=%2A "HTTP/2 200 OK"
+2026-05-29 01:09:24,386 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/station_monthly_metrics?select=%2A "HTTP/2 200 OK"
+2026-05-29 01:09:24,387 WARNING ml_service.supabase_io :: Unknown label 'Cafe & Roastery' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,388 WARNING ml_service.supabase_io :: Unknown label 'high' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,388 WARNING ml_service.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,388 WARNING ml_service.supabase_io :: Unknown label 'high' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,388 WARNING ml_service.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,388 WARNING ml_service.supabase_io :: Unknown label 'medium' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,388 WARNING ml_service.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,388 WARNING ml_service.supabase_io :: Unknown label 'medium' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,388 WARNING ml_service.supabase_io :: Unknown label 'Samut Prakan' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,388 WARNING ml_service.supabase_io :: Unknown label 'high' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,388 WARNING ml_service.supabase_io :: Unknown label 'Bangkok' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,388 WARNING ml_service.supabase_io :: Unknown label 'medium' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,388 WARNING ml_service.supabase_io :: Unknown label 'Nonthaburi' for LabelEncoder — defaulting to 0
+2026-05-29 01:09:24,391 WARNING ml_service.matching_score :: Could not apply segment medians: cannot insert store_type_enc, already exists — falling back to column median.
+2026-05-29 01:09:24,461 INFO httpx :: HTTP Request: POST https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/ml_matching_scores?on_conflict=retailer_id%2Cstation_id&columns=%22retailer_id%22%2C%22match_score%22%2C%22is_cold_start%22%2C%22model_version%22%2C%22estimated_earn_high_thb%22%2C%22match_label%22%2C%22station_id%22%2C%22estimated_earn_low_thb%22%2C%22match_pct%22 "HTTP/2 200 OK"
+2026-05-29 01:09:24,462 INFO ml_cron :: matching OK — rows_written=6 skipped=0
+2026-05-29 01:09:24,462 INFO ml_cron :: Running anomaly...
+2026-05-29 01:09:24,517 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/store_monthly_pnl?select=%2A "HTTP/2 200 OK"
+2026-05-29 01:09:24,578 INFO httpx :: HTTP Request: GET https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/store_monthly_performance?select=%2A "HTTP/2 200 OK"
+2026-05-29 01:09:24,672 INFO httpx :: HTTP Request: POST https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/ml_anomaly_alerts?on_conflict=store_id%2Cperiod&columns=%22anomaly_score%22%2C%22anomaly_dimension%22%2C%22is_anomaly%22%2C%22severity%22%2C%22store_id%22%2C%22period%22%2C%22direction%22%2C%22suggested_action%22%2C%22pct_deviation%22%2C%22model_version%22 "HTTP/2 200 OK"
+2026-05-29 01:09:24,672 INFO ml_cron :: anomaly OK — rows_written=8 skipped=0
+2026-05-29 01:09:24,740 INFO httpx :: HTTP Request: PATCH https://hhczxngecxlufghqcpwj.supabase.co/rest/v1/ml_run_logs?id=eq.34f23322-266a-4ef6-8ff9-1c6e0e1cf577 "HTTP/2 200 OK"
+2026-05-29 01:09:24,741 INFO ml_cron :: ===== Done — 22 rows written in 10.7s, 0 errors =====
