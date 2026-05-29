@@ -229,16 +229,23 @@ export default function ApplyFlowPage() {
         if (res.ok) {
           const p = await res.json() as {
             businessName?: string;
+            contactName?:  string;
+            phone?:        string;
             category?:     string;
             concept?:      string;
           };
           if (p.businessName) { setBusinessName(p.businessName); filled = true; }
           if (p.category)     { setCategory(p.category);         filled = true; }
           if (p.concept)      { setConcept(p.concept);           filled = true; }
+          if (p.phone)        { setPhone(p.phone);               filled = true; }
+          // Contact Person = the contact saved in the profile (owner_name).
+          // Fall back to the account holder's name only if none was saved —
+          // never the business/store name.
+          const contact = (p.contactName && p.contactName.trim()) || user.name || "";
+          if (contact) { setContactName(contact); filled = true; }
         }
       } catch {}
     }
-    if (user?.name) { setContactName(user.name); filled = true; }
     if (!filled) {
       const local = loadProfile();
       if (local) {

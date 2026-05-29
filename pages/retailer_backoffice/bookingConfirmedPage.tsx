@@ -1,8 +1,8 @@
 "use client";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import RetailerBackofficeLayout from "@/components/retailer_backoffice/RetailerBackofficeLayout";
-import { getAppByRetailerId } from "@/lib/applicationsData";
 
 const STEPS = [
   { label: "Application Submitted",  icon: "description",    done: true },
@@ -10,27 +10,91 @@ const STEPS = [
   { label: "Walkthrough Scheduled",  icon: "calendar_month",  done: true },
 ];
 
-export default function BookingConfirmedPage() {
-  const router  = useRouter();
-  const appId     = typeof router.query.appId === "string" ? router.query.appId : "PTG-APP-2025-8821";
-  const date      = typeof router.query.date  === "string" ? router.query.date  : "29";
-  const time      = typeof router.query.time  === "string" ? router.query.time  : "14:00";
-  const sharedApp = getAppByRetailerId(appId) ?? getAppByRetailerId("PTG-APP-2025-8821")!;
-  const appInfo   = {
-    stationName:        sharedApp.stationName,
-    unit:               sharedApp.unitCode,
-    unitLabel:          sharedApp.unitLabel,
-    price:              `฿${sharedApp.price.toLocaleString()}`,
-    duration:           sharedApp.duration,
-    location:           sharedApp.location,
-    specialist:         sharedApp.specialistName,
-    specialistInitials: sharedApp.specialistInitials,
-  };
+// Live application row (from /api/applications) including the confirmed booking.
+// Replaces the old hardcoded `applicationsData` mock that always fell back to a
+// fixed station when the real app id wasn't found.
+type Row = {
+  retailer_display_id: string;
+  specialist_name?: string;
+  specialist_initials?: string;
+  booking?: { visitDate: string; visitTime: string } | null;
+  station_units?: {
+    unit_code?: string; unit_label?: string; price_thb?: number; lease_type?: string;
+    stations?: { name?: string; location_text?: string } | null;
+  } | null;
+};
 
-  const DAY_MAP: Record<string, string> = {
-    "26": "Mon", "27": "Tue", "28": "Wed", "29": "Thu", "30": "Fri", "31": "Sat",
-  };
-  const dayLabel = `${DAY_MAP[date] ?? ""}, ${date} May 2026`;
+function fmtDate(iso?: string): string {
+  if (!iso) return "—";
+  const d = new Date(`${iso}T00:00:00`);
+  if (isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+}
+function fmtTimeRange(t?: string): string {
+  if (!t) return "—";
+  const [h, m] = t.split(":");
+  return `${t} – ${String(Number(h) + 1).padStart(2, "0")}:${m ?? "00"} ICT`;
+}
+
+export default function BookingConfirmedPage() {
+  const router = useRouter();
+  const appId  = typeof router.query.appId === "string" ? router.query.appId : "";
+  const qDate  = typeof router.query.date === "string" ? router.query.date : "";
+  const qTime  = typeof router.query.time === "string" ? router.query.time : "";
+
+  const [row, setRow] = useState<Row | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/applications?role=retailer");
+        if (res.ok && !cancelled) {
+          const rows = (await res.json()) as Row[];
+          setRow(rows.find(r => r.retailer_display_id === appId) ?? null);
+        }
+      } catch {}
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [router.isReady, appId]);
+
+  if (loading) {
+    return (
+      <RetailerBackofficeLayout>
+        <div className="flex items-center justify-center py-24 text-sm text-on-surface-variant">Loading booking…</div>
+      </RetailerBackofficeLayout>
+    );
+  }
+  if (!row) {
+    return (
+      <RetailerBackofficeLayout>
+        <div className="flex flex-col items-center justify-center py-24 gap-3">
+          <span className="material-symbols-outlined text-outline/30 text-[48px]">event_busy</span>
+          <p className="text-sm font-semibold text-on-surface-variant">Booking not found.</p>
+          <Link href="/retailer_backoffice/myApplicationsPage" className="text-xs text-primary underline">Back to My Applications</Link>
+        </div>
+      </RetailerBackofficeLayout>
+    );
+  }
+
+  const stationName  = row.station_units?.stations?.name ?? "—";
+  const location     = row.station_units?.stations?.location_text ?? "—";
+  const unitCode     = row.station_units?.unit_code ?? "—";
+  const unitLabel    = row.station_units?.unit_label ?? "";
+  const price        = `฿${(row.station_units?.price_thb ?? 0).toLocaleString()}`;
+  const leaseType    = row.station_units?.lease_type ?? "Standard";
+  const specialist   = row.specialist_name ?? "Kanya Srisuk";
+  const specialistInitials = row.specialist_initials ?? "KS";
+
+  // Prefer the persisted booking date/time; fall back to query (ISO) if needed.
+  const visitDate = row.booking?.visitDate ?? qDate;
+  const visitTime = row.booking?.visitTime ?? qTime;
+  const dayLabel  = fmtDate(visitDate);
+  const timeRange = fmtTimeRange(visitTime);
 
   return (
     <RetailerBackofficeLayout>
@@ -52,7 +116,7 @@ export default function BookingConfirmedPage() {
         <div className="flex-1 min-w-0">
           <div className="text-[10px] font-bold uppercase tracking-widest text-lime-400 mb-1">Walkthrough Confirmed</div>
           <h1 className="text-2xl font-bold text-white mb-1">Booking Confirmed</h1>
-          <p className="text-white/70 text-sm">Your site visit is scheduled. Get ready for your walkthrough at {appInfo.stationName}.</p>
+          <p className="text-white/70 text-sm">Your site visit is scheduled. Get ready for your walkthrough at {stationName}.</p>
         </div>
         <div className="flex-shrink-0 text-right">
           <div className="text-xs text-white/50 mb-0.5">Reference</div>
@@ -72,14 +136,14 @@ export default function BookingConfirmedPage() {
             </div>
             <div className="p-6 grid grid-cols-2 gap-y-5 gap-x-8">
               {[
-                { label: "Station",        value: appInfo.stationName },
-                { label: "Unit",           value: `${appInfo.unit} — ${appInfo.unitLabel}` },
-                { label: "Location",       value: appInfo.location },
-                { label: "Monthly Rent",   value: appInfo.price },
-                { label: "Lease Duration", value: appInfo.duration },
+                { label: "Station",        value: stationName },
+                { label: "Unit",           value: unitLabel ? `${unitCode} — ${unitLabel}` : unitCode },
+                { label: "Location",       value: location },
+                { label: "Monthly Rent",   value: price },
+                { label: "Lease Type",     value: leaseType },
                 { label: "Walkthrough Date", value: dayLabel },
-                { label: "Walkthrough Time", value: `${time} – ${String(Number(time.split(":")[0]) + 1).padStart(2, "0")}:${time.split(":")[1]} ICT` },
-                { label: "Your Specialist", value: appInfo.specialist },
+                { label: "Walkthrough Time", value: timeRange },
+                { label: "Your Specialist", value: specialist },
               ].map(({ label, value }) => (
                 <div key={label}>
                   <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-0.5">{label}</div>
@@ -93,7 +157,6 @@ export default function BookingConfirmedPage() {
           <div className="bg-white rounded-2xl shadow-sm p-6">
             <h3 className="font-semibold text-on-surface mb-5">Booking Progress</h3>
             <div className="relative">
-              {/* Vertical line */}
               <div className="absolute left-4 top-0 bottom-0 w-px bg-outline-variant/20" />
               <div className="space-y-0">
                 {STEPS.map((step, i) => (
@@ -106,7 +169,7 @@ export default function BookingConfirmedPage() {
                     <div className={`pt-1 ${!step.done ? "opacity-50" : ""}`}>
                       <div className={`text-sm font-semibold ${step.done ? "text-on-surface" : "text-on-surface-variant"}`}>{step.label}</div>
                       {i === 2 && step.done && (
-                        <div className="text-xs text-primary font-medium mt-0.5">{dayLabel} · {time}</div>
+                        <div className="text-xs text-primary font-medium mt-0.5">{dayLabel} · {visitTime || "—"}</div>
                       )}
                     </div>
                   </div>
@@ -125,10 +188,10 @@ export default function BookingConfirmedPage() {
             <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-3">Your Leasing Specialist</div>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-11 h-11 bg-lime-400 rounded-full flex items-center justify-center text-[#1C3A1C] font-bold flex-shrink-0">
-                {appInfo.specialistInitials}
+                {specialistInitials}
               </div>
               <div>
-                <div className="text-sm font-bold text-on-surface">{appInfo.specialist}</div>
+                <div className="text-sm font-bold text-on-surface">{specialist}</div>
                 <div className="text-xs text-on-surface-variant flex items-center gap-1">
                   <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
                   PTG Leasing · Online
